@@ -4,7 +4,7 @@ A simple Discord Bot for managing regestrations to events for your community.
 ## Install
 1. #### Prerequisites:
     1. python 3.6 or later
-    2. lib: discord.py
+    2. install lib: discord.py
 
 2. Add config.yml with:  token: "[Your own Bot Token]"
 
