@@ -1,4 +1,4 @@
-# Regestration-Bot
+# Registration-Bot
 A simple Discord Bot for managing regestrations to events for your community.
 
 ## Install
