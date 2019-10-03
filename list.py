@@ -21,7 +21,7 @@ async def get_list(ctx, client): #Get Slotlist from Channel
     channel = ctx.message.channel
     async for x in channel.history(limit=1000):
         msg = x.content
-        if re.search("Slotliste", msg) and x.author == client.user:
+        if re.search("Slotliste", msg) and x.author == client.user: #TODO: Token in conf machen
             return msg, x
 
 
@@ -49,7 +49,6 @@ class SlotList():
 
     def enter(self, player, slot): #Slot Player
         if not slot in self.data.keys():
-            print(self.data.keys())
             return False
 
         elif self.data[slot].replace(" ", "") == "":
@@ -59,7 +58,6 @@ class SlotList():
 
             self.data[slot] = " " + player
         else:
-            print("2")
             return False
 
 

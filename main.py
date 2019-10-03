@@ -11,9 +11,11 @@ from list import SlotList, get_list
 ''' --- onLoad ----'''
 client = Bot("!")
 
+path = os.path.dirname(os.path.abspath(__file__))
+
 #load conf
-if os.path.isfile('./config.yml'):
-    with open("config.yml", 'r') as ymlfile:
+if os.path.isfile(path + '/config.yml'):
+    with open(path + "/config.yml", 'r') as ymlfile:
         cfg = yaml.safe_load(ymlfile)
 else:
     print("Please add config.yml to the dir")
@@ -50,14 +52,16 @@ async def slot(ctx, num=""):                 #slots the author of the message in
 
         if(list.enter(ctx.message.author.display_name, num)):
             await list.write()
-            del list
-            await channel.send("Erfolgreich eingetragen")
+            await ctx.message.author.send("Du hast Dich für das Event " + ctx.message.channel.name + " eingetragen!")
         else:
-            await channel.send("Der angegebene Slot ist ungültig oder schon belegt")
+            await channel.send(ctx.message.author.mention + " Der angegebene Slot ist ungültig oder schon belegt!", delete_after=5)
 
+        del list
 
     else:
-        await channel.send("Für was willst du dich slotten?")
+        await channel.send(ctx.message.author.mention + " Bitte spezifiziere den Slot (Nummer)!", delete_after=5)
+
+    await ctx.message.delete()
 
 @client.command(pass_context = True)
 async def unslot(ctx):                          #unslot the author auf the message
@@ -69,9 +73,14 @@ async def unslot(ctx):                          #unslot the author auf the messa
     if list.exit(ctx.message.author.display_name):
         await list.write()
         del list
-        await channel.send("Erfolgreich ausgetragen")
+        await ctx.message.author.send("Du hast Dich für das Event " + ctx.message.channel.name + " ausgetragen!")
+        await ctx.message.delete()
     else:
-        await channel.send("Du bist nicht eingetragen")
+        await channel.send(ctx.message.author.mention + " Du bist nicht eingetragen!", delete_after=5)
+        await ctx.message.delete()
+
+
+
 
 @client.command(pass_context = True)
 @has_permissions(manage_channels = True)
@@ -80,7 +89,7 @@ async def forceUnslot(ctx):           # [Admin Function] unslots an user
 
     player = ctx.message.content.split(" ")[1:]
     if not player:
-        await channel.send("Bitte einen User angeben")
+        await channel.send(ctx.message.author.mention + " Bitte einen User angeben!", delete_after=5)
         return
 
     seperator  = " "
@@ -91,10 +100,14 @@ async def forceUnslot(ctx):           # [Admin Function] unslots an user
 
     if list.exit(player):
         await list.write()
-        del list
-        await channel.send("Erfolgreich ausgetragen")
+        await channel.send(ctx.message.author.mention + " " + player +" wurde erfolgreich  ausgetragen!", delete_after=5)
+        await ctx.message.delete()
     else:
-        await channel.send("User ist nicht eingetragen")
+        await channel.send(ctx.message.author.mention + " " + player + " ist nicht eingetragen!", delete_after=5)
+        await ctx.message.delete()
+
+    del list
+
 
 @client.command(pass_context = True)
 @has_permissions(manage_channels = True)
@@ -104,7 +117,7 @@ async def forceSlot(ctx):      # [Admin Function] slots an user
     argv = ctx.message.content.split(" ")
 
     if not len(argv) >= 2:
-        print("Bitte Slot und Nutzer angeben")
+        await channel.send(ctx.message.author.mention + " Bitte Slot und Nutzer angeben!", delete_after=5)
         return
 
 
@@ -112,7 +125,7 @@ async def forceSlot(ctx):      # [Admin Function] slots an user
     player = argv[2:]
 
     if not player:
-        await channel.send("Bitte einen User angeben")
+        await channel.send(ctx.message.author.mention + " Bitte einen User angeben!", delete_after=5)
         return
 
     seperator = " "
@@ -126,9 +139,12 @@ async def forceSlot(ctx):      # [Admin Function] slots an user
     if (list.enter(player, num)):
         await list.write()
         del list
-        await channel.send("Erfolgreich eingetragen")
+        await channel.send(ctx.message.author.mention + " Erfolgreich eingetragen!", delete_after=5)
+        await ctx.message.delete()
     else:
-        await channel.send("Der angegebene Slot ist ungültig oder schon belegt")
+        await channel.send(ctx.message.author.mention + " Der angegebene Slot ist ungültig oder schon belegt!", delete_after=5)
+        await ctx.message.delete()
+
 
 
 
