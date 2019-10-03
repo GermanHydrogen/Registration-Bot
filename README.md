@@ -6,7 +6,7 @@ First of all create an Slotlist with following requirements:
 - Begins with "Slotliste"
 - Each slot has its own line
 - Each slot description beginns with "#[Number of the slot]"
-- The slot description ends with an "-"
+- Each slot description ends with an "-"
 
 ### Example
 Slotliste
