@@ -21,7 +21,7 @@ async def get_list(ctx, client): #Get Slotlist from Channel
     channel = ctx.message.channel
     async for x in channel.history(limit=1000):
         msg = x.content
-        if re.search("Slotliste", msg) and x.author == client.user: #TODO: Token in conf machen
+        if re.search("Slotliste", msg) and x.author == client.user:
             return msg, x
 
 
@@ -31,23 +31,27 @@ class SlotList():
     data = {}
     msg = ""
 
-    list = ""
+    message = None
+    channel = None
 
-    def __init__(self, input, list):
+    def __init__(self, input, message = None, channel = None):
 
-        self.list = list
+        self.message = message
+        self.channel = channel
         self.msg = input
 
 
         for line in input.splitlines(False):
             if line and line[0] == "#":
-                if line.split("-")[-1].replace(" ", "") == "":
+                if line.split("-")[-1].replace(" ", "").replace("**", "") == "":
                     self.data[get_number(line[1:])] = " "
                 else:
-                    self.data[get_number(line[1:])] = line.split("-")[-1]
+                    self.data[get_number(line[1:])] = line.split("-")[-1].replace("**", "")
+
 
 
     def enter(self, player, slot): #Slot Player
+
         if not slot in self.data.keys():
             return False
 
@@ -77,9 +81,12 @@ class SlotList():
             if line and line[0] == "#":
                 for x in line.split("-")[:-1]:
                     output += x + "-"
-                output += self.data[get_number(line[1:])] + "\n"
+                output += f"**{self.data[get_number(line[1:])]}**\n"
             else:
                 output += line + "\n"
 
-        await self.list.edit(content=output)
+        if(self.channel == None):
+            await self.message.edit(content=output)
+        else:
+            await (await self.channel.send(output)).pin()
 

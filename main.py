@@ -1,7 +1,9 @@
 import os
 import yaml
+import datetime
 
 import re
+from discord.ext import commands
 from discord.ext.commands import Bot, has_permissions
 
 from list import SlotList, get_list
@@ -10,6 +12,8 @@ from list import SlotList, get_list
 
 ''' --- onLoad ----'''
 client = Bot("!")
+
+client.remove_command("help")
 
 path = os.path.dirname(os.path.abspath(__file__))
 
@@ -25,30 +29,46 @@ if not cfg["token"]:
     print("No valid token in config.yml")
     exit()
 
+TODAY = datetime.date.today()
+
+if not  os.path.isfile(path + f'/{TODAY}.log'):
+    LOG_FILE = open(f"{TODAY}.log", "w")
+    LOG_FILE.write(f"---- Created: {datetime.datetime.now()} ----\n\n")
+    LOG_FILE.close()
+
 ''' ---        ----'''
 
-@client.command(pass_context = True)
-@has_permissions(manage_channels = True)
-async def create(ctx):                          #makes the slotlist editable for the bot
-    channel = ctx.message.channel
-    async for x in channel.history(limit=1000):
-        msg = x.content
-        if msg == "!create":
-            await x.delete()
-        elif re.search("Slotliste", msg):
-            await x.delete()
-            await (await channel.send(msg)).pin()
 
-            break
+@client.event
+async def on_command_error(ctx, error):
+    await ctx.message.delete()
 
-@client.command(pass_context = True)
-async def slot(ctx, num=""):                 #slots the author of the message in a slot
+    if isinstance(error, commands.CommandOnCooldown):
+        await ctx.send(ctx.message.author.mention + " " +str(error), delete_after=error.retry_after + 1)
+    else:
+        await ctx.send(ctx.message.author.mention + " Command not found! Check **!help** for all commands", delete_after=5)
+
+    f = open(f"{TODAY}.log", "a")
+    log =  str(datetime.datetime.now()) +                     "\t"
+    log += "User: " + str(ctx.message.author).ljust(20) +    "\t"
+    log += "Channel:" + str(ctx.message.channel).ljust(20) + "\t"
+    log += str(error) + "\n"
+    f.write(log)
+    f.close()
+
+    raise error
+
+''' --- User Commands --- '''
+
+@client.command(hidden = False, description= "[number] slots the author of the message in the slot")
+@commands.cooldown(1,2, commands.BucketType.channel)
+async def slot(ctx, num=""):
     channel = ctx.message.channel
     if num:
 
         liste, x = await get_list(ctx, client)
 
-        list = SlotList(liste, x)
+        list = SlotList(liste, message = x)
 
         if(list.enter(ctx.message.author.display_name, num)):
             await list.write()
@@ -63,12 +83,13 @@ async def slot(ctx, num=""):                 #slots the author of the message in
 
     await ctx.message.delete()
 
-@client.command(pass_context = True)
-async def unslot(ctx):                          #unslot the author auf the message
+@client.command(hidden = False, description="unslot the author uf the message")
+@commands.cooldown(1,2, commands.BucketType.channel)
+async def unslot(ctx):
     channel = ctx.message.channel
 
     liste, x = await get_list(ctx, client)
-    list = SlotList(liste, x)
+    list = SlotList(liste, message = x)
 
     if list.exit(ctx.message.author.display_name):
         await list.write()
@@ -79,16 +100,54 @@ async def unslot(ctx):                          #unslot the author auf the messa
         await channel.send(ctx.message.author.mention + " Du bist nicht eingetragen!", delete_after=5)
         await ctx.message.delete()
 
+@client.command()
+async def help(ctx):
+    output = "My commands are:\n```yaml\n"
+
+    for element in client.commands:
+        if(element != help and not element.hidden):
+            output += f"{element}:".ljust(20) + f"{element.description}\n"
+
+    output += "\n#Admin Commands:\n"
+
+    if (ctx.message.author.permissions_in(ctx.message.channel).manage_channels):
+        for element in client.commands:
+            if (element != help and element.hidden):
+                output += f"{element}:".ljust(20) + f"{element.description}\n"
 
 
+    output += "```"
 
-@client.command(pass_context = True)
+    await ctx.message.author.send(output)
+    await ctx.message.delete()
+
+''' --- Admin Commands --- '''
+
+@client.command(hidden = True, description= "Initialize the slotlist")
+@has_permissions(manage_channels = True)
+async def create(ctx):                          #makes the slotlist editable for the bot
+    channel = ctx.message.channel
+    async for x in channel.history(limit=1000):
+        msg = x.content
+        if msg == "!create":
+            await x.delete()
+        elif re.search("Slotliste", msg):
+            await x.delete()  #await (await channel.send(msg)).pin()
+
+            liste = SlotList(msg, channel=channel)
+            await liste.write()
+            del liste
+            break
+
+
+@client.command(hidden = True, description="[User] Unslots an User")
 @has_permissions(manage_channels = True)
 async def forceUnslot(ctx):           # [Admin Function] unslots an user
     channel = ctx.message.channel
 
     player = ctx.message.content.split(" ")[1:]
     if not player:
+        await ctx.message.delete()
         await channel.send(ctx.message.author.mention + " Bitte einen User angeben!", delete_after=5)
         return
 
@@ -96,7 +155,7 @@ async def forceUnslot(ctx):           # [Admin Function] unslots an user
     player = seperator.join(player)
 
     liste, x = await get_list(ctx, client)
-    list = SlotList(liste, x)
+    list = SlotList(liste, message = x)
 
     if list.exit(player):
         await list.write()
@@ -109,14 +168,16 @@ async def forceUnslot(ctx):           # [Admin Function] unslots an user
     del list
 
 
-@client.command(pass_context = True)
+@client.command(hidden = True, description="[Number] [User] Slots an User in a Slot")
 @has_permissions(manage_channels = True)
+@commands.cooldown(1,2, commands.BucketType.channel)
 async def forceSlot(ctx):      # [Admin Function] slots an user
     channel = ctx.message.channel
 
     argv = ctx.message.content.split(" ")
 
     if not len(argv) >= 2:
+        await ctx.message.delete()
         await channel.send(ctx.message.author.mention + " Bitte Slot und Nutzer angeben!", delete_after=5)
         return
 
@@ -125,6 +186,7 @@ async def forceSlot(ctx):      # [Admin Function] slots an user
     player = argv[2:]
 
     if not player:
+        await ctx.message.delete()
         await channel.send(ctx.message.author.mention + " Bitte einen User angeben!", delete_after=5)
         return
 
@@ -134,7 +196,7 @@ async def forceSlot(ctx):      # [Admin Function] slots an user
 
     liste, x = await get_list(ctx, client)
 
-    list = SlotList(liste, x)
+    list = SlotList(liste, message = x)
 
     if (list.enter(player, num)):
         await list.write()
@@ -145,6 +207,7 @@ async def forceSlot(ctx):      # [Admin Function] slots an user
         await channel.send(ctx.message.author.mention + " Der angegebene Slot ist ungültig oder schon belegt!", delete_after=5)
         await ctx.message.delete()
 
+''' ---        --- '''
 
 
 
