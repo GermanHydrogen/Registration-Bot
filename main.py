@@ -41,7 +41,8 @@ if not  os.path.isfile(path + f'/{TODAY}.log'):
 
 @client.event
 async def on_command_error(ctx, error):
-    await ctx.message.delete()
+    if(ctx.message.channel != "DMChannel" and ctx.message.channel != "GroupChannel"):
+        await ctx.message.delete()
 
     if isinstance(error, commands.CommandOnCooldown):
         await ctx.send(ctx.message.author.mention + " " +str(error), delete_after=error.retry_after + 1)
@@ -62,6 +63,7 @@ async def on_command_error(ctx, error):
 
 @client.command(hidden = False, description= "[number] slots the author of the message in the slot")
 @commands.cooldown(1,2, commands.BucketType.channel)
+@commands.guild_only()
 async def slot(ctx, num=""):
     channel = ctx.message.channel
     if num:
@@ -85,6 +87,7 @@ async def slot(ctx, num=""):
 
 @client.command(hidden = False, description="unslot the author uf the message")
 @commands.cooldown(1,2, commands.BucketType.channel)
+@commands.guild_only()
 async def unslot(ctx):
     channel = ctx.message.channel
 
@@ -125,6 +128,7 @@ async def help(ctx):
 
 @client.command(hidden = True, description= "Initialize the slotlist")
 @has_permissions(manage_channels = True)
+@commands.guild_only()
 async def create(ctx):                          #makes the slotlist editable for the bot
     channel = ctx.message.channel
     async for x in channel.history(limit=1000):
@@ -142,6 +146,7 @@ async def create(ctx):                          #makes the slotlist editable for
 
 @client.command(hidden = True, description="[User] Unslots an User")
 @has_permissions(manage_channels = True)
+@commands.guild_only()
 async def forceUnslot(ctx):           # [Admin Function] unslots an user
     channel = ctx.message.channel
 
@@ -171,6 +176,7 @@ async def forceUnslot(ctx):           # [Admin Function] unslots an user
 @client.command(hidden = True, description="[Number] [User] Slots an User in a Slot")
 @has_permissions(manage_channels = True)
 @commands.cooldown(1,2, commands.BucketType.channel)
+@commands.guild_only()
 async def forceSlot(ctx):      # [Admin Function] slots an user
     channel = ctx.message.channel
 
