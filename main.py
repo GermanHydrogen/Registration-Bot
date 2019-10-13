@@ -9,7 +9,6 @@ from discord.ext.commands import Bot, has_permissions
 from list import SlotList, get_list
 
 
-
 ''' --- onLoad ----'''
 client = Bot(command_prefix="!", case_insensitive=True)
 
@@ -74,20 +73,20 @@ async def slot(ctx, num=""):
 
         list = SlotList(liste, message = x)
 
-        if(list.enter(ctx.message.author.display_name, num)):
+        if(list.enter(ctx.message.author.name, num)):
             await list.write()
-            await ctx.message.author.send("Du hast Dich für das Event " + ctx.message.channel.name + " eingetragen!")
+            await ctx.message.author.send(f"You have signed up for the assault on {'/'.join( ctx.channel.name.split('-')[:-1])}.")
         else:
-            await channel.send(ctx.message.author.mention + " Der angegebene Slot ist ungültig oder schon belegt!", delete_after=5)
+            await channel.send(ctx.message.author.mention + " The given slot isn't valid or available!", delete_after=5)
 
         del list
 
     else:
-        await channel.send(ctx.message.author.mention + " Bitte spezifiziere den Slot (Nummer)!", delete_after=5)
+        await channel.send(ctx.message.author.mention + " Please specify the slot (Number)!", delete_after=5)
 
     await ctx.message.delete()
 
-@client.command(hidden = False, description="unslot the author uf the message")
+@client.command(hidden = False, description="unslot the author of the message")
 @commands.cooldown(1,2, commands.BucketType.channel)
 @commands.guild_only()
 async def unslot(ctx):
@@ -96,10 +95,10 @@ async def unslot(ctx):
     liste, x = await get_list(ctx, client)
     list = SlotList(liste, message = x)
 
-    if list.exit(ctx.message.author.display_name):
+    if list.exit(ctx.message.author.name):
         await list.write()
         del list
-        await ctx.message.author.send("Du hast Dich für das Event " + ctx.message.channel.name + " ausgetragen!")
+        await ctx.message.author.send(f"Guess we'll be kicking russian butts without you on {'/'.join( ctx.channel.name.split('-')[:-1])}. Who do you think you are, deserting your comrades like this?")
         await ctx.message.delete()
     else:
         await channel.send(ctx.message.author.mention + " Du bist nicht eingetragen!", delete_after=5)
@@ -133,17 +132,27 @@ async def help(ctx):
 @commands.guild_only()
 async def create(ctx):                          #makes the slotlist editable for the bot
     channel = ctx.message.channel
+    out = []
+
     async for x in channel.history(limit=1000):
         msg = x.content
-        if msg == "!create":
-            await x.delete()
-        elif re.search("Slotliste", msg):
+        if re.search("Slotliste", msg):
             await x.delete()  #await (await channel.send(msg)).pin()
+
+            out.append("Slotlist")
 
             liste = SlotList(msg, channel=channel)
             await liste.write()
             del liste
-            break
+
+
+    if "Slotlist" in out:
+        await ctx.message.author.send("The event was created successfully")
+    else:
+        await ctx.message.author.send("The Slotlist was not found!")
+
+    await ctx.message.delete()
+
 
 
 @client.command(hidden = True, description="[User] Unslots an User")
@@ -155,7 +164,7 @@ async def forceUnslot(ctx):           # [Admin Function] unslots an user
     player = ctx.message.content.split(" ")[1:]
     if not player:
         await ctx.message.delete()
-        await channel.send(ctx.message.author.mention + " Bitte einen User angeben!", delete_after=5)
+        await channel.send(ctx.message.author.mention + " Please specify a **user**!", delete_after=5)
         return
 
     seperator  = " "
@@ -168,8 +177,14 @@ async def forceUnslot(ctx):           # [Admin Function] unslots an user
         await list.write()
         await channel.send(ctx.message.author.mention + " " + player +" wurde erfolgreich  ausgetragen!", delete_after=5)
         await ctx.message.delete()
+
+        try:
+            await (ctx.guild.get_member_named(player)).send(f"Du wurdest aus dem Event {ctx.channel.name} ausgetragen")
+        except:
+            pass
+
     else:
-        await channel.send(ctx.message.author.mention + " " + player + " ist nicht eingetragen!", delete_after=5)
+        await channel.send(ctx.message.author.mention + " " + player + " isn't registered!", delete_after=5)
         await ctx.message.delete()
 
     del list
@@ -186,7 +201,7 @@ async def forceSlot(ctx):      # [Admin Function] slots an user
 
     if not len(argv) >= 2:
         await ctx.message.delete()
-        await channel.send(ctx.message.author.mention + " Bitte Slot und Nutzer angeben!", delete_after=5)
+        await channel.send(ctx.message.author.mention + " Please specify a **slot** and **user**!", delete_after=5)
         return
 
 
@@ -195,7 +210,7 @@ async def forceSlot(ctx):      # [Admin Function] slots an user
 
     if not player:
         await ctx.message.delete()
-        await channel.send(ctx.message.author.mention + " Bitte einen User angeben!", delete_after=5)
+        await channel.send(ctx.message.author.mention + " Please specify a **user**!", delete_after=5)
         return
 
     seperator = " "
@@ -209,10 +224,16 @@ async def forceSlot(ctx):      # [Admin Function] slots an user
     if (list.enter(player, num)):
         await list.write()
         del list
-        await channel.send(ctx.message.author.mention + " Erfolgreich eingetragen!", delete_after=5)
+        await channel.send(ctx.message.author.mention + " The user was successfully slotted!", delete_after=5)
+
+        try:
+            await (ctx.guild.get_member_named(player)).send(f"You were enlisted to the Operation on {'/'.join( ctx.channel.name.split('-')[:-1])} by {str(ctx.message.author.name)}")
+        except:
+            pass
+
         await ctx.message.delete()
     else:
-        await channel.send(ctx.message.author.mention + " Der angegebene Slot ist ungültig oder schon belegt!", delete_after=5)
+        await channel.send(ctx.message.author.mention + " The given slot is invalid or available!", delete_after=5)
         await ctx.message.delete()
 
 ''' ---        --- '''
