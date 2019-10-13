@@ -11,11 +11,12 @@ from list import SlotList, get_list
 
 
 ''' --- onLoad ----'''
-client = Bot("!")
+client = Bot(command_prefix="!", case_insensitive=True)
 
 client.remove_command("help")
 
 path = os.path.dirname(os.path.abspath(__file__))
+
 
 #load conf
 if os.path.isfile(path + '/config.yml'):
@@ -31,10 +32,11 @@ if not cfg["token"]:
 
 TODAY = datetime.date.today()
 
-if not  os.path.isfile(path + f'/{TODAY}.log'):
-    LOG_FILE = open(f"{TODAY}.log", "w")
+if not os.path.isfile(path + f'/{TODAY}.log'):
+    LOG_FILE = open(path + f"/{TODAY}.log", "w+")
     LOG_FILE.write(f"---- Created: {datetime.datetime.now()} ----\n\n")
     LOG_FILE.close()
+
 
 ''' ---        ----'''
 
@@ -49,7 +51,7 @@ async def on_command_error(ctx, error):
     else:
         await ctx.send(ctx.message.author.mention + " Command not found! Check **!help** for all commands", delete_after=5)
 
-    f = open(f"{TODAY}.log", "a")
+    f = open(path + f"/{TODAY}.log", "a")
     log =  str(datetime.datetime.now()) +                     "\t"
     log += "User: " + str(ctx.message.author).ljust(20) +    "\t"
     log += "Channel:" + str(ctx.message.channel).ljust(20) + "\t"
