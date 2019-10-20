@@ -6,7 +6,12 @@ import re
 from discord.ext import commands
 from discord.ext.commands import Bot, has_permissions
 
-from list import SlotList, get_list
+from list import SlotList, get_list, get_member, get_channel_author
+
+# TODO: !!!! LIST MERGEN !!!!
+
+
+# TODO: Author ändern?
 
 
 ''' --- onLoad ----'''
@@ -73,9 +78,13 @@ async def slot(ctx, num=""):
 
         list = SlotList(liste, message = x)
 
-        if(list.enter(ctx.message.author.name, num)):
+        if(list.enter(ctx.message.author.display_name, num)):
             await list.write()
-            await ctx.message.author.send(f"You have signed up for the assault on {'/'.join( ctx.channel.name.split('-')[:-1])}.")
+            try:
+                await (await get_channel_author(ctx.channel)).send(f"User: {ctx.message.author} as {ctx.message.author.display_name} **slotted** for {channel.name} in Position #{num}")
+                await ctx.message.author.send(f"You have signed up for the assault on {'/'.join( ctx.channel.name.split('-')[:-1])}.")
+            except:
+                pass
         else:
             await channel.send(ctx.message.author.mention + " The given slot isn't valid or available!", delete_after=5)
 
@@ -95,10 +104,14 @@ async def unslot(ctx):
     liste, x = await get_list(ctx, client)
     list = SlotList(liste, message = x)
 
-    if list.exit(ctx.message.author.name):
+    if list.exit(ctx.message.author.display_name):
         await list.write()
         del list
-        await ctx.message.author.send(f"Guess we'll be kicking russian butts without you on {'/'.join( ctx.channel.name.split('-')[:-1])}. Who do you think you are, deserting your comrades like this?")
+        try:
+            await (await get_channel_author(ctx.channel)).send(f"User: {ctx.message.author} as {ctx.message.author.display_name} **unslotted** for {channel.name}")
+            await ctx.message.author.send(f"Guess we'll be kicking russian butts without you on {'/'.join( ctx.channel.name.split('-')[:-1])}. Who do you think you are, deserting your comrades like this?")
+        except:
+            pass
         await ctx.message.delete()
     else:
         await channel.send(ctx.message.author.mention + " Du bist nicht eingetragen!", delete_after=5)
@@ -179,7 +192,8 @@ async def forceUnslot(ctx):           # [Admin Function] unslots an user
         await ctx.message.delete()
 
         try:
-            await (ctx.guild.get_member_named(player)).send(f"Du wurdest aus dem Event {ctx.channel.name} ausgetragen")
+            member = get_member(ctx.guild, player)
+            await member.send(f"You were removed from the Operation {ctx.channel.name}")
         except:
             pass
 
@@ -226,8 +240,11 @@ async def forceSlot(ctx):      # [Admin Function] slots an user
         del list
         await channel.send(ctx.message.author.mention + " The user was successfully slotted!", delete_after=5)
 
+
+
         try:
-            await (ctx.guild.get_member_named(player)).send(f"You were enlisted to the Operation on {'/'.join( ctx.channel.name.split('-')[:-1])} by {str(ctx.message.author.name)}")
+            member = get_member(ctx.guild, player)
+            await member.send(f"You were enlisted to the Operation on {'/'.join( ctx.channel.name.split('-')[:-1])} by {str(ctx.message.author.display_name)}")
         except:
             pass
 
@@ -236,8 +253,57 @@ async def forceSlot(ctx):      # [Admin Function] slots an user
         await channel.send(ctx.message.author.mention + " The given slot is invalid or available!", delete_after=5)
         await ctx.message.delete()
 
+@client.command(hidden = True, description="[Number] [Description] Adds a Slot to the list")
+@has_permissions(manage_channels = True)
+@commands.cooldown(1,2, commands.BucketType.channel)
+@commands.guild_only()
+async def addslot(ctx):
+    channel = ctx.message.channel
+    argv = ctx.message.content.split(" ")
+
+    if not len(argv) >= 2:
+        await ctx.message.delete()
+        await channel.send(ctx.message.author.mention + " Please specify a **slot** and **description**!", delete_after=5)
+        return
+
+
+    slot = argv[1]
+    desc = " ".join(argv[2:])
+
+    liste, x = await get_list(ctx, client)
+    list = SlotList(liste, message=x)
+
+    if(list.add(slot, desc)):
+        await list.write()
+        del list
+
+        await channel.send(ctx.message.author.mention + " The slot was successfully added!", delete_after=5)
+
+        await ctx.message.delete()
+    else:
+        await channel.send(ctx.message.author.mention + " The given slot is invalid or unavailable!", delete_after=5)
+        await ctx.message.delete()
+
+@client.command(hidden = True, description="[Number] [Description] Deletes a Slot from the list")
+@has_permissions(manage_channels = True)
+@commands.cooldown(1,2, commands.BucketType.channel)
+@commands.guild_only()
+async def delslot(ctx, slot):
+    channel = ctx.message.channel
+    liste, x = await get_list(ctx, client)
+    list = SlotList(liste, message=x)
+
+    if list.delete(slot):
+        await list.write()
+        del list
+
+        await channel.send(ctx.message.author.mention + " The slot was successfully deleted!", delete_after=5)
+
+        await ctx.message.delete()
+
+    else:
+        await channel.send(ctx.message.author.mention + " The given slot is invalid or unavailable!", delete_after=5)
+        await ctx.message.delete()
 ''' ---        --- '''
-
-
 
 client.run(cfg['token'])
