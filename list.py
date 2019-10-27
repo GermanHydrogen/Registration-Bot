@@ -31,7 +31,7 @@ def get_member(guild, name):
     for member in list:
         if member.name == name or member.nick == name:
             return member
-    return None
+    raise None
 
 async def get_channel_author(channel):
     x : Message

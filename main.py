@@ -67,8 +67,26 @@ async def on_command_error(ctx, error):
 @commands.guild_only()
 async def slot(ctx, num=""):
     channel = ctx.message.channel
-    if num:
+    channel_author = await get_channel_author(ctx.channel)
+    channel_name = channel.name.split("-")[-1]
 
+    author = ctx.message.author
+
+    instructor = ctx.guild.get_member(cfg[channel_name])
+    if not instructor:
+        instructor = ctx.guild.get_member(cfg['backup'])
+
+
+    if not (channel_name in [x.name for x in ctx.message.author.roles]):
+
+        # User-Message
+        await author.send(f"Welcome to the Rosenrudel!\nTo proceed to your first Mission, please report to your Instructor **{instructor.display_name}**.")
+        # Channel-Message
+        await channel_author.send(f"The **new** User: {author} as {author.display_name} **tried** to slot for {channel.name} in Position #{num}")
+        # Instructor-Message
+        await instructor.send(f"The **new** User: {author} as {author.display_name} **tried** to slot for {channel.name} in Position #{num}")
+
+    elif num:
         liste, x = await get_list(ctx, client)
 
         list = SlotList(liste, message = x)
@@ -76,12 +94,12 @@ async def slot(ctx, num=""):
         if(list.enter(ctx.message.author.display_name, num)):
             await list.write()
             try:
-                await (await get_channel_author(ctx.channel)).send(f"User: {ctx.message.author} as {ctx.message.author.display_name} **slotted** for {channel.name} in Position #{num}")
-                await ctx.message.author.send(f"You have signed up for the assault on {'/'.join( ctx.channel.name.split('-')[:-1])}.")
+                await channel_author.send(f"User: {author} as {ctx.message.author.display_name} **slotted** for {channel.name} in Position #{num}")
+                await author.send(f"You have signed up for the assault on {'/'.join( ctx.channel.name.split('-')[:-1])}.")
             except:
                 pass
         else:
-            await channel.send(ctx.message.author.mention + " The given slot isn't valid or available!", delete_after=5)
+            await channel.send(author.mention + " The given slot isn't valid or available!", delete_after=5)
 
         del list
 
