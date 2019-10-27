@@ -37,20 +37,13 @@ Zum Initialisieren des Bots !create ausführen.
 
 ### Event Bearbeiten
 
-1. Slotliste kopieren und bearbeiten
-2. Slotliste vom Bot löschen
-3. Bearbeite Slotliste in den Channel stellen und mit !create initialisieren
+- !addslot [num] [Beschreibung]  &nbsp;&nbsp;&nbsp; Fügt einen Slot zur Liste hinzu
+- !delslot [num]                &nbsp;&nbsp;&nbsp; Löscht einen Slot
 
 ### Commands
 
 - !forceslot [num] [Nutzer]     &nbsp;&nbsp;&nbsp;Trägt einen Nutzer in einen Slot ein
 - !forceunslot [Nutzer]         &nbsp;&nbsp;&nbsp;&nbsp;Trägt einen Nutzer aus
-
-#### Geplant
-
-- !addslot [num] [Beschreibung]
-- !delslot [num]
-
 
 
 ---
