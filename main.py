@@ -4,15 +4,9 @@ import datetime
 
 import re
 from discord.ext import commands
-from discord.ext.commands import Bot, has_permissions
+from discord.ext.commands import Bot, has_permissions, has_role
 
 from list import SlotList, get_list, get_member, get_channel_author
-
-# TODO: !!!! LIST MERGEN !!!!
-
-
-# TODO: Author ändern?
-
 
 ''' --- onLoad ----'''
 client = Bot(command_prefix="!", case_insensitive=True)
@@ -30,14 +24,14 @@ else:
     print("Please add config.yml to the dir")
     exit()
 
-if not cfg["token"]:
+if not cfg["token"] and cfg["role"]:
     print("No valid token in config.yml")
     exit()
 
 TODAY = datetime.date.today()
 
-if not os.path.isfile(path + f'/{TODAY}.log'):
-    LOG_FILE = open(path + f"/{TODAY}.log", "w+")
+if not os.path.isfile(path + f'/logs/{TODAY}.log'):
+    LOG_FILE = open(path + f"/logs/{TODAY}.log", "w+")
     LOG_FILE.write(f"---- Created: {datetime.datetime.now()} ----\n\n")
     LOG_FILE.close()
 
@@ -55,10 +49,11 @@ async def on_command_error(ctx, error):
     else:
         await ctx.send(ctx.message.author.mention + " Command not found! Check **!help** for all commands", delete_after=5)
 
-    f = open(path + f"/{TODAY}.log", "a")
+    f = open(path + f"/logs/{TODAY}.log", "a")
     log =  str(datetime.datetime.now()) +                     "\t"
     log += "User: " + str(ctx.message.author).ljust(20) +    "\t"
     log += "Channel:" + str(ctx.message.channel).ljust(20) + "\t"
+    log += "Command: " + str(ctx.message.content) + "\t"
     log += str(error) + "\n"
     f.write(log)
     f.close()
@@ -125,9 +120,8 @@ async def help(ctx):
         if(element != help and not element.hidden):
             output += f"{element}:".ljust(20) + f"{element.description}\n"
 
-    output += "\n#Admin Commands:\n"
-
-    if (ctx.message.author.permissions_in(ctx.message.channel).manage_channels):
+    if (cfg['role'] in [x.name for x in ctx.message.author.roles]):
+        output += "\n#Admin Commands:\n"
         for element in client.commands:
             if (element != help and element.hidden):
                 output += f"{element}:".ljust(20) + f"{element.description}\n"
@@ -141,7 +135,7 @@ async def help(ctx):
 ''' --- Admin Commands --- '''
 
 @client.command(hidden = True, description= "Initialize the slotlist")
-@has_permissions(manage_channels = True)
+@has_role(cfg["role"])
 @commands.guild_only()
 async def create(ctx):                          #makes the slotlist editable for the bot
     channel = ctx.message.channel
@@ -169,7 +163,7 @@ async def create(ctx):                          #makes the slotlist editable for
 
 
 @client.command(hidden = True, description="[User] Unslots an User")
-@has_permissions(manage_channels = True)
+@has_role(cfg["role"])
 @commands.guild_only()
 async def forceUnslot(ctx):           # [Admin Function] unslots an user
     channel = ctx.message.channel
@@ -205,7 +199,7 @@ async def forceUnslot(ctx):           # [Admin Function] unslots an user
 
 
 @client.command(hidden = True, description="[Number] [User] Slots an User in a Slot")
-@has_permissions(manage_channels = True)
+@has_role(cfg["role"])
 @commands.cooldown(1,2, commands.BucketType.channel)
 @commands.guild_only()
 async def forceSlot(ctx):      # [Admin Function] slots an user
@@ -254,7 +248,7 @@ async def forceSlot(ctx):      # [Admin Function] slots an user
         await ctx.message.delete()
 
 @client.command(hidden = True, description="[Number] [Description] Adds a Slot to the list")
-@has_permissions(manage_channels = True)
+@has_role(cfg["role"])
 @commands.cooldown(1,2, commands.BucketType.channel)
 @commands.guild_only()
 async def addslot(ctx):
@@ -285,7 +279,7 @@ async def addslot(ctx):
         await ctx.message.delete()
 
 @client.command(hidden = True, description="[Number] [Description] Deletes a Slot from the list")
-@has_permissions(manage_channels = True)
+@has_role(cfg["role"])
 @commands.cooldown(1,2, commands.BucketType.channel)
 @commands.guild_only()
 async def delslot(ctx, slot):
