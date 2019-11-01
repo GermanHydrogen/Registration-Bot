@@ -24,9 +24,21 @@ else:
     print("Please add config.yml to the dir")
     exit()
 
-if not cfg["token"] and cfg["role"]:
+if not cfg["token"] and cfg["role"] and cfg["language"]:
     print("No valid token in config.yml")
     exit()
+
+
+#load lang
+
+if os.path.isfile(path + f'/msg_conf/{cfg["language"]}.yml'):
+    with open(path + f'/msg_conf/{cfg["language"]}.yml') as ymlfile:
+        lang = yaml.safe_load(ymlfile)
+else:
+    print("Language File missing")
+    exit()
+
+#load log
 
 TODAY = datetime.date.today()
 
@@ -63,28 +75,31 @@ async def on_command_error(ctx, error):
 ''' --- User Commands --- '''
 
 @client.command(hidden = False, description= "[number] slots the author of the message in the slot")
-@commands.cooldown(1,2, commands.BucketType.channel)
+@commands.cooldown(1,0.5, commands.BucketType.channel)
 @commands.guild_only()
 async def slot(ctx, num=""):
     channel = ctx.message.channel
     channel_author = await get_channel_author(ctx.channel)
-    channel_name = channel.name.split("-")[-1]
+    #channel_name = channel.name.split("-")[-1]
 
     author = ctx.message.author
 
-    instructor = ctx.guild.get_member(cfg[channel_name])
+    instructor = ctx.guild.get_member(cfg["arma3"]) # TODO: STATIC
     if not instructor:
         instructor = ctx.guild.get_member(cfg['backup'])
 
 
-    if not (channel_name in [x.name for x in ctx.message.author.roles]):
+    if not ("ArmA3-Rudelkrieger" in [x.name for x in ctx.message.author.roles]): #TODO: STATIC
 
-        # User-Message
-        await author.send(f"Welcome to the Rosenrudel!\nTo proceed to your first Mission, please report to your Instructor **{instructor.display_name}**.")
+
+        # User-Message TODO
+        await author.send(lang["slot"]["new_user"]["user"].format(instructor.display_name).replace('\\n', '\n'))
         # Channel-Message
-        await channel_author.send(f"The **new** User: {author} as {author.display_name} **tried** to slot for {channel.name} in Position #{num}")
+        await channel_author.send(lang["slot"]["new_user"]["channel"].format(author, author.display_name , channel.name, num))
         # Instructor-Message
-        await instructor.send(f"The **new** User: {author} as {author.display_name} **tried** to slot for {channel.name} in Position #{num}")
+        await instructor.send(lang["slot"]["new_user"]["instructor"].format(author, author.display_name , channel.name, num))
+        # Assign-Rule
+        await author.add_roles([x for x in ctx.guild.roles if x.name == "ArmA3-Rudelanwärter"][0])
 
     elif num:
         liste, x = await get_list(ctx, client)
@@ -94,22 +109,22 @@ async def slot(ctx, num=""):
         if(list.enter(ctx.message.author.display_name, num)):
             await list.write()
             try:
-                await channel_author.send(f"User: {author} as {ctx.message.author.display_name} **slotted** for {channel.name} in Position #{num}")
-                await author.send(f"You have signed up for the assault on {'/'.join( ctx.channel.name.split('-')[:-1])}.")
+                await channel_author.send(lang["slot"]["slot"]["success"]["channel_author"].format(author, ctx.message.author.display_name, channel.name, num))
+                await author.send(lang["slot"]["slot"]["success"]["user"].format('/'.join( ctx.channel.name.split('-')[:-1])))
             except:
                 pass
         else:
-            await channel.send(author.mention + " The given slot isn't valid or available!", delete_after=5)
+            await channel.send(author.mention + " " + lang["slot"]["slot"]["error"]["general"]["channel"], delete_after=5)
 
         del list
 
     else:
-        await channel.send(ctx.message.author.mention + " Please specify the slot (Number)!", delete_after=5)
+        await channel.send(ctx.message.author.mention + " " + lang["slot"]["slot"]["error"]["number_missing"]["channel"], delete_after=5)
 
     await ctx.message.delete()
 
 @client.command(hidden = False, description="unslot the author of the message")
-@commands.cooldown(1,2, commands.BucketType.channel)
+@commands.cooldown(1, 0.5, commands.BucketType.channel)
 @commands.guild_only()
 async def unslot(ctx):
     channel = ctx.message.channel
@@ -121,13 +136,13 @@ async def unslot(ctx):
         await list.write()
         del list
         try:
-            await (await get_channel_author(ctx.channel)).send(f"User: {ctx.message.author} as {ctx.message.author.display_name} **unslotted** for {channel.name}")
-            await ctx.message.author.send(f"Guess we'll be kicking russian butts without you on {'/'.join( ctx.channel.name.split('-')[:-1])}. Who do you think you are, deserting your comrades like this?")
+            await (await get_channel_author(ctx.channel)).send(lang["unslot"]["success"]["channel_author"].format(ctx.message.author, ctx.message.author.display_name, channel.name))
+            await ctx.message.author.send(lang["unslot"]["success"]["user"].format('/'.join( ctx.channel.name.split('-')[:-1])))
         except:
             pass
         await ctx.message.delete()
     else:
-        await channel.send(ctx.message.author.mention + " Du bist nicht eingetragen!", delete_after=5)
+        await channel.send(ctx.message.author.mention + " " + lang["unslot"]["error"]["general"]["channel"], delete_after=5)
         await ctx.message.delete()
 
 @client.command()
@@ -172,53 +187,16 @@ async def create(ctx):                          #makes the slotlist editable for
 
 
     if "Slotlist" in out:
-        await ctx.message.author.send("The event was created successfully")
+        await ctx.message.author.send(lang["create"]["success"]["user"])
     else:
-        await ctx.message.author.send("The Slotlist was not found!")
+        await ctx.message.author.send(lang["create"]["error"]["general"]["user"])
 
     await ctx.message.delete()
 
 
-
-@client.command(hidden = True, description="[User] Unslots an User")
-@has_role(cfg["role"])
-@commands.guild_only()
-async def forceUnslot(ctx):           # [Admin Function] unslots an user
-    channel = ctx.message.channel
-
-    player = ctx.message.content.split(" ")[1:]
-    if not player:
-        await ctx.message.delete()
-        await channel.send(ctx.message.author.mention + " Please specify a **user**!", delete_after=5)
-        return
-
-    seperator  = " "
-    player = seperator.join(player)
-
-    liste, x = await get_list(ctx, client)
-    list = SlotList(liste, message = x)
-
-    if list.exit(player):
-        await list.write()
-        await channel.send(ctx.message.author.mention + " " + player +" wurde erfolgreich  ausgetragen!", delete_after=5)
-        await ctx.message.delete()
-
-        try:
-            member = get_member(ctx.guild, player)
-            await member.send(f"You were removed from the Operation {ctx.channel.name}")
-        except:
-            pass
-
-    else:
-        await channel.send(ctx.message.author.mention + " " + player + " isn't registered!", delete_after=5)
-        await ctx.message.delete()
-
-    del list
-
-
 @client.command(hidden = True, description="[Number] [User] Slots an User in a Slot")
 @has_role(cfg["role"])
-@commands.cooldown(1,2, commands.BucketType.channel)
+@commands.cooldown(1,0.5, commands.BucketType.channel)
 @commands.guild_only()
 async def forceSlot(ctx):      # [Admin Function] slots an user
     channel = ctx.message.channel
@@ -227,7 +205,7 @@ async def forceSlot(ctx):      # [Admin Function] slots an user
 
     if not len(argv) >= 2:
         await ctx.message.delete()
-        await channel.send(ctx.message.author.mention + " Please specify a **slot** and **user**!", delete_after=5)
+        await channel.send(ctx.message.author.mention + " " + lang["forceSlot"]["error"]["arg_error"]["channel"], delete_after=5)
         return
 
 
@@ -236,7 +214,7 @@ async def forceSlot(ctx):      # [Admin Function] slots an user
 
     if not player:
         await ctx.message.delete()
-        await channel.send(ctx.message.author.mention + " Please specify a **user**!", delete_after=5)
+        await channel.send(ctx.message.author.mention + " " + lang["forceSlot"]["error"]["missing_target"]["channel"], delete_after=5)
         return
 
     seperator = " "
@@ -250,20 +228,57 @@ async def forceSlot(ctx):      # [Admin Function] slots an user
     if (list.enter(player, num)):
         await list.write()
         del list
-        await channel.send(ctx.message.author.mention + " The user was successfully slotted!", delete_after=5)
+        await channel.send(ctx.message.author.mention + " " + lang["forceSlot"]["success"]["channel"], delete_after=5)
 
 
 
         try:
             member = get_member(ctx.guild, player)
-            await member.send(f"You were enlisted to the Operation on {'/'.join( ctx.channel.name.split('-')[:-1])} by {str(ctx.message.author.display_name)}")
+            await member.send(lang["forceSlot"]["success"]["target"].format(str(ctx.message.author.display_name), '/'.join( ctx.channel.name.split('-')[:-1])))
         except:
             pass
 
         await ctx.message.delete()
     else:
-        await channel.send(ctx.message.author.mention + " The given slot is invalid or available!", delete_after=5)
+        await channel.send(ctx.message.author.mention + " " + lang["forceSlot"]["error"]["general"]["channel"], delete_after=5)
         await ctx.message.delete()
+
+@client.command(hidden = True, description="[User] Unslots an User")
+@has_role(cfg["role"])
+@commands.cooldown(1,0.5, commands.BucketType.channel)
+@commands.guild_only()
+async def forceUnslot(ctx):           # [Admin Function] unslots an user
+    channel = ctx.message.channel
+
+    player = ctx.message.content.split(" ")[1:]
+    if not player:
+        await ctx.message.delete()
+        await channel.send(ctx.message.author.mention + " " + lang["forceUnslot"]["error"]["missing_target"]["channel"], delete_after=5)
+        return
+
+    seperator  = " "
+    player = seperator.join(player)
+
+    liste, x = await get_list(ctx, client)
+    list = SlotList(liste, message = x)
+
+    if list.exit(player):
+        await list.write()
+        await channel.send(ctx.message.author.mention + " " + lang["forceUnslot"]["success"]["channel"].format(player), delete_after=5)
+        await ctx.message.delete()
+
+        try:
+            member = get_member(ctx.guild, player)
+            await member.send(lang["forceUnslot"]["success"]["target"].format(ctx.channel.name))
+        except:
+            pass
+
+    else:
+        await channel.send(ctx.message.author.mention + " " + lang["forceUnslot"]["error"]["general"]["channel"].format(player), delete_after=5)
+        await ctx.message.delete()
+
+    del list
+
 
 @client.command(hidden = True, description="[Number] [Description] Adds a Slot to the list")
 @has_role(cfg["role"])
@@ -275,7 +290,7 @@ async def addslot(ctx):
 
     if not len(argv) >= 2:
         await ctx.message.delete()
-        await channel.send(ctx.message.author.mention + " Please specify a **slot** and **description**!", delete_after=5)
+        await channel.send(ctx.message.author.mention + " " + lang["addslot"]["error"]["arg_error"]["channel"], delete_after=5)
         return
 
 
@@ -289,11 +304,11 @@ async def addslot(ctx):
         await list.write()
         del list
 
-        await channel.send(ctx.message.author.mention + " The slot was successfully added!", delete_after=5)
+        await channel.send(ctx.message.author.mention + " " + lang["addslot"]["success"]["channel"], delete_after=5)
 
         await ctx.message.delete()
     else:
-        await channel.send(ctx.message.author.mention + " The given slot is invalid or unavailable!", delete_after=5)
+        await channel.send(ctx.message.author.mention + " " + lang["addslot"]["error"]["general"]["channel"], delete_after=5)
         await ctx.message.delete()
 
 @client.command(hidden = True, description="[Number] [Description] Deletes a Slot from the list")
@@ -309,12 +324,12 @@ async def delslot(ctx, slot):
         await list.write()
         del list
 
-        await channel.send(ctx.message.author.mention + " The slot was successfully deleted!", delete_after=5)
+        await channel.send(ctx.message.author.mention + " " + lang["delslot"]["success"]["channel"], delete_after=5)
 
         await ctx.message.delete()
 
     else:
-        await channel.send(ctx.message.author.mention + " The given slot is invalid or unavailable!", delete_after=5)
+        await channel.send(ctx.message.author.mention + " " + lang["delslot"]["error"]["general"]["chennel"], delete_after=5)
         await ctx.message.delete()
 ''' ---        --- '''
 

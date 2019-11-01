@@ -1,0 +1,86 @@
+# English Language File
+
+# User Commands
+
+slot:
+
+  new_user:
+    user: "Welcome to the Rosenrudel!\n To proceed to your first Mission, please report to your Instructor **{}**"
+    channel: "The **new** User: {} as {} **tried** to slot for {channel.name} in Position #{}"
+    instructor: "The **new** User: {} as {} **tried** to slot for {} in Position #{}"
+
+  slot:
+    success:
+      channel_author: "User: {} as {} **slotted** for {} in Position #{}"
+      user: "You have signed up for the assault on {}."
+
+    error:
+      general:
+        channel: " The given slot isn't valid or available!"
+      number_missing:
+        channel: " Please specify the slot (Number)!"
+
+
+unslot:
+
+  success:
+    channel_author: "User: {} as {} **unslotted** for {}"
+    user : "Guess we'll be kicking russian butts without you on {}. Who do you think you are, deserting your comrades like this?"
+
+  error:
+    general:
+      channel: "Your not in the list"
+
+# -------------------------------------------------------------------
+# Admin Commands
+
+create:
+  success:
+    user: "The event was created successfully"
+  error:
+    general:
+      user: "The Slotlist was not found!"
+
+forceSlot:
+  success:
+    channel: "The user was successfully slotted!"
+    target: "You were enlisted to the Operation on {} by {}"
+
+  error:
+    general:
+      channel: "The given slot is invalid or available!"
+    arg_error:
+      channel: "Please specify a **slot** and **user**!"
+    missing_target:
+      channel: "Please specify a **user**!"
+
+forceUnslot:
+
+  success:
+    channel: "{} was removed from the list!"
+    target: "You were removed from the Operation {}"
+
+  error:
+    general:
+      channel: "{} isn't registered!"
+    missing_target:
+      channel: "Please specify a **user**!"
+
+addslot:
+
+  success:
+    channel: "The slot was successfully added!"
+
+  error:
+    general:
+      channel: "The given slot is invalid!"
+    arg_error:
+      channel: "Please specify a **slot** and **description**!"
+
+delslot:
+
+  success:
+    channel: "The slot was successfully deleted!"
+  error:
+    general:
+      channel: "The given slot is invalid or unavailable!"

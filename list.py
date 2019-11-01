@@ -102,7 +102,7 @@ class SlotList():
 
             nearest = argmin(nearest)
             nearest = (liste[nearest])
-            print(nearest)
+
 
 
             for line, index in zip(target, range(len(target))):
