@@ -66,7 +66,6 @@ class SlotList():
 
 
     def enter(self, player, slot): #Slot Player
-
         if not slot in self.data.keys():
             return False
 
@@ -151,14 +150,23 @@ class SlotList():
 
     async def write(self): #Update List in Discord
         output = ""
+        last = ""
         for line in self.msg.splitlines(False):
+            current = line
             if line and line[0] == "#":
+                current = line.split(" ")[1]
+                if  "Reserve" in current and not "Reserve" in last and last != "":
+                    output += "\n"
+
                 for x in line.split("-")[:-1]:
                     output += x + "-"
                 output += f"**{self.data[get_number(line[1:])]}**\n"
+
+
             else:
                 output += line + "\n"
 
+            last = current
         if(self.channel == None):
             await self.message.edit(content=output)
         else:

@@ -25,6 +25,7 @@ unslot:
 
   success:
     channel_author: "User: {} as {} **unslotted** for {}"
+    channel_author_date: "User: {} as {} __**unslotted**__ for {}"
     user : "Guess we'll be kicking russian butts without you on {}. Who do you think you are, deserting your comrades like this?"
 
   error:

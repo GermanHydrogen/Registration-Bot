@@ -108,11 +108,18 @@ async def slot(ctx, num=""):
 
         if(list.enter(ctx.message.author.display_name, num)):
             await list.write()
+            await author.send(lang["slot"]["slot"]["success"]["user"].format('/'.join(ctx.channel.name.split('-')[:-1])))
             try:
                 await channel_author.send(lang["slot"]["slot"]["success"]["channel_author"].format(author, ctx.message.author.display_name, channel.name, num))
-                await author.send(lang["slot"]["slot"]["success"]["user"].format('/'.join( ctx.channel.name.split('-')[:-1])))
             except:
                 pass
+
+            f = open(path + f"/logs/{ctx.message.channel.name}.log", "a")
+            log = str(datetime.datetime.now()) + "\t"
+            log += f"Slot {num} \n"
+            f.write(log)
+            f.close()
+
         else:
             await channel.send(author.mention + " " + lang["slot"]["slot"]["error"]["general"]["channel"], delete_after=5)
 
@@ -135,11 +142,25 @@ async def unslot(ctx):
     if list.exit(ctx.message.author.display_name):
         await list.write()
         del list
-        try:
-            await (await get_channel_author(ctx.channel)).send(lang["unslot"]["success"]["channel_author"].format(ctx.message.author, ctx.message.author.display_name, channel.name))
-            await ctx.message.author.send(lang["unslot"]["success"]["user"].format('/'.join( ctx.channel.name.split('-')[:-1])))
-        except:
-            pass
+        await ctx.message.author.send(lang["unslot"]["success"]["user"].format('/'.join(ctx.channel.name.split('-')[:-1])))
+        if str(TODAY) == ("-").join(channel.name.split("-")[:-1]):
+            try:
+                await (await get_channel_author(ctx.channel)).send(
+                    lang["unslot"]["success"]["channel_author_date"].format(ctx.message.author, ctx.message.author.display_name, channel.name))
+            except:
+                pass
+        else:
+            try:
+                await (await get_channel_author(ctx.channel)).send(lang["unslot"]["success"]["channel_author"].format(ctx.message.author, ctx.message.author.display_name, channel.name))
+            except:
+                pass
+
+        f = open(path + f"/logs/{ctx.message.channel.name}.log", "a")
+        log = str(datetime.datetime.now()) + "\t"
+        log += f"Unslot \n"
+        f.write(log)
+        f.close()
+
         await ctx.message.delete()
     else:
         await channel.send(ctx.message.author.mention + " " + lang["unslot"]["error"]["general"]["channel"], delete_after=5)
@@ -185,9 +206,16 @@ async def create(ctx):                          #makes the slotlist editable for
             await liste.write()
             del liste
 
+            break
 
     if "Slotlist" in out:
         await ctx.message.author.send(lang["create"]["success"]["user"])
+
+        if not os.path.isfile(path + f'/logs/{ctx.message.channel.name}.log'):
+            LOG_FILE = open(path + f"/logs/{ctx.message.channel.name}.log", "w+")
+            LOG_FILE.write(f"---- Created: {datetime.datetime.now()} ----\n\n")
+            LOG_FILE.close()
+
     else:
         await ctx.message.author.send(lang["create"]["error"]["general"]["user"])
 
