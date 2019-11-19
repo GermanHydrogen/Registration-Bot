@@ -90,3 +90,36 @@ delslot:
   error:
     general:
       channel: "Der angegebene Slot ist ungültig!"
+
+editslot:
+
+  success:
+    channel: "Der Slot wurde erfolgreich bearbeitet!"
+
+  error:
+    general:
+      channel: "Der angegebne Slot ist ungültig"
+    arg_error:
+      channel: "Bitte gib einen gültigen **Slot** mit **Beschreibung** an!"
+
+addgroup:
+
+  success:
+    channel: "Die Gruppe wurde erfolgreich hinzugefügt!"
+
+  error:
+    general:
+      channel: "Die angegebene Gruppe ist ungültig"
+    arg_error:
+      channel: "Bitte gib eine gültige Gruppe an!"
+
+delgroup:
+
+  success:
+    channel: "Die Gruppe wurde erfolgreich gelöscht!"
+
+  error:
+    general:
+      channel: "Die angegebene Gruppe ist ungültig"
+    arg_error:
+      channel: "Bitte gib eine gültige Gruppe an!"

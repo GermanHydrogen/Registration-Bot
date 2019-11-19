@@ -4,7 +4,7 @@ import datetime
 
 import re
 from discord.ext import commands
-from discord.ext.commands import Bot, has_permissions, has_role
+from discord.ext.commands import Bot, has_role
 
 from list import SlotList, get_list, get_member, get_channel_author
 
@@ -130,6 +130,7 @@ async def slot(ctx, num=""):
 
     await ctx.message.delete()
 
+
 @client.command(hidden = False, description="unslot the author of the message")
 @commands.cooldown(1, 0.5, commands.BucketType.channel)
 @commands.guild_only()
@@ -203,6 +204,7 @@ async def create(ctx):                          #makes the slotlist editable for
             out.append("Slotlist")
 
             liste = SlotList(msg, channel=channel)
+
             await liste.write()
             del liste
 
@@ -308,7 +310,7 @@ async def forceUnslot(ctx):           # [Admin Function] unslots an user
     del list
 
 
-@client.command(hidden = True, description="[Number] [Description] Adds a Slot to the list")
+@client.command(hidden = True, description="[Number] [Group] [Description] Adds a Slot to the list")
 @has_role(cfg["role"])
 @commands.cooldown(1,2, commands.BucketType.channel)
 @commands.guild_only()
@@ -316,19 +318,20 @@ async def addslot(ctx):
     channel = ctx.message.channel
     argv = ctx.message.content.split(" ")
 
-    if not len(argv) >= 2:
+    if not len(argv) >= 3:
         await ctx.message.delete()
         await channel.send(ctx.message.author.mention + " " + lang["addslot"]["error"]["arg_error"]["channel"], delete_after=5)
         return
 
 
     slot = argv[1]
-    desc = " ".join(argv[2:])
+    group = argv[2]
+    desc = " ".join(argv[3:])
 
     liste, x = await get_list(ctx, client)
     list = SlotList(liste, message=x)
 
-    if(list.add(slot, desc)):
+    if(list.add(slot, group, desc)):
         await list.write()
         del list
 
@@ -338,6 +341,8 @@ async def addslot(ctx):
     else:
         await channel.send(ctx.message.author.mention + " " + lang["addslot"]["error"]["general"]["channel"], delete_after=5)
         await ctx.message.delete()
+
+
 
 @client.command(hidden = True, description="[Number] [Description] Deletes a Slot from the list")
 @has_role(cfg["role"])
@@ -357,8 +362,114 @@ async def delslot(ctx, slot):
         await ctx.message.delete()
 
     else:
-        await channel.send(ctx.message.author.mention + " " + lang["delslot"]["error"]["general"]["chennel"], delete_after=5)
+        await channel.send(ctx.message.author.mention + " " + lang["delslot"]["error"]["general"]["channel"], delete_after=5)
         await ctx.message.delete()
+
+@client.command(hidden = True, description="[Number] [Description] Edits a Slot")
+@has_role(cfg["role"])
+@commands.cooldown(1,2, commands.BucketType.channel)
+@commands.guild_only()
+async def editslot(ctx):
+    channel = ctx.message.channel
+    argv = ctx.message.content.split(" ")
+
+    if not len(argv) >= 2:
+        await ctx.message.delete()
+        await channel.send(ctx.message.author.mention + " " + lang["editslot"]["error"]["arg_error"]["channel"], delete_after=5)
+        return
+
+
+    slot = argv[1]
+    desc = " ".join(argv[2:])
+
+
+    liste, x = await get_list(ctx, client)
+    list = SlotList(liste, message=x)
+
+    if(list.edit(slot, desc)):
+        await list.write()
+        del list
+
+        await channel.send(ctx.message.author.mention + " " + lang["editslot"]["success"]["channel"], delete_after=5)
+
+        await ctx.message.delete()
+    else:
+        await channel.send(ctx.message.author.mention + " " + lang["editslot"]["error"]["general"]["channel"], delete_after=5)
+        await ctx.message.delete()
+
+
+@client.command(hidden=True, description="[Begin] [End] [optional name] Adds a group to the list")
+@has_role(cfg["role"])
+@commands.cooldown(1, 2, commands.BucketType.channel)
+@commands.guild_only()
+async def addgroup(ctx):
+    channel = ctx.message.channel
+    argv = ctx.message.content.split(" ")
+
+    if not len(argv) >= 2:
+        await ctx.message.delete()
+        await channel.send(ctx.message.author.mention + " " + lang["addgroup"]["error"]["arg_error"]["channel"],
+                           delete_after=5)
+        return
+
+    begin = argv[1]
+    end = argv[2]
+    if len(argv) > 3:
+        name = " ".join(argv[3:])
+    else:
+        name = ""
+
+    liste, x = await get_list(ctx, client)
+    list = SlotList(liste, message=x)
+
+    if (list.group_add(begin, end, name)):
+        await list.write()
+        del list
+
+        await channel.send(ctx.message.author.mention + " " + lang["addgroup"]["success"]["channel"], delete_after=5)
+
+        await ctx.message.delete()
+    else:
+        await channel.send(ctx.message.author.mention + " " + lang["addgroup"]["error"]["general"]["channel"],
+                           delete_after=5)
+        await ctx.message.delete()
+
+@client.command(hidden=True, description="[Begin] [End] [optional name] Adds a group to the list")
+@has_role(cfg["role"])
+@commands.cooldown(1, 2, commands.BucketType.channel)
+@commands.guild_only()
+async def delgroup(ctx):
+    channel = ctx.message.channel
+    argv = ctx.message.content.split(" ")
+
+    if not len(argv) >= 2:
+        await ctx.message.delete()
+        await channel.send(ctx.message.author.mention + " " + lang["delgroup"]["error"]["arg_error"]["channel"], #Todo:
+                           delete_after=5)
+        return
+
+    if len(argv) > 1:
+        name = " ".join(argv[1:])
+    else:
+        name = ""
+
+    liste, x = await get_list(ctx, client)
+    list = SlotList(liste, message=x)
+
+    if (list.group_delete(name)):
+        await list.write()
+        del list
+
+        await channel.send(ctx.message.author.mention + " " + lang["delgroup"]["success"]["channel"], delete_after=5) #Todo
+
+        await ctx.message.delete()
+    else:
+        await channel.send(ctx.message.author.mention + " " + lang["delgroup"]["error"]["general"]["channel"],
+                           delete_after=5)
+        await ctx.message.delete()
+
+
+
 ''' ---        --- '''
 
 client.run(cfg['token'])
