@@ -29,8 +29,8 @@ slot:
 unslot:
 
   success:
-    channel_author: "{} ({}) hat sich für das Event {} **ausgetragen**"
-    channel_author_date: "{} ({}) hat sich für das Event {} __**ausgetragen**__"
+    channel_author: "{} ({}) hat sich für das Event {} aus der Position {} **ausgetragen**"
+    channel_author_date: "{} ({}) hat sich für das Event {} aus der Position {} __**ausgetragen**__"
     user : "Du hast dich für das Event am {} ausgetragen."
 
   error:

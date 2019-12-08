@@ -80,19 +80,19 @@ async def on_command_error(ctx, error):
 async def slot(ctx, num=""):
     channel = ctx.message.channel
     channel_author = await get_channel_author(ctx.channel)
-    #channel_name = channel.name.split("-")[-1]
 
     author = ctx.message.author
 
-    instructor = ctx.guild.get_member(cfg["arma3"]) # TODO: STATIC
+    instructor = ctx.guild.get_member(cfg["arma3"])
     if not instructor:
         instructor = ctx.guild.get_member(cfg['backup'])
 
+    backup = ctx.guild.get_member(cfg['backup'])
 
     if not ("ArmA3-Rudelkrieger" in [x.name for x in ctx.message.author.roles]): #TODO: STATIC
 
 
-        # User-Message TODO
+        # User-Message
         await author.send(lang["slot"]["new_user"]["user"].format(instructor.display_name).replace('\\n', '\n'))
         # Channel-Message
         await channel_author.send(lang["slot"]["new_user"]["channel"].format(author, author.display_name , channel.name, num))
@@ -110,6 +110,7 @@ async def slot(ctx, num=""):
             await list.write()
             await author.send(lang["slot"]["slot"]["success"]["user"].format('/'.join(ctx.channel.name.split('-')[:-1])))
             try:
+                await backup.send(lang["slot"]["slot"]["success"]["channel_author"].format(author, ctx.message.author.display_name, channel.name, num))
                 await channel_author.send(lang["slot"]["slot"]["success"]["channel_author"].format(author, ctx.message.author.display_name, channel.name, num))
             except:
                 pass
@@ -140,19 +141,22 @@ async def unslot(ctx):
     liste, x = await get_list(ctx, client)
     list = SlotList(liste, message = x)
 
-    if list.exit(ctx.message.author.display_name):
+    backup = ctx.guild.get_member(cfg['backup'])
+    index = list.exit(ctx.message.author.display_name)
+    if index:
         await list.write()
         del list
         await ctx.message.author.send(lang["unslot"]["success"]["user"].format('/'.join(ctx.channel.name.split('-')[:-1])))
         if str(TODAY) == ("-").join(channel.name.split("-")[:-1]):
             try:
                 await (await get_channel_author(ctx.channel)).send(
-                    lang["unslot"]["success"]["channel_author_date"].format(ctx.message.author, ctx.message.author.display_name, channel.name))
+                    lang["unslot"]["success"]["channel_author_date"].format(ctx.message.author, ctx.message.author.display_name, channel.name, index))
             except:
                 pass
         else:
             try:
-                await (await get_channel_author(ctx.channel)).send(lang["unslot"]["success"]["channel_author"].format(ctx.message.author, ctx.message.author.display_name, channel.name))
+                await backup.send(lang["unslot"]["success"]["channel_author"].format(ctx.message.author, ctx.message.author.display_name, channel.name, index))
+                await (await get_channel_author(ctx.channel)).send(lang["unslot"]["success"]["channel_author"].format(ctx.message.author, ctx.message.author.display_name, channel.name, index))
             except:
                 pass
 

@@ -1,13 +1,19 @@
 import re
 
 from discord import Message
-from numpy import argmin
-
 from math import ceil
 
 
 def get_line_data(line):
+    '''
+    Extracts information from a line of a slotlist
+    Args:
+        line (string): line of a slotlist
 
+    Returns:
+       {num: {"player": playername, "descr": description}}
+
+    '''
     dict = {"desc": "", "player": ""}
     num = ""
     line = line.split("-")
@@ -35,6 +41,14 @@ def get_line_data(line):
     return {num: dict}
 
 def leading_zeros(string):
+    '''
+    Determines the number format
+    Args:
+        string: number
+
+    Returns:
+        (int) : number of leading zeros
+    '''
     lenght = 0
     for x in string:
         if x == "0":
@@ -44,6 +58,17 @@ def leading_zeros(string):
     return lenght
 
 def generator(begin, end):
+    '''
+    Generates a list of formated numbers
+    Args:
+        begin (string): First number
+        end (string): Last number
+
+    Returns:
+        (list)
+
+    '''
+
     b = int(begin)
     e = int(end)
     out = list(range(b, e+1))
@@ -55,19 +80,32 @@ def generator(begin, end):
     return out
 
 
-def get_key(dict, player): #Get Key for an value in dict
-    for num, val in dict.items():
+def get_key(input, player): #
+    '''
+    Gets a key for an value in dict
+    Args:
+        input (dict): Slotlist dictionary
+        player (string):  Playername
+
+    Returns:
+        returns slotnumber
+    '''
+    for num, val in input.items():
         if val["player"] == player:
             return num
 
-def get_free(dict):
+def get_free(slotlist):
     '''
     Takes the slot dictionary and returns the keys of the empty slots.
-    :param dict:
-    :return:
+    Args:
+        slotlist (dict):
+
+    Returns:
+
     '''
+
     output = []
-    for index, elem in dict.items():
+    for index, elem in slotlist.items():
         if elem["player"] == "" and elem["desc"] != "Reserve":
             output.append(index)
 
@@ -77,8 +115,12 @@ def get_group(list, group):
     '''
     Takes the struct list of the Slotlist and returns the index
     of the Group
-    :param list:
-    :return index:
+    Args:
+        list:
+        group:
+
+    Returns:
+
     '''
     for index, elem in enumerate(list, start=0):
         if elem["title"].replace("*", "").replace("__", "") == group:
@@ -86,7 +128,18 @@ def get_group(list, group):
 
     return None
 
-async def get_list(ctx, client): #Get Slotlist from Channel
+
+
+async def get_list(ctx, client):
+    '''
+    Get Slotlist from Channel
+    Args:
+        ctx (command object): Command
+        client (client object): Client
+
+    Returns:
+        (string), (message object): Slotliste, Message of the Slotlist
+    '''
     channel = ctx.message.channel
     async for x in channel.history(limit=1000):
         msg = x.content
@@ -94,6 +147,16 @@ async def get_list(ctx, client): #Get Slotlist from Channel
             return msg, x
 
 def get_member(guild, name):
+    '''
+    Gets a member of a list
+    Args:
+        guild (guild object): Guild
+        name (string): Name of a user
+
+    Returns:
+        (member object)
+
+    '''
     list = guild.members
     for member in list:
         if member.name == name or member.nick == name:
@@ -101,6 +164,14 @@ def get_member(guild, name):
     raise None
 
 async def get_channel_author(channel):
+    '''
+    Gets the author of the channel by checking the first message
+    Args:
+        channel (channel object): Channel
+
+    Returns:
+        (user object): Author
+    '''
     x : Message
     async for x in channel.history(limit=10000):
         pass
@@ -108,10 +179,18 @@ async def get_channel_author(channel):
     return x.author
 
 
-def sort_dict(dict):
+def sort_dict(input):
+    '''
+    Sorts the Slotlist
+    Args:
+        input (dict):
+
+    Returns:
+        (dict): the sorted Slotlist
+    '''
     output = {}
-    for elem in sorted(dict.keys()):
-        output[elem] = dict[elem]
+    for elem in sorted(input.keys()):
+        output[elem] = input[elem]
     return output
 
 def sort_sup(item):
@@ -156,10 +235,18 @@ class SlotList():
                 self.struct.append({"title": line.strip(), "before": current, "begins": "", "ends": ""})
                 current = ""
 
-        print(self.slots)
-        print(self.struct)
 
     def enter(self, player, slot): #Slot Player
+        '''
+
+        Args:
+            player (string): A Player-Name
+            slot (string): A Slot-Number
+
+        Returns:
+            (boolean): True if successfull
+
+        '''
         if not slot in self.slots.keys():
             return False
 
@@ -177,16 +264,35 @@ class SlotList():
 
         return True
 
-    def exit(self, player): #Unslot Player
-        if player in [x["player"] for x in list(self.slots.values())]:
-            self.slots[get_key(self.slots, player)]["player"] = ""
+    def exit(self, player):
+        '''
+        Unslots a given Player
+        Args:
+            player (string):
 
-            return True
+        Returns:
+            (string):  the slotnumber of the player if successfull
+            (bool): False else
+        '''
+        if player in [x["player"] for x in list(self.slots.values())]:
+            index = get_key(self.slots, player)
+            self.slots[index]["player"] = ""
+
+            return index
         else:
             return False
 
 
     def edit(self, slot, desc):
+        '''
+        Edits the description of a given slot in the slotlist
+        Args:
+            slot (string): Slotnumber
+            desc (string): Description
+
+        Returns:
+            (boolean): True if successfull
+        '''
         if not slot in self.slots.keys() or self.slots[slot]["desc"] == "Reserve":
             return False
 
@@ -195,6 +301,16 @@ class SlotList():
             return True
 
     def add(self, slot, group, desc):
+        '''
+        Adds a slot to the slotlist
+        Args:
+            slot (string): Slotnumber
+            group (string): Group name or number to which the slot is been added
+            desc (string): Description of slot
+
+        Returns:
+            (boolean): True if successfull
+        '''
         if slot in self.slots.keys():
             return False
 
@@ -221,6 +337,14 @@ class SlotList():
             return True
 
     def delete(self, slot):
+        '''
+        Deletes a slot from the slotlist
+        Args:
+            slot (string): Slotnumber
+
+        Returns:
+            (boolean): True if successfull
+        '''
         if not slot in self.slots.keys():
             return False
 
@@ -230,6 +354,16 @@ class SlotList():
 
 
     def group_add(self, begin, end, name = ""):
+        '''
+        Adds a group to the slotlist and adds all slot in the given range
+        Args:
+            begin (string): First slotnumber of the group
+            end (string): Last slotnumber of the group
+            name (string) [opt]: Displayed title of the group
+
+        Returns:
+            (boolean): True if successfull
+        '''
         if get_group(self.struct, name.replace("*", "").replace("_", "")) and name.strip():
             return False
         elif not begin.isdigit or not end.isdigit():
@@ -268,7 +402,7 @@ class SlotList():
                     liste.append("0")
 
         nearest = [abs(int(x) - int(begin)) for x in liste]
-        nearest = argmin(nearest)
+        nearest = nearest.index(min(nearest))
 
         buffer = self.struct[nearest+1:]
         self.struct = self.struct[:nearest+1]
@@ -285,6 +419,14 @@ class SlotList():
         return True
 
     def group_delete(self, name):
+        '''
+        Deletes a group from the list
+        Args:
+            name: Name or number of the group
+
+        Returns:
+            (boolean): True if successfull
+        '''
         if not get_group(self.struct, name.replace("*", "").replace("_", "")) and name.strip():
             if name.isdigit() and int(name) < len(self.struct):
                index = int(name)
@@ -300,7 +442,12 @@ class SlotList():
 
         return True
 
+
     async def write(self): #Update List in Discord
+        '''
+        Writes or edits the Slotlist in the discord channel
+        '''
+
 
         free = get_free(self.slots)
         reserve = get_group(self.struct, "Reserve")
