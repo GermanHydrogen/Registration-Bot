@@ -1,5 +1,5 @@
 # Registration-Bot
-A simple Discord Bot for managing registrations to events for your community.
+A simple Discord Bot for managing registrations to events for your community. It's using the discord.py package by Rapptz.
 
 # Deutsch
 
