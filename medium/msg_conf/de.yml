@@ -47,6 +47,22 @@ create:
     general:
       user: "Die Slotliste wurde nicht erkannt!"
 
+campaign:
+  request: "{} macht Dir ein Angebot was Du nicht ablehnen kannst. Möchtest Du beim nächsten Teil seiner Kampagne am
+          {} als {} auf dem Slot {} wieder mitspielen? Bestätige dies bitte innerhalb der nächsten 2 Tage mittels Reaktion,
+          ansonsten steht der Slot wieder zur freien Verfügung."
+  channel:
+    success: "Die Anfragen wurden erfolgreich generiert"
+    error: "Es liegt ein Fehler vor; ist der Event-Name bzw. die Event-ID korrekt?"
+  private:
+    accept:
+      success: "Du hast dich erfolgreich zurückgemeldet"
+      error: "Ein Fehler ist aufgetreten, bitte wende dich an den Missionsbauer oder [RR] Wasserstoff"
+    deny:
+        success: "Du hast dich erfolgreich ausgetragen"
+        error: "Ein Fehler ist aufgetreten, bitte wende dich an den Missionsbauer oder [RR] Wasserstoff"
+    timeout: "Da die Zeit abgelaufen ist, wurdest Du nun automatisch ausgetragen"
+
 forceSlot:
   success:
     channel: "Der User wurde eingetragen!"
