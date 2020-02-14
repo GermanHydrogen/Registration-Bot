@@ -58,13 +58,13 @@ forceSlot:
     arg_error:
       channel: "Bitte gib einen **Slot** und **User** an!"
     missing_target:
-      channel: "Bitte gib einen **User** an!"
+      channel: "Bitte gib einen gültigen **User** an!"
 
 forceUnslot:
 
   success:
     channel: "{} wurde entfernt!"
-    target: "Du wurdest von dem Event {ctx.channel.name} ausgetragen"
+    target: "Du wurdest von dem Event {} ausgetragen"
 
   error:
     general:
