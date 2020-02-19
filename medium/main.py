@@ -197,7 +197,7 @@ async def slot(ctx, num=""):
 
             f = open(path + f"/logs/{ctx.message.channel.name}.log", "a")
             log = str(datetime.datetime.now()) + "\t"
-            log += f"Slot {num} \n"
+            log += f"Slot {num} \t {ctx.message.author} \t {ctx.message.content}\n"
             f.write(log)
             f.close()
 
@@ -252,7 +252,7 @@ async def unslot(ctx):
 
         f = open(path + f"/logs/{ctx.message.channel.name}.log", "a")
         log = str(datetime.datetime.now()) + "\t"
-        log += f"Unslot \n"
+        log += f"Unslot \t {ctx.message.author} \t {ctx.message.content}"
         f.write(log)
         f.close()
 
@@ -396,6 +396,10 @@ async def forceSlot(ctx):  # [Admin Function] slots an user
                            delete_after=5)
         return
 
+    if player == None:
+        await channel.send(ctx.message.author.mention + " " + lang["forceSlot"]["error"]["missing_target"]["channel"],
+                           delete_after=5)
+        return
 
     if (slotEvent(channel, player,  num, force=True)):
 

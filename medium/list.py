@@ -215,28 +215,25 @@ def pull_reserve(id):
     mycursor.execute(sql, [id])
     free = mycursor.fetchall()
 
-    sql = "SELECT Number, User FROM Slot WHERE Event = %s and User IS NOT NULL and Description = 'Reserve' ORDER BY Number;"
+    sql = "SELECT Number, User FROM Slot WHERE Event = %s and User IS NOT NULL and Description = 'Reserve' ORDER BY CONVERT(Number, UNSIGNED INTEGER);"
     mycursor.execute(sql, [id])
     reserve = mycursor.fetchall()
 
-    buffer = free
-
     if free and reserve:
-        for elem in free:
+        for index, elem in enumerate(free, start=0):
+
+            if index == len(reserve):
+                return True
 
             sql = "UPDATE Slot SET User= NULL WHERE Event= %s and Number = %s;"
-            var = [id, reserve[0][0]]
+            var = [id, reserve[index][0]]
             mycursor.execute(sql, var)
             mydb.commit()
 
-            sql = f"UPDATE Slot SET User= %s WHERE Event= %s and Number = %s;"
-            var = [reserve[0][1], id, elem[0]]
+            sql = "UPDATE Slot SET User= %s WHERE Event= %s and Number = %s;"
+            var = [reserve[index][1], id, elem[0]]
             mycursor.execute(sql, var)
             mydb.commit()
-
-            buffer.pop(0)
-            if not buffer:
-                return False
 
         return False
     elif free:
@@ -354,7 +351,7 @@ def createEvent(msg, author, bot=None):
                 struct.append({"Name": "", "Struct": current_buffer})
                 current_buffer = ""
 
-                if list(data.values())[0]["Description"].strip() == "Reserve":
+                if list(data.values())[0]["Description"].strip().replace("**", "") == "Reserve":
                     struct[-1]["Name"] = "**Reserve**"
                     reserve = True
 
@@ -370,7 +367,7 @@ def createEvent(msg, author, bot=None):
         elif line.strip() == "":
             current_buffer += "\n"
         else:
-            if line.strip() == "Reserve":
+            if line.strip().replace("**", "") == "Reserve":
                 reserve = True
             struct.append({"Name": line.strip(), "Struct": current_buffer})
             current_buffer = ""
@@ -543,6 +540,11 @@ def acceptReservation(msg_id):
     mycursor.execute(sql, [str(msg_id)])
     mydb.commit()
 
+    sql = "UPDATE Slot SET User = %s WHERE Event = %s AND User = %s"
+    var = [None, slot[1], slot[0]]
+    mycursor.execute(sql, var)
+    mydb.commit()
+
     sql = "UPDATE Slot SET User = %s WHERE Event = %s AND Number = %s;"
     mycursor.execute(sql, slot)
     mydb.commit()
@@ -656,8 +658,6 @@ def slotEvent(channel, user_id, num, user_displayname= None,force=False):
     var = [user_id, num, channel.id]
     mycursor.execute(sql, var)
     mydb.commit()
-
-    result = None
 
     return True
 
