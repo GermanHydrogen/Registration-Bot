@@ -273,12 +273,12 @@ def sort_reserve(channel):
         if not y:
             continue
         else:
-            sql = "UPDATE Slot SET User = NULL WHERE User = %s;"
-            mycursor.execute(sql, [y])
+            sql = "UPDATE Slot SET User = NULL WHERE User = %s AND Event = %s;"
+            mycursor.execute(sql, [y, channel.id])
             mydb.commit()
 
-            sql = "UPDATE Slot SET User = %s WHERE Number = %s;"
-            var = [y, reserve[count][0]]
+            sql = "UPDATE Slot SET User = %s WHERE Number = %s AND Event = %s;"
+            var = [y, reserve[count][0], channel.id]
             mycursor.execute(sql, var)
             mydb.commit()
 
@@ -455,7 +455,7 @@ async def writeEvent(channel):
 
         sql = "SELECT " \
               "Number , Description, User FROM Slot " \
-              "WHERE Event = %s and GroupID = %s ORDER BY CONVERT(Number,UNSIGNED INTEGER)"
+              "WHERE Event = %s and GroupID = %s ORDER BY CONVERT(Number,UNSIGNED INTEGER);"
         var = [channel_id, element[0]]
         mycursor.execute(sql, var)
         slots = mycursor.fetchall()
@@ -463,7 +463,7 @@ async def writeEvent(channel):
         for x in slots:
             if x[2] is not None:
 
-                sql = "SELECT Nickname FROM User WHERE ID = %s"
+                sql = "SELECT Nickname FROM User WHERE ID = %s;"
                 mycursor.execute(sql, [x[2]])
                 user = mycursor.fetchone()[0]
 
@@ -770,8 +770,8 @@ def delSlot(channel, slot):
     if not mycursor.fetchone():
         return False
 
-    sql = "DELETE FROM Slot WHERE Number = %s;"
-    mycursor.execute(sql, [slot])
+    sql = "DELETE FROM Slot WHERE Event = %s AND Number = %s;"
+    mycursor.execute(sql, [channel.id, slot])
     mydb.commit()
 
     return True
@@ -796,8 +796,8 @@ def editSlot(channel, slot, desc):
     if not mycursor.fetchone():
         return False
 
-    sql = "UPDATE Slot SET Description = %s WHERE Number = %s;"
-    var = [desc, slot]
+    sql = "UPDATE Slot SET Description = %s WHERE Number = %s AND Event = %s;"
+    var = [desc, slot, channel.id]
     mycursor.execute(sql, var)
     mydb.commit()
 
