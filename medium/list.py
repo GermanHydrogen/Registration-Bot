@@ -1,8 +1,8 @@
 import re
 import os
 import yaml
-import datetime
-from discord import *
+
+import discord
 
 from math import ceil
 
@@ -16,19 +16,19 @@ try:
         cfg = yaml.safe_load(ymlfile)
 
     mydb = mysql.connector.connect(
-        host= cfg["host"],
-        user= cfg["user"],
-        passwd= cfg["passwd"],
-        database= cfg["database"]
+        host=cfg["host"],
+        user=cfg["user"],
+        passwd=cfg["passwd"],
+        database=cfg["database"]
     )
 except:
     exit()
-    pass
-
 
 mycursor = mydb.cursor(buffered=True)
+
+
 async def get_list(ctx, client):
-    '''
+    """
     Get Slotlist from Channel
     Args:
         ctx (command object): Command
@@ -36,15 +36,16 @@ async def get_list(ctx, client):
 
     Returns:
         (string), (message object): Slotliste, Message of the Slotlist
-    '''
+    """
     channel = ctx.message.channel
     async for x in channel.history(limit=1000):
         msg = x.content
         if re.search("Slotliste", msg) and x.author == client.user:
             return msg, x
 
+
 def get_line_data(line):
-    '''
+    """
     Extracts information from a line of a slotlist
     Args:
         line (string): line of a slotlist
@@ -52,52 +53,53 @@ def get_line_data(line):
     Returns:
        {num: {"player": playername, "descr": description}}
 
-    '''
-    dict = {"Description": "", "User": ""}
+    """
+    output = {"Description": "", "User": ""}
     num = ""
     line = line.split("-")
 
-    dict["User"] = line[-1].replace("**", "")
+    output["User"] = line[-1].replace("**", "")
     line = "".join(line[:-1])
 
     count = 0
 
     for x in line[1:]:
-        if (x.isdigit()):
+        if x.isdigit():
             num += x
             count += 1
         else:
             break
 
     for x in line[count:]:
-        if(x.isalpha() or x in " ()-"):
-            dict["Description"] += x
+        if x.isalpha() or x in " ()-":
+            output["Description"] += x
 
+    output["Description"] = output["Description"].strip()
+    output["User"] = output["User"].strip()
 
-    dict["Description"] = dict["Description"].strip()
-    dict["User"] = dict["User"].strip()
+    return {num: output}
 
-    return {num: dict}
 
 def get_members(name, channel):
-    '''
+    """
     Gets a member of a list
     Args:
-        guild (guild object): Guild
         name (string): Name of a user
+        channel (discord.TextChannel): channel
 
     Returns:
-        (member object)
+        (discord.Member)
 
-    '''
-    list = channel.guild.members
-    for member in list:
+    """
+    guild_member = channel.guild.members
+    for member in guild_member:
         if member.name == name or member.nick == name:
             return member
     return None
 
+
 def get_user_id(nname, channel):
-    '''
+    """
         Gets an user id
         Args:
             nname (string): Nickname of a user
@@ -106,8 +108,7 @@ def get_user_id(nname, channel):
         Returns:
             (int)
 
-    '''
-
+    """
 
     sql = "SElECT ID FROM User WHERE Nickname = %s;"
     mycursor.execute(sql, [nname])
@@ -127,8 +128,9 @@ def get_user_id(nname, channel):
 
         return nname.id
 
+
 def get_channel_author(channel):
-    '''
+    """
         Gets the author of the channel
         Args:
             channel (channel): Server Channel
@@ -136,7 +138,7 @@ def get_channel_author(channel):
         Returns:
             (member object)
 
-    '''
+    """
     sql = "SELECT User FROM Author WHERE Event = %s;"
     mycursor.execute(sql, [channel.id])
 
@@ -147,8 +149,9 @@ def get_channel_author(channel):
     else:
         return None
 
+
 def get_event_id(name):
-    '''
+    """
             Gets the id of an event
             Args:
                 name (string): Eventname (e.g. 2020-02-13-arma3)
@@ -156,7 +159,7 @@ def get_event_id(name):
             Returns:
                 (string): id
 
-       '''
+       """
 
     sql = "SELECT ID FROM Event WHERE Name = %s;"
     mycursor.execute(sql, [str(name)])
@@ -167,8 +170,9 @@ def get_event_id(name):
     else:
         return None
 
+
 def get_event_date(channel_id):
-    '''
+    """
             Gets the date of an event
             Args:
                 channel_id (string): Server Channel
@@ -176,7 +180,7 @@ def get_event_date(channel_id):
             Returns:
                 (string): date
 
-       '''
+    """
 
     sql = "SELECT Date FROM Event WHERE ID = %s;"
     mycursor.execute(sql, [str(channel_id)])
@@ -186,8 +190,9 @@ def get_event_date(channel_id):
     else:
         return None
 
+
 def get_slots(channel_id):
-    '''
+    """
             Gets all taken slots of the channel
             Args:
                 channel_id (string): Server Channel
@@ -195,28 +200,34 @@ def get_slots(channel_id):
             Returns:
                 (list): [(user, slot-number, description)]
 
-       '''
+       """
     sql = "SELECT User, Number, Description FROM Slot WHERE Event = %s AND Description != %s AND User IS NOT NULL;"
     mycursor.execute(sql, [str(channel_id), 'Reserve'])
 
     return mycursor.fetchall()
 
-def pull_reserve(id):
-    '''
+
+def pull_reserve(event_id):
+    """
         Pulls users from reserve into open slots
         Args:
-            id (int): Event ID
+            event_id (string): Event ID
 
         Returns:
             (bool): if free slots exist
 
-    '''
-    sql = "SELECT Number FROM Slot WHERE Event = %s and User IS NULL and Description != 'Reserve';"
-    mycursor.execute(sql, [id])
+    """
+    sql = "SELECT Number FROM Slot " \
+          "WHERE Event = %s AND User IS NULL AND Description != 'Reserve';"
+
+    mycursor.execute(sql, [event_id])
     free = mycursor.fetchall()
 
-    sql = "SELECT Number, User FROM Slot WHERE Event = %s and User IS NOT NULL and Description = 'Reserve' ORDER BY CONVERT(Number, UNSIGNED INTEGER);"
-    mycursor.execute(sql, [id])
+    sql = "SELECT Number, User FROM Slot " \
+          "WHERE Event = %s and User IS NOT NULL AND Description = 'Reserve' " \
+          "ORDER BY CONVERT(Number, UNSIGNED INTEGER);"
+
+    mycursor.execute(sql, [event_id])
     reserve = mycursor.fetchall()
 
     if free and reserve:
@@ -226,12 +237,12 @@ def pull_reserve(id):
                 return True
 
             sql = "UPDATE Slot SET User= NULL WHERE Event= %s and Number = %s;"
-            var = [id, reserve[index][0]]
+            var = [event_id, reserve[index][0]]
             mycursor.execute(sql, var)
             mydb.commit()
 
             sql = "UPDATE Slot SET User= %s WHERE Event= %s and Number = %s;"
-            var = [reserve[index][1], id, elem[0]]
+            var = [reserve[index][1], event_id, elem[0]]
             mycursor.execute(sql, var)
             mydb.commit()
 
@@ -241,23 +252,24 @@ def pull_reserve(id):
     else:
         return False
 
+
 def sort_reserve(channel):
-    '''
+    """
         Sorts the reserve slots, so its filled from bottom up
         Args:
-            channel (channel): Server channel
+            channel (discord.TextChannel): Server channel
 
         Returns:
             (bool): if successful
 
-    '''
+    """
     sql = "SELECT Number, User FROM Slot WHERE Event = %s and Description = 'Reserve' ORDER BY Number"
     mycursor.execute(sql, [channel.id])
     reserve = mycursor.fetchall()
 
     count = 0
 
-    for x,y in reserve:
+    for x, y in reserve:
         if not y:
             continue
         else:
@@ -272,8 +284,9 @@ def sort_reserve(channel):
 
             count += 1
 
+
 def createEvent(msg, author, bot=None):
-    '''
+    """
            Creates an event in the database
            Args:
                msg (msg object): The message containing the slotlist
@@ -283,9 +296,9 @@ def createEvent(msg, author, bot=None):
            Returns:
                (bool): if successful
 
-    '''
+    """
 
-    input = msg.content
+    content = msg.content
     channel = msg.channel
     split = channel.name.split("-")
     if not (len(split) == 4 and len(split[0]) == 4 and len(split[1]) == 2 and len(split[2]) == 2 and split[3]):
@@ -297,7 +310,7 @@ def createEvent(msg, author, bot=None):
 
     sql = "SELECT ID FROM Event WHERE ID = %s;"
     mycursor.execute(sql, [event])
-    
+
     if mycursor.fetchall():
         sql = "DELETE FROM Slot WHERE Event = %s;"
         mycursor.execute(sql, [event])
@@ -323,7 +336,6 @@ def createEvent(msg, author, bot=None):
             mycursor.execute(sql, var)
             mydb.commit()
 
-
         sql = "INSERT INTO Author VALUES (%s, %s);"
         var = [event, author.id]
 
@@ -342,7 +354,7 @@ def createEvent(msg, author, bot=None):
     current_buffer = ""
     reserve = False
 
-    for line in input.splitlines(False):
+    for line in content.splitlines(False):
         if "Slotliste" in line:
             pass
         elif line and line[0] == "#":
@@ -355,14 +367,13 @@ def createEvent(msg, author, bot=None):
                     struct[-1]["Name"] = "**Reserve**"
                     reserve = True
 
-            data[list(data)[0]]["GroupNum"] = len(struct) -1
+            data[list(data)[0]]["GroupNum"] = len(struct) - 1
             if data[list(data)[0]]["User"]:
                 data[list(data)[0]]["User"] = get_user_id(data[list(data)[0]]["User"], channel)
             else:
                 data[list(data)[0]]["User"] = None
 
             slots.update(data)
-
 
         elif line.strip() == "":
             current_buffer += "\n"
@@ -373,42 +384,44 @@ def createEvent(msg, author, bot=None):
             current_buffer = ""
 
     groupID = {}
-    for a,b,c,d in [(num, event, elem["Name"],elem["Struct"]) for num, elem in enumerate(struct, start=0)]:
+    for a, b, c, d in [(num, event, elem["Name"], elem["Struct"]) for num, elem in enumerate(struct, start=0)]:
         sql = "INSERT INTO SlotGroup (Number, Event, Name, Struct) VALUES (%s, %s, %s, %s);"
-        var = [a,b,c,d]
+        var = [a, b, c, d]
 
         mycursor.execute(sql, var)
         mydb.commit()
 
         groupID[a] = mycursor.lastrowid
 
-
     sql = "INSERT INTO Slot VALUES (%s, %s, %s, %s, %s)"
-    var = [(event, index, elem["Description"], elem["User"], groupID[elem["GroupNum"]]) for index, elem in slots.items()]
+    var = [(event, index, elem["Description"], elem["User"], groupID[elem["GroupNum"]]) for index, elem in
+           slots.items()]
     mycursor.executemany(sql, var)
     mydb.commit()
 
     if not reserve:
         sql = "INSERT INTO SlotGroup (Number, Event, Name, Struct) VALUES (%s, %s, %s, %s);"
-        var =  [list(groupID)[-1]+1 ,channel.id, "Reserve", '\n']
+        var = [list(groupID)[-1] + 1, channel.id, "Reserve", '\n']
 
         mycursor.execute(sql, var)
         mydb.commit()
 
         lenght = int(len(list(slots)) * 0.1) + 1
-        begin = ceil((int(list(slots)[-1]) + 1)/10)*10
-        format = len(list(slots)[-1]) - 1
+        begin = ceil((int(list(slots)[-1]) + 1) / 10) * 10
+        msg_format = len(list(slots)[-1]) - 1
 
         sql = "INSERT INTO Slot (Event, Number, Description,GroupID) VALUES (%s, %s, %s, %s);"
-        var = [(channel.id,str(index).rjust(format, "0"), "Reserve", mycursor.lastrowid) for index in range(begin, begin + lenght)]
+        var = [(channel.id, str(index).rjust(msg_format, "0"), "Reserve", mycursor.lastrowid) for index in
+               range(begin, begin + lenght)]
 
         mycursor.executemany(sql, var)
         mydb.commit()
 
     return True
 
+
 async def writeEvent(channel):
-    '''
+    """
            Outputs the slotlist to a given channel
            Args:
                channel (channel): Server channel
@@ -416,21 +429,20 @@ async def writeEvent(channel):
            Returns:
                (bool): if successful
 
-       '''
+       """
 
+    channel_id = channel.id
 
-    id = channel.id
-
-    free = pull_reserve(id)
+    free = pull_reserve(channel_id)
     sort_reserve(channel)
 
     sql = "SELECT ID, Number, Name, Struct FROM SlotGroup WHERE Event = %s ORDER BY Number;"
-    mycursor.execute(sql, [id])
+    mycursor.execute(sql, [channel_id])
     group = mycursor.fetchall()
 
     output = "**Slotliste**\n"
     for element in group:
-        if (element[2]):
+        if element[2]:
             if element[2] == "Reserve" and free:
                 continue
 
@@ -443,13 +455,13 @@ async def writeEvent(channel):
 
         sql = "SELECT " \
               "Number , Description, User FROM Slot " \
-              "WHERE Event = %s and GroupID = %s ORDER BY CONVERT(Number,UNSIGNED INTEGER) ASC"
-        var = [id, element[0]]
+              "WHERE Event = %s and GroupID = %s ORDER BY CONVERT(Number,UNSIGNED INTEGER)"
+        var = [channel_id, element[0]]
         mycursor.execute(sql, var)
         slots = mycursor.fetchall()
 
         for x in slots:
-            if x[2] != None:
+            if x[2] is not None:
 
                 sql = "SELECT Nickname FROM User WHERE ID = %s"
                 mycursor.execute(sql, [x[2]])
@@ -460,12 +472,11 @@ async def writeEvent(channel):
                 output += f"#{x[0]} {x[1]} - "
             output += "\n"
 
-
     sql = "SELECT Message FROM Event WHERE ID = %s;"
-    mycursor.execute(sql, [id])
+    mycursor.execute(sql, [channel_id])
     msg = mycursor.fetchone()
 
-    if msg and msg[0] != None:
+    if msg and msg[0] is not None:
 
         try:
 
@@ -483,27 +494,25 @@ async def writeEvent(channel):
     else:
         new_msg = await channel.send(output)
 
-
         sql = "UPDATE Event SET Message = %s WHERE ID = %s;"
         var = [new_msg.id, channel.id]
         mycursor.execute(sql, var)
 
         mydb.commit()
 
-def reserveSlots(list):
-    '''
+
+def reserveSlots(query):
+    """
             Creates Requests to Users for paticipating again
             Args:
-                dest_channel (channel): Event channel for which the request are send
-                source_channel_id (string): Event channel id from witch the slots are imported
-                bot (client): Bot user
+                query (list): List containing event-id, user-id, slotnumber, message-id, and date
             Returns:
                 (bool): if successful
-    '''
+    """
 
     try:
         sql = "INSERT INTO CampaignMessage VALUES (%s, %s, %s, %s, %s);"
-        mycursor.executemany(sql, list)
+        mycursor.executemany(sql, query)
         mydb.commit()
     except:
         return False
@@ -511,24 +520,23 @@ def reserveSlots(list):
     # Blocks all reserved slots
     try:
         sql = "UPDATE Slot SET User = %s WHERE Event = %s AND Number = %s;"
-        var = [('C00000000000000000', x[0], x[2]) for x in list]
+        var = [('C00000000000000000', x[0], x[2]) for x in query]
         mycursor.executemany(sql, var)
         mydb.commit()
     except:
         return False
 
-
-
     return True
 
+
 def acceptReservation(msg_id):
-    '''
+    """
             Accept a Reservation
             Args:
                 msg_id (string): ID of the reservation message
             Returns:
                 (string): channel if successfull channel_id, when not None
-    '''
+    """
     sql = "SELECT User, Event, SlotNumber FROM CampaignMessage WHERE MessageID = %s;"
     mycursor.execute(sql, [str(msg_id)])
     slot = mycursor.fetchone()
@@ -551,18 +559,19 @@ def acceptReservation(msg_id):
 
     return slot[1]
 
+
 def denyReservation(msg_id):
-    '''
+    """
             Deny a Reservation
             Args:
                 msg_id (string): ID of the reservation message
             Returns:
                 (string): channel if successfull channel_id, when not None
-    '''
+    """
 
     sql = "SELECT Event, SlotNumber FROM CampaignMessage WHERE MessageID = %s;"
     mycursor.execute(sql, [str(msg_id)])
-    slot =  mycursor.fetchone()
+    slot = mycursor.fetchone()
 
     if not slot:
         return None
@@ -578,16 +587,16 @@ def denyReservation(msg_id):
 
     return slot[0]
 
+
 def cleanupReservation(date):
-    '''
+    """
             Deletes all timeouted reservations
             Args:
-                channel_id (string): id of the event channel
                 date (date): given date
             Returns:
                 (list): list of effected channel ids's
                 (list): list of effected user and msg id's
-    '''
+    """
 
     sql = "SELECT Event, User, SlotNumber, MessageID FROM CampaignMessage WHERE (DATEDIFF(DateUntil, %s) < 0);"
     mycursor.execute(sql, [str(date)])
@@ -608,9 +617,8 @@ def cleanupReservation(date):
     return [x[0] for x in slots], [(x[1], x[3]) for x in slots]
 
 
-
-def slotEvent(channel, user_id, num, user_displayname= None,force=False):
-    '''
+def slotEvent(channel, user_id, num, user_displayname=None, force=False):
+    """
            Slots a given user in the given slot
            Args:
                 channel (channel): Server channel
@@ -622,8 +630,7 @@ def slotEvent(channel, user_id, num, user_displayname= None,force=False):
            Returns:
                (bool): if successful
 
-    '''
-
+    """
 
     sql = "SELECT User FROM Slot WHERE Event = %s and Number = %s;"
     var = [channel.id, num]
@@ -637,12 +644,12 @@ def slotEvent(channel, user_id, num, user_displayname= None,force=False):
     mycursor.execute(sql, [user_id])
     result = mycursor.fetchone()
 
-    if (not force) and (result == None):
+    if (not force) and (result is None):
         sql = "INSERT INTO User VALUES (%s, %s);"
         var = [str(user_id), user_displayname]
         mycursor.execute(sql, var)
         mydb.commit()
-    elif not force and (result != None) and result[1] != user_displayname:
+    elif not force and (result is not None) and result[1] != user_displayname:
         sql = "UPDATE User SET Nickname= %s WHERE ID = %s;"
         var = [str(user_displayname), str(user_id)]
         mycursor.execute(sql, var)
@@ -661,8 +668,9 @@ def slotEvent(channel, user_id, num, user_displayname= None,force=False):
 
     return True
 
+
 def unslotEvent(channel, user_id):
-    '''
+    """
             Unslots a user from an Event
             Args:
                 channel (channel): Server channel
@@ -671,17 +679,17 @@ def unslotEvent(channel, user_id):
            Returns:
                (bool): if successful
 
-       '''
+       """
     sql = "UPDATE Slot SET User = NULL WHERE STRCMP(User, %s) = 0 and Event = %s;"
     var = [user_id, channel.id]
     mycursor.execute(sql, var)
     mydb.commit()
 
-    return (mycursor.rowcount != 0)
+    return mycursor.rowcount != 0
 
 
 def addSlot(channel, slot, group, desc):
-    '''
+    """
            Adds a slot to a given event
            Args:
                 channel (channel): Server channel
@@ -692,7 +700,7 @@ def addSlot(channel, slot, group, desc):
            Returns:
                (bool): if successful
 
-       '''
+       """
 
     sql = "SELECT Description FROM Slot WHERE Event = %s and Number = %s;"
     var = [channel.id, slot]
@@ -715,8 +723,6 @@ def addSlot(channel, slot, group, desc):
     elif result:
         return False
 
-
-
     if group.isdigit():
 
         sql = "SELECT ID FROM SlotGroup WHERE Event = %s ORDER BY Number;"
@@ -738,7 +744,6 @@ def addSlot(channel, slot, group, desc):
         if not group:
             return False
 
-
     sql = "INSERT INTO Slot (Event, Number, Description, GroupID) VALUES (%s, %s, %s, %s);"
     var = [channel.id, slot, desc, group]
     mycursor.execute(sql, var)
@@ -746,8 +751,9 @@ def addSlot(channel, slot, group, desc):
 
     return True
 
+
 def delSlot(channel, slot):
-    '''
+    """
            Deletes a given slot
            Args:
                 channel (channel): Server channel
@@ -756,7 +762,7 @@ def delSlot(channel, slot):
            Returns:
                (bool): if successful
 
-       '''
+       """
 
     sql = "SELECT Number FROM Slot WHERE Event = %s and Number = %s;"
     var = [channel.id, slot]
@@ -770,8 +776,9 @@ def delSlot(channel, slot):
 
     return True
 
+
 def editSlot(channel, slot, desc):
-    '''
+    """
            Edits a slot name
            Args:
                channel (channel): Server channel
@@ -781,7 +788,7 @@ def editSlot(channel, slot, desc):
            Returns:
                (bool): if successful
 
-    '''
+    """
 
     sql = "SELECT Number FROM Slot WHERE Event = %s and Number = %s;"
     var = [channel.id, slot]
@@ -798,7 +805,7 @@ def editSlot(channel, slot, desc):
 
 
 def addGroup(channel, number, name=""):
-    '''
+    """
            Adds a slot-group to a given event
            Args:
                 channel (channel): Server channel
@@ -808,14 +815,14 @@ def addGroup(channel, number, name=""):
            Returns:
                 (bool): if successful
 
-       '''
+       """
     sql = "SELECT Name, Number FROM SlotGroup WHERE Event = %s and Number = %s;"
     var = [channel.id, int(number)]
     mycursor.execute(sql, var)
     result = mycursor.fetchone()
     if result and result[0] == "Reserve":
         sql = "UPDATE SlotGroup SET Number = %s WHERE Event = %s and Name = %s"
-        var = [int(number)+1, channel.id, 'Reserve']
+        var = [int(number) + 1, channel.id, 'Reserve']
         mycursor.execute(sql, var)
         mydb.commit()
 
@@ -829,8 +836,9 @@ def addGroup(channel, number, name=""):
 
     return True
 
+
 def delGroup(channel, group):
-    '''
+    """
             Deletes a slot from a given event
             Args:
                 channel (channel): Server channel
@@ -839,8 +847,7 @@ def delGroup(channel, group):
             Returns:
                (bool): if successful
 
-    '''
-
+    """
 
     if group.isdigit():
         sql = "SELECT ID FROM SlotGroup WHERE Event = %s ORDER BY Number;"
@@ -858,7 +865,6 @@ def delGroup(channel, group):
 
         if not group:
             return False
-
 
     sql = "DELETE FROM Slot WHERE GroupID = %s;"
     mycursor.execute(sql, [group])

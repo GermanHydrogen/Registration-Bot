@@ -1,3 +1,4 @@
-*.logs
+*.log
 **/.idea
-**/config
+**/config.*
+**/__pycache__

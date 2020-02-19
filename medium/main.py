@@ -1,8 +1,5 @@
-import os
-import yaml
 import datetime
 
-import re
 from discord.ext import commands
 from discord.ext.commands import Bot, has_role
 
@@ -53,7 +50,7 @@ async def on_ready():
     guild = client.get_guild(int(cfg['guild']))
     result = cleanupReservation(TODAY)
 
-    if result != None:
+    if result is not None:
         channels = result[0]
         users = result[1]
 
@@ -71,12 +68,13 @@ async def on_ready():
 
     print("Done")
 
+
 ''' ---        ----'''
 
 
 @client.event
 async def on_command_error(ctx, error):
-    if (ctx.message.channel != "DMChannel" and ctx.message.channel != "GroupChannel"):
+    if ctx.message.channel != "DMChannel" and ctx.message.channel != "GroupChannel":
         await ctx.message.delete()
 
     if isinstance(error, commands.CommandOnCooldown):
@@ -96,9 +94,10 @@ async def on_command_error(ctx, error):
 
     raise error
 
+
 @client.event
 async def on_raw_reaction_add(payload):
-    if payload.guild_id != None:
+    if payload.guild_id is not None:
         return
     elif payload.user_id == client.user.id:
         return
@@ -106,7 +105,7 @@ async def on_raw_reaction_add(payload):
     author = client.get_user(payload.user_id)
 
     channel = author.dm_channel
-    if channel == None:
+    if channel is None:
         channel = await author.create_dm()
 
     if channel.id != payload.channel_id:
@@ -143,7 +142,6 @@ async def on_raw_reaction_add(payload):
             await author.send(lang['campaign']['private']['accept']['error'])
 
 
-
 ''' --- User Commands --- '''
 
 
@@ -177,7 +175,7 @@ async def slot(ctx, num=""):
 
     elif num:
 
-        if (slotEvent(channel, author.id, num,user_displayname= author.display_name)):
+        if slotEvent(channel, author.id, num, user_displayname=author.display_name):
             await writeEvent(channel)
 
             await author.send(
@@ -227,7 +225,7 @@ async def unslot(ctx):
         await writeEvent(channel)
         await ctx.message.author.send(
             lang["unslot"]["success"]["user"].format('/'.join(ctx.channel.name.split('-')[:-1])))
-        if str(TODAY) == ("-").join(channel.name.split("-")[:-1]):
+        if str(TODAY) == "-".join(channel.name.split("-")[:-1]):
             try:
                 await channel_author.send(lang["unslot"]["success"]["channel_author_date"].format(ctx.message.author,
                                                                                                   ctx.message.author.display_name,
@@ -268,13 +266,13 @@ async def help(ctx):
     output = "My commands are:\n```yaml\n"
 
     for element in client.commands:
-        if (element != help and not element.hidden):
+        if element != help and not element.hidden:
             output += f"{element}:".ljust(20) + f"{element.description}\n"
 
-    if (cfg['role'] in [x.name for x in ctx.message.author.roles]):
+    if cfg['role'] in [x.name for x in ctx.message.author.roles]:
         output += "\n#Admin Commands:\n"
         for element in client.commands:
-            if (element != help and element.hidden):
+            if element != help and element.hidden:
                 output += f"{element}:".ljust(20) + f"{element.description}\n"
 
     output += "```"
@@ -318,14 +316,16 @@ async def create(ctx):  # makes the slotlist editable for the bot
 
     await ctx.message.delete()
 
+
 @client.command(hidden=True, description="Initialize the slotlist")
 @has_role(cfg["role"])
 @commands.guild_only()
 async def campaign(ctx, event):
     if not str(event).isdigit():
         event = get_event_id(event)
-        if event == None:
-            await ctx.message.channel.send(ctx.message.author.mention + " " + lang["campaign"]["channel"]["error"], delete_after=5)
+        if event is None:
+            await ctx.message.channel.send(ctx.message.author.mention + " " + lang["campaign"]["channel"]["error"],
+                                           delete_after=5)
             return
 
     slots = get_slots(str(event).strip())
@@ -334,7 +334,8 @@ async def campaign(ctx, event):
 
     if not slots:
         await ctx.message.delete()
-        await ctx.message.channel.send(ctx.message.author.mention + " " + lang["campaign"]["channel"]["error"], delete_after=5)
+        await ctx.message.channel.send(ctx.message.author.mention + " " + lang["campaign"]["channel"]["error"],
+                                       delete_after=5)
         return
     else:
         event_date = get_event_date(str(ctx.message.channel.id))
@@ -345,7 +346,10 @@ async def campaign(ctx, event):
             else:
                 try:
                     user = client.get_user(int(elem[0]))
-                    msg = await user.send(lang["campaign"]["request"].format(ctx.message.author.display_name, event_date, elem[2], elem[1]))
+                    msg = await user.send(lang["campaign"]["request"].format(ctx.message.author.display_name,
+                                                                             event_date,
+                                                                             elem[2],
+                                                                             elem[1]))
                     await msg.add_reaction('\N{THUMBS UP SIGN}')
                     await msg.add_reaction('\N{THUMBS DOWN SIGN}')
                     result.append((str(ctx.message.channel.id), elem[0], elem[1], str(msg.id), str(date)))
@@ -353,9 +357,11 @@ async def campaign(ctx, event):
                     continue
 
     if reserveSlots(result):
-        await ctx.message.channel.send(ctx.message.author.mention+ " " + lang["campaign"]["channel"]["success"], delete_after=5)
+        await ctx.message.channel.send(ctx.message.author.mention + " " + lang["campaign"]["channel"]["success"],
+                                       delete_after=5)
     else:
-        await ctx.message.channel.send(ctx.message.author.mention + " " + lang["campaign"]["channel"]["error"], delete_after=5)
+        await ctx.message.channel.send(ctx.message.author.mention + " " + lang["campaign"]["channel"]["error"],
+                                       delete_after=5)
 
     await writeEvent(ctx.message.channel)
 
@@ -396,21 +402,22 @@ async def forceSlot(ctx):  # [Admin Function] slots an user
                            delete_after=5)
         return
 
-    if player == None:
+    if player is None:
         await channel.send(ctx.message.author.mention + " " + lang["forceSlot"]["error"]["missing_target"]["channel"],
                            delete_after=5)
         return
 
-    if (slotEvent(channel, player,  num, force=True)):
+    if slotEvent(channel, player, num, force=True):
 
         await writeEvent(channel)
 
-        await channel.send(ctx.message.author.mention + " " + lang["forceSlot"]["success"]["channel"], delete_after=5)
+        await channel.send(ctx.message.author.mention + " " + lang["forceSlot"]["success"]["channel"],
+                           delete_after=5)
 
         try:
             player = ctx.guild.get_member(int(player))
             await player.send(lang["forceSlot"]["success"]["target"].format(str(ctx.message.author.display_name),
-                                                                        '/'.join(ctx.channel.name.split('-')[:-1])))
+                                                                            '/'.join(ctx.channel.name.split('-')[:-1])))
         except:
             pass
 
@@ -438,7 +445,6 @@ async def forceUnslot(ctx):  # [Admin Function] unslots an user
     player = " ".join(player)
     if not (len(player) > 1 and player[1:].isdigit()):
         player = get_user_id(player, channel)
-
 
     if unslotEvent(channel, player):
         await writeEvent(channel)
@@ -472,11 +478,11 @@ async def addslot(ctx):
                            delete_after=5)
         return
 
-    slot = argv[1]
+    slot_num = argv[1]
     group = argv[2]
     desc = " ".join(argv[3:])
 
-    if (addSlot(channel, slot, group, desc)):
+    if addSlot(channel, slot_num, group, desc):
         await writeEvent(channel)
 
         await channel.send(ctx.message.author.mention + " " + lang["addslot"]["success"]["channel"], delete_after=5)
@@ -492,10 +498,10 @@ async def addslot(ctx):
 @has_role(cfg["role"])
 @commands.cooldown(1, 2, commands.BucketType.channel)
 @commands.guild_only()
-async def delslot(ctx, slot):
+async def delslot(ctx, slot_num):
     channel = ctx.message.channel
 
-    if delSlot(channel, slot):
+    if delSlot(channel, slot_num):
         await writeEvent(channel)
 
         await channel.send(ctx.message.author.mention + " " + lang["delslot"]["success"]["channel"], delete_after=5)
@@ -522,10 +528,10 @@ async def editslot(ctx):
                            delete_after=5)
         return
 
-    slot = argv[1]
+    slot_num = argv[1]
     desc = " ".join(argv[2:])
 
-    if (editSlot(channel, slot, desc)):
+    if editSlot(channel, slot_num, desc):
         await writeEvent(channel)
 
         await channel.send(ctx.message.author.mention + " " + lang["editslot"]["success"]["channel"], delete_after=5)
@@ -557,7 +563,7 @@ async def addgroup(ctx):
     else:
         name = ""
 
-    if (addGroup(channel, number, name)):
+    if addGroup(channel, number, name):
         await writeEvent(channel)
 
         await channel.send(ctx.message.author.mention + " " + lang["addgroup"]["success"]["channel"], delete_after=5)
@@ -588,7 +594,7 @@ async def delgroup(ctx):
     else:
         name = ""
 
-    if (delGroup(channel, name)):
+    if delGroup(channel, name):
         await writeEvent(channel)
 
         await channel.send(ctx.message.author.mention + " " + lang["delgroup"]["success"]["channel"],
@@ -604,4 +610,3 @@ async def delgroup(ctx):
 ''' ---        --- '''
 
 client.run(cfg['token'])
-
