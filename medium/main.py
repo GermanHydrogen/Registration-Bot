@@ -136,7 +136,7 @@ async def on_raw_reaction_add(payload):
             await writeEvent(list_channel)
             await msg.delete()
 
-            await channel.send("``` " + msg.content + " ```")
+            await channel.send("```" + msg.content + " ```")
             await author.send(lang['campaign']['private']['accept']['success'])
         else:
             await author.send(lang['campaign']['private']['accept']['error'])

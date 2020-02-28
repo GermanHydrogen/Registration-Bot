@@ -10,22 +10,16 @@ CREATE TABLE User(
 create TABLE Event(
     ID VARCHAR(18) NOT NULL,
     Name VARCHAR(50),
+    Author VARCHAR(18) NOT NULL,
     Date DATE,
     Type VARCHAR(15),
     Message VARCHAR(18),
-    PRIMARY KEY (ID)
-);
 
-CREATE TABLE Author(
-    Event VARCHAR(18),
-    User VARCHAR(18),
-    CONSTRAINT author PRIMARY KEY (Event, User),
-    FOREIGN KEY (Event) REFERENCES Event(ID),
-    FOREIGN KEY (User) REFERENCES User(ID)
+    PRIMARY KEY (ID),
+    FOREIGN KEY (Author) REFERENCES User(ID)
 );
 
 CREATE TABLE SlotGroup(
-    ID MEDIUMINT UNSIGNED UNIQUE AUTO_INCREMENT,
     Number TINYINT UNSIGNED ,
     Event VARCHAR(18),
     Name VARCHAR(100)
@@ -44,12 +38,11 @@ CREATE TABLE Slot(
         CHARACTER SET utf8mb4
         COLLATE utf8mb4_unicode_ci,
     User VARCHAR(18),
-    GroupID MEDIUMINT UNSIGNED,
+    GroupNumber TINYINT UNSIGNED NOT NULL,
 
   CONSTRAINT prim PRIMARY KEY (Event, Number),
   FOREIGN KEY (User) REFERENCES User(ID),
-  FOREIGN KEY (GroupID) REFERENCES SlotGroup(ID) ON DELETE CASCADE ,
-  FOREIGN KEY (Event) References Event(ID)
+  FOREIGN KEY (Event, GroupNumber) REFERENCES SlotGroup(Event, Number) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE CampaignMessage
@@ -63,14 +56,13 @@ CREATE TABLE CampaignMessage
     DateUntil DATE,
 
     CONSTRAINT prim PRIMARY KEY (Event, User),
-    FOREIGN KEY (Event) REFERENCES Event(ID),
     FOREIGN KEY (User) REFERENCES User(ID),
     FOREIGN KEY (Event, SlotNumber) REFERENCES Slot(Event, Number)
 );
 
+
 INSERT INTO User VALUES ('A00000000000000000', 'K.I.A.');
 INSERT INTO User VALUES ('B00000000000000000', 'M.I.A.');
 INSERT INTO User VALUES ('C00000000000000000', 'BLOCKED');
-
-
+INSERT INTO User VALUES ('D00000000000000000', 'Auf Nachfrage beim Missionsbauer');
 

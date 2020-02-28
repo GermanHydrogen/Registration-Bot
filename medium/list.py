@@ -139,7 +139,7 @@ def get_channel_author(channel):
             (member object)
 
     """
-    sql = "SELECT User FROM Author WHERE Event = %s;"
+    sql = "SELECT Author FROM Event WHERE ID = %s;"
     mycursor.execute(sql, [channel.id])
 
     result = mycursor.fetchone()
@@ -321,12 +321,7 @@ def createEvent(msg, author, bot=None):
 
         mydb.commit()
     else:
-        sql = "INSERT INTO Event (ID, Name, Date, Type) VALUES (%s, %s, %s, %s);"
-        var = [event, channel.name, date, name]
-        mycursor.execute(sql, var)
-
-        mydb.commit()
-
+        # Check if Author User exists
         sql = "SELECT ID FROM User WHERE ID = %s;"
         mycursor.execute(sql, [author.id])
 
@@ -336,10 +331,10 @@ def createEvent(msg, author, bot=None):
             mycursor.execute(sql, var)
             mydb.commit()
 
-        sql = "INSERT INTO Author VALUES (%s, %s);"
-        var = [event, author.id]
-
+        sql = "INSERT INTO Event (ID, Name, Author, Date, Type) VALUES (%s, %s, %s, %s, %s);"
+        var = [event, channel.name, author.id, date, name]
         mycursor.execute(sql, var)
+
         mydb.commit()
 
     if msg.author == bot:
@@ -383,7 +378,6 @@ def createEvent(msg, author, bot=None):
             struct.append({"Name": line.strip(), "Struct": current_buffer})
             current_buffer = ""
 
-    groupID = {}
     for a, b, c, d in [(num, event, elem["Name"], elem["Struct"]) for num, elem in enumerate(struct, start=0)]:
         sql = "INSERT INTO SlotGroup (Number, Event, Name, Struct) VALUES (%s, %s, %s, %s);"
         var = [a, b, c, d]
@@ -391,17 +385,16 @@ def createEvent(msg, author, bot=None):
         mycursor.execute(sql, var)
         mydb.commit()
 
-        groupID[a] = mycursor.lastrowid
-
     sql = "INSERT INTO Slot VALUES (%s, %s, %s, %s, %s)"
-    var = [(event, index, elem["Description"], elem["User"], groupID[elem["GroupNum"]]) for index, elem in
+    var = [(event, index, elem["Description"], elem["User"], elem["GroupNum"]) for index, elem in
            slots.items()]
     mycursor.executemany(sql, var)
     mydb.commit()
 
     if not reserve:
+        groupNum = list(slots.values())[-1]["GroupNum"] + 1
         sql = "INSERT INTO SlotGroup (Number, Event, Name, Struct) VALUES (%s, %s, %s, %s);"
-        var = [list(groupID)[-1] + 1, channel.id, "Reserve", '\n']
+        var = [groupNum, channel.id, "Reserve", '\n']
 
         mycursor.execute(sql, var)
         mydb.commit()
@@ -410,8 +403,8 @@ def createEvent(msg, author, bot=None):
         begin = ceil((int(list(slots)[-1]) + 1) / 10) * 10
         msg_format = len(list(slots)[-1]) - 1
 
-        sql = "INSERT INTO Slot (Event, Number, Description,GroupID) VALUES (%s, %s, %s, %s);"
-        var = [(channel.id, str(index).rjust(msg_format, "0"), "Reserve", mycursor.lastrowid) for index in
+        sql = "INSERT INTO Slot (Event, Number, Description, GroupNumber) VALUES (%s, %s, %s, %s);"
+        var = [(channel.id, str(index).rjust(msg_format, "0"), "Reserve", groupNum) for index in
                range(begin, begin + lenght)]
 
         mycursor.executemany(sql, var)
@@ -436,30 +429,29 @@ async def writeEvent(channel):
     free = pull_reserve(channel_id)
     sort_reserve(channel)
 
-    sql = "SELECT ID, Number, Name, Struct FROM SlotGroup WHERE Event = %s ORDER BY Number;"
+    sql = "SELECT Number, Name, Struct FROM SlotGroup WHERE Event = %s ORDER BY Number;"
     mycursor.execute(sql, [channel_id])
     group = mycursor.fetchall()
 
     output = "**Slotliste**\n"
     for element in group:
-        if element[2]:
-            if element[2] == "Reserve" and free:
+        if element[1]:
+            if element[1] == "Reserve" and free:
                 continue
 
-            if element[2] != "":
-                output += element[3]
-                output += f"{element[2]}" + "\n"
+            if element[1] != "":
+                output += element[2]
+                output += f"{element[1]}" + "\n"
         else:
 
-            output += element[3]
+            output += element[2]
 
         sql = "SELECT " \
               "Number , Description, User FROM Slot " \
-              "WHERE Event = %s and GroupID = %s ORDER BY CONVERT(Number,UNSIGNED INTEGER);"
+              "WHERE Event = %s and GroupNumber = %s ORDER BY CONVERT(Number,UNSIGNED INTEGER);"
         var = [channel_id, element[0]]
         mycursor.execute(sql, var)
         slots = mycursor.fetchall()
-
         for x in slots:
             if x[2] is not None:
 
@@ -637,7 +629,7 @@ def slotEvent(channel, user_id, num, user_displayname=None, force=False):
     mycursor.execute(sql, var)
     slot = mycursor.fetchone()
 
-    if slot is None:
+    if slot is None or slot[0] is not None:
         return False
 
     sql = "SELECT ID, Nickname FROM User WHERE ID = %s;"
@@ -725,18 +717,15 @@ def addSlot(channel, slot, group, desc):
 
     if group.isdigit():
 
-        sql = "SELECT ID FROM SlotGroup WHERE Event = %s ORDER BY Number;"
-        mycursor.execute(sql, [channel.id])
+        sql = "SELECT Number FROM SlotGroup WHERE Event = %s AND Number = %s;"
+        mycursor.execute(sql, [channel.id, group])
 
-        try:
-            group = mycursor.fetchall()[int(group)][0]
-
-        except:
+        if mycursor.fetchall() is None:
             return False
 
     else:
 
-        sql = "SELECT ID FROM SlotGroup WHERE Event = %s and Name = %s;"
+        sql = "SELECT Number FROM SlotGroup WHERE Event = %s and Name = %s;"
         var = [channel.id, group]
         mycursor.execute(sql, var)
         group = mycursor.fetchone()[0]
@@ -744,7 +733,7 @@ def addSlot(channel, slot, group, desc):
         if not group:
             return False
 
-    sql = "INSERT INTO Slot (Event, Number, Description, GroupID) VALUES (%s, %s, %s, %s);"
+    sql = "INSERT INTO Slot (Event, Number, Description, GroupNumber) VALUES (%s, %s, %s, %s);"
     var = [channel.id, slot, desc, group]
     mycursor.execute(sql, var)
     mydb.commit()
@@ -850,28 +839,28 @@ def delGroup(channel, group):
     """
 
     if group.isdigit():
-        sql = "SELECT ID FROM SlotGroup WHERE Event = %s ORDER BY Number;"
-        mycursor.execute(sql, [channel.id])
-        try:
-            group = mycursor.fetchall()[int(group)][0]
-        except:
+        sql = "SELECT Number FROM SlotGroup WHERE Event = %s AND Number = %s;"
+        mycursor.execute(sql, [channel.id, group])
+
+        if mycursor.fetchone() is None:
             return False
 
     else:
-        sql = "SELECT ID FROM SlotGroup WHERE Event = %s and Name = %s;"
+        sql = "SELECT Number FROM SlotGroup WHERE Event = %s AND Name = %s;"
         var = [channel.id, group]
         mycursor.execute(sql, var)
-        group = mycursor.fetchone()[0]
 
         if not group:
             return False
 
-    sql = "DELETE FROM Slot WHERE GroupID = %s;"
-    mycursor.execute(sql, [group])
+        group = mycursor.fetchone()[0]
+
+    sql = "DELETE FROM Slot WHERE GroupNumber = %s AND Event = %s;"
+    mycursor.execute(sql, [group, channel.id])
     mydb.commit()
 
-    sql = "DELETE FROM SlotGroup WHERE ID = %s;"
-    mycursor.execute(sql, [group])
+    sql = "DELETE FROM SlotGroup WHERE Number = %s AND Event = %s;"
+    mycursor.execute(sql, [group, channel.id])
     mydb.commit()
 
     return True
