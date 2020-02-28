@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 from discord.ext import commands
 from discord.ext.commands import Bot, has_role
@@ -37,10 +38,18 @@ else:
 
 TODAY = datetime.date.today()
 
-if not os.path.isfile(path + f'/logs/{TODAY}.log'):
-    LOG_FILE = open(path + f"/logs/{TODAY}.log", "w+")
-    LOG_FILE.write(f"---- Created: {datetime.datetime.now()} ----\n\n")
-    LOG_FILE.close()
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+handler = logging.FileHandler(filename=f"logs/{TODAY}.log", encoding='utf-8', mode='a')
+handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s: %(message)s'))
+logger.addHandler(handler)
+
+discord_logger = logging.getLogger('discord')
+discord_logger.setLevel(logging.DEBUG)
+discord_handler = logging.FileHandler(filename='logs/discord.log', encoding='utf-8', mode='w')
+discord_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+discord_logger.addHandler(discord_handler)
 
 
 # Campaign-MSG cleanup
@@ -83,14 +92,12 @@ async def on_command_error(ctx, error):
         await ctx.send(ctx.message.author.mention + " Command not found! Check **!help** for all commands",
                        delete_after=5)
 
-    f = open(path + f"/logs/{TODAY}.log", "a")
-    log = str(datetime.datetime.now()) + "\t"
-    log += "User: " + str(ctx.message.author).ljust(20) + "\t"
+    log = "User: " + str(ctx.message.author).ljust(20) + "\t"
     log += "Channel:" + str(ctx.message.channel).ljust(20) + "\t"
-    log += "Command: " + str(ctx.message.content) + "\t"
-    log += str(error) + "\n"
-    f.write(log)
-    f.close()
+    log += "Command: " + str(ctx.message.content).ljust(20) + "\t"
+    log += str(error)
+
+    logger.error(log)
 
     raise error
 
@@ -193,11 +200,10 @@ async def slot(ctx, num=""):
                     pass
                 pass
 
-            f = open(path + f"/logs/{ctx.message.channel.name}.log", "a")
-            log = str(datetime.datetime.now()) + "\t"
-            log += f"Slot {num} \t {ctx.message.author} \t {ctx.message.content}\n"
-            f.write(log)
-            f.close()
+            log = "User: " + str(ctx.message.author).ljust(20) + "\t"
+            log += "Channel:" + str(ctx.message.channel).ljust(20) + "\t"
+            log += "Command: " + str(ctx.message.content).ljust(20) + "\t"
+            logger.debug(log)
 
         else:
             await channel.send(author.mention + " " + lang["slot"]["slot"]["error"]["general"]["channel"],
@@ -248,11 +254,10 @@ async def unslot(ctx):
             except:
                 pass
 
-        f = open(path + f"/logs/{ctx.message.channel.name}.log", "a")
-        log = str(datetime.datetime.now()) + "\t"
-        log += f"Unslot \t {ctx.message.author} \t {ctx.message.content}"
-        f.write(log)
-        f.close()
+        log = "User: " + str(ctx.message.author).ljust(20) + "\t"
+        log += "Channel:" + str(ctx.message.channel).ljust(20) + "\t"
+        log += "Command: " + str(ctx.message.content).ljust(20) + "\t"
+        logger.debug(log)
 
         await ctx.message.delete()
     else:
@@ -421,6 +426,11 @@ async def forceSlot(ctx):  # [Admin Function] slots an user
         except:
             pass
 
+        log = "User: " + str(ctx.message.author).ljust(20) + "\t"
+        log += "Channel:" + str(ctx.message.channel).ljust(20) + "\t"
+        log += "Command: " + str(ctx.message.content).ljust(20) + "\t"
+        logger.debug(log)
+
         await ctx.message.delete()
     else:
         await channel.send(ctx.message.author.mention + " " + lang["forceSlot"]["error"]["general"]["channel"],
@@ -451,6 +461,11 @@ async def forceUnslot(ctx):  # [Admin Function] unslots an user
         await channel.send(ctx.message.author.mention + " " + lang["forceUnslot"]["success"]["channel"].format(player),
                            delete_after=5)
         await ctx.message.delete()
+
+        log = "User: " + str(ctx.message.author).ljust(20) + "\t"
+        log += "Channel:" + str(ctx.message.channel).ljust(20) + "\t"
+        log += "Command: " + str(ctx.message.content).ljust(20) + "\t"
+        logger.debug(log)
 
         try:
             await player.send(lang["forceUnslot"]["success"]["target"].format(channel.name))
