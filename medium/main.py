@@ -41,13 +41,13 @@ TODAY = datetime.date.today()
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-handler = logging.FileHandler(filename=f"logs/{TODAY}.log", encoding='utf-8', mode='a')
+handler = logging.FileHandler(filename=path + f"/logs/{TODAY}.log", encoding='utf-8', mode='a')
 handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s: %(message)s'))
 logger.addHandler(handler)
 
 discord_logger = logging.getLogger('discord')
 discord_logger.setLevel(logging.DEBUG)
-discord_handler = logging.FileHandler(filename='logs/discord.log', encoding='utf-8', mode='w')
+discord_handler = logging.FileHandler(filename=path + '/logs/discord.log', encoding='utf-8', mode='w')
 discord_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 discord_logger.addHandler(discord_handler)
 
@@ -62,7 +62,6 @@ async def on_ready():
     if camp is not None:
         channels = camp[0]
         users = camp[1]
-
 
         for elem in channels:
             channel = guild.get_channel(int(elem))
@@ -406,11 +405,6 @@ async def create(ctx):  # makes the slotlist editable for the bot
 
     if "Slotlist" in out:
         await ctx.message.author.send(lang["create"]["success"]["user"])
-
-        if not os.path.isfile(path + f'/logs/{ctx.message.channel.name}.log'):
-            LOG_FILE = open(path + f"/logs/{ctx.message.channel.name}.log", "w+")
-            LOG_FILE.write(f"---- Created: {datetime.datetime.now()} ----\n\n")
-            LOG_FILE.close()
 
     else:
         await ctx.message.author.send(lang["create"]["error"]["general"]["user"])
