@@ -37,6 +37,33 @@ unslot:
     general:
       channel: "Du kannst dich nicht austragen, wenn du nicht in der Liste eingetragen bist"
 
+trade:
+  request: "{} möchte mit Dir seinen Slot für das Event {} tauschen. Du kannst dies in den nächsten 24h mittels
+            Reaktion bestätigen oder ablehnen. Bei Ablauf der Frist, wird die Anfrage automatisch abgelehnt."
+
+  private:
+    timeout:
+      rec: "Die Zeit für die Anfrage von {} für das Event {} ist abgelaufen."
+      req: "Die Zeit für die Anfrage an {} für das Event {} ist abgelaufen."
+
+    accept:
+      rec: "Du hast den Slot mit {} in dem Event {} getauscht."
+      req: "{} hat deinem Tauschangebot für das Event {} zugestimmt."
+      error: "Ein Fehler ist aufgetreten. Bitte wende dich an [RR] Wasserstoff."
+
+    deny:
+      rec: "Du hast das Tauschangebot von {} für das Event {} abgelehnt."
+      req: "{} hat das Tauschangebot für das Event {} abgelehnt."
+      error: "Ein Fehler ist aufgetreten. Bitte wende dich an [RR] Wasserstoff."
+
+  channel:
+    error:
+      arg: "Bitte gib einen gültigen Nutzer an!"
+      val: "Bitte git einen gültigen Nutzer an, welcher auch in der Slotliste eingetragen ist!"
+      send: "Ein Fehler ist aufgetreten, bitte wende dich an [RR] Wasserstoff!"
+
+    sucess: "Du hast erfolgreich ein Tauschangebot abgeschickt."
+
 # -------------------------------------------------------------------
 # Admin Commands
 

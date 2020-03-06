@@ -45,36 +45,24 @@ CREATE TABLE IF NOT EXISTS Slot(
   FOREIGN KEY (Event, GroupNumber) REFERENCES SlotGroup(Event, Number) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS CampaignMessage
+CREATE TABLE IF NOT EXISTS Message
 (
     Event VARCHAR(18),
-    User VARCHAR(18),
+    User VARCHAR(18) CHECK(User regexp '^[0-9]'),
 
+    RecUser VARCHAR(18) CHECK(RecUser regexp '^[0-9]'),
     SlotNumber VARCHAR(4),
 
-    MessageID VARCHAR(18) UNIQUE,
-    DateUntil DATE,
-
-    CONSTRAINT prim PRIMARY KEY (Event, User),
-    FOREIGN KEY (User) REFERENCES User(ID),
-    FOREIGN KEY (Event, SlotNumber) REFERENCES Slot(Event, Number)
-);
-
-CREATE TABLE IF NOT EXISTS TradeMessage(
-
-    Event VARCHAR(18),
-
-    ReqUser VARCHAR(18) CHECK(ReqUser regexp '^[0-9]'),
-    RecUser VARCHAR(18) NOT NULL CHECK(RecUser regexp '^[0-9]'),
-
-    MessageID VARCHAR(18) NOT NULL UNIQUE,
+    MessageID VARCHAR(18) UNIQUE NOT NULL ,
     DateUntil DATE NOT NULL ,
 
-    CONSTRAINT prim PRIMARY KEY (Event, ReqUser),
-    CONSTRAINT user CHECK (ReqUser != RecUser),
-    FOREIGN KEY (Event) REFERENCES Event(ID),
-    FOREIGN KEY (ReqUser) REFERENCES User(ID),
-    FOREIGN KEY (RecUser) REFERENCES User(ID)
+    CONSTRAINT prim PRIMARY KEY (Event, User),
+    CONSTRAINT type CHECK(RecUser is not NULL or SlotNumber is not NULL),
+    CONSTRAINT user CHECK (User != RecUser),
+
+    FOREIGN KEY (User) REFERENCES User(ID),
+    FOREIGN KEY (RecUser) REFERENCES User(ID),
+    FOREIGN KEY (Event, SlotNumber) REFERENCES Slot(Event, Number)
 );
 
 

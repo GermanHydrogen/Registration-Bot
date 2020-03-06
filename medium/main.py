@@ -57,11 +57,12 @@ discord_logger.addHandler(discord_handler)
 @client.event
 async def on_ready():
     guild = client.get_guild(int(cfg['guild']))
-    result = cleanupReservation(TODAY)
+    camp, trade = cleanupMessage(TODAY)
 
-    if result is not None:
-        channels = result[0]
-        users = result[1]
+    if camp is not None:
+        channels = camp[0]
+        users = camp[1]
+
 
         for elem in channels:
             channel = guild.get_channel(int(elem))
@@ -75,9 +76,26 @@ async def on_ready():
             await user.send("``` " + msg.content + " ```")
             await user.send(lang['campaign']['private']['timeout'])
 
+    if trade is not None:
+        for elem in trade:
+            channel_name = guild.get_channel(int(elem[0])).name
+
+            req_user = client.get_user(int(elem[1]))
+            rec_user = client.get_user(int(elem[2]))
+
+            nickname = guild.get_member(req_user).display_name
+
+            msg = await rec_user.fetch_message(int(elem[3]))
+
+            await msg.delete()
+            await rec_user.send("``` " + msg.content + " ```")
+            await rec_user.send(lang['trade']['private']['timeout']['rec'].format(nickname, channel_name))
+
+            nickname = guild.get_member(rec_user).display_name
+            await req_user.send(lang['trade']['private']['timeout']['req'].format(nickname, channel_name))
+
     print("Done")
-
-
+    logger.info("Server Started")
 ''' ---        ----'''
 
 
@@ -104,6 +122,8 @@ async def on_command_error(ctx, error):
 
 @client.event
 async def on_raw_reaction_add(payload):
+    guild = client.get_guild(int(cfg['guild']))
+
     if payload.guild_id is not None:
         return
     elif payload.user_id == client.user.id:
@@ -121,32 +141,66 @@ async def on_raw_reaction_add(payload):
     msg = await channel.fetch_message(payload.message_id)
 
     if payload.emoji.name == '👎':
-        list_channel_id = denyReservation(str(msg.id))
-        if list_channel_id:
-            guild = client.get_guild(int(cfg['guild']))
-            list_channel = guild.get_channel(int(list_channel_id))
+        types, result = denyMessage(str(msg.id))
 
-            await writeEvent(list_channel)
-            await msg.delete()
-
-            await channel.send("``` " + msg.content + " ```")
-            await author.send(lang['campaign']['private']['deny']['success'])
+        if not result:
+            await author.send(lang[types]['private']['deny']['error'])
         else:
-            await author.send(lang['campaign']['private']['deny']['error'])
+
+            if types == "campaign":
+                guild = client.get_guild(int(cfg['guild']))
+                result = guild.get_channel(int(result))
+
+                await writeEvent(result)
+                await msg.delete()
+                await channel.send("``` " + msg.content + " ```")
+                await author.send(lang['campaign']['private']['deny']['success'])
+
+
+            else:
+                channel_name = guild.get_channel(int(result[0])).name
+
+                req_user = client.get_user(int(result[1]))
+                rec_user = client.get_user(int(result[2]))
+
+                nickname = guild.get_member(rec_user).display_name
+
+                await req_user.send(lang['trade']['private']['deny']['req'].format(nickname, channel_name))
+
+                await msg.delete()
+                await channel.send("``` " + msg.content + " ```")
+
+                nickname = guild.get_member(req_user).display_name
+                await author.send(lang['trade']['private']['deny']['rec'].format(nickname, channel_name))
 
     elif payload.emoji.name == '👍':
-        list_channel_id = acceptReservation(str(msg.id))
-        if list_channel_id:
-            guild = client.get_guild(int(cfg['guild']))
-            list_channel = guild.get_channel(int(list_channel_id))
-
-            await writeEvent(list_channel)
-            await msg.delete()
-
-            await channel.send("```" + msg.content + " ```")
-            await author.send(lang['campaign']['private']['accept']['success'])
+        types, result = acceptMessage(str(msg.id))
+        if not result:
+            await author.send(lang[types]['private']['accept']['error'])
         else:
-            await author.send(lang['campaign']['private']['accept']['error'])
+            if types == "campaign":
+                guild = client.get_guild(int(cfg['guild']))
+                result = guild.get_channel(int(result))
+
+                await writeEvent(result)
+                await msg.delete()
+                await channel.send("```" + msg.content + " ```")
+                await author.send(lang['campaign']['private']['accept']['success'])
+            else:
+                channel_name = guild.get_channel(int(result[0])).name
+
+                req_user = client.get_user(int(result[1]))
+                rec_user = client.get_user(int(result[2]))
+
+                nickname = guild.get_member(rec_user).display_name
+
+                await req_user.send(lang['trade']['private']['accept']['req'].format(nickname, channel_name))
+
+                await msg.delete()
+                await channel.send("```" + msg.content + " ```")
+
+                nickname = guild.get_member(rec_user).display_name
+                await author.send(lang['trade']['private']['accept']['rec'].format(nickname, channel_name))
 
 
 ''' --- User Commands --- '''
@@ -265,6 +319,48 @@ async def unslot(ctx):
                            delete_after=5)
         await ctx.message.delete()
 
+@client.command(hidden=False, description="[user] Sends a trademsg to the user")
+@commands.cooldown(1, 0.5, commands.BucketType.channel)
+@commands.guild_only()
+async def trade(ctx):
+    pass
+    channel = ctx.message.channel
+    date = datetime.date.today() + datetime.timedelta(days=1)
+
+    argv = ctx.message.content.split(" ")
+
+    if not len(argv) >= 2:
+        await ctx.message.delete()
+        await channel.send(ctx.message.author.mention + " " + lang["trade"]["channel"]["error"]["argv"],
+                           delete_after=5)
+        return
+
+    reqUser = ctx.message.author.id
+    recUser = get_user_id(" ".join(argv[0:]), channel)
+
+    if not validateTrade(channel.id, reqUser, recUser):
+        await ctx.message.delete()
+        await channel.send(ctx.message.author.mention + " " + lang["trade"]["channel"]["error"]["val"],
+                           delete_after=5)
+
+        return
+
+    try:
+        user = client.get_user(int(recUser))
+        msg = await user.send(lang["trade"]["request"].format(ctx.message.author, channel.name))
+        await msg.add_reaction('\N{THUMBS UP SIGN}')
+        await msg.add_reaction('\N{THUMBS DOWN SIGN}')
+
+        createTrade(str(channel.id), str(reqUser), str(recUser), str(msg.id), date)
+    except:
+        await ctx.message.delete()
+        await channel.send(ctx.message.author.mention + " " + lang["trade"]["channel"]["error"]["send"],
+                           delete_after=5)
+        return
+
+    await ctx.message.delete()
+    await channel.send(ctx.message.author.mention + " " + lang["trade"]["channel"]["success"],
+                       delete_after=5)
 
 @client.command()
 async def help(ctx):

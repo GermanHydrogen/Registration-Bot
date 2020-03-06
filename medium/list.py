@@ -21,10 +21,10 @@ try:
         passwd=cfg["passwd"],
         database=cfg["database"]
     )
+
+    mycursor = mydb.cursor(buffered=True)
 except:
     exit()
-
-mycursor = mydb.cursor(buffered=True)
 
 
 async def get_list(ctx, client):
@@ -503,7 +503,7 @@ def reserveSlots(query):
     """
 
     try:
-        sql = "INSERT INTO CampaignMessage VALUES (%s, %s, %s, %s, %s);"
+        sql = "INSERT INTO Message VALUES (%s, %s, %s, %s, %s);"
         mycursor.executemany(sql, query)
         mydb.commit()
     except:
@@ -521,38 +521,81 @@ def reserveSlots(query):
     return True
 
 
-def acceptReservation(msg_id):
+def acceptMessage(msg_id):
+    sql = "SELECT * FROM Message WHERE MessageID = %s;"
+    mycursor.execute(sql, [str(msg_id)])
+    result = mycursor.fetchone()
+    if not result:
+        return None
+    if result[2] is None:
+        return "campaign", acceptReservation(msg_id, result[0], result[1], result[3])
+    else:
+        return "trade", acceptTrade(msg_id, result[0], result[1], result[2])
+
+def acceptReservation(msg_id, event, user, slotnumber):
     """
             Accept a Reservation
             Args:
                 msg_id (string): ID of the reservation message
+                event(string): ID of an event
+                user(string): ID of an user
+                slotnumber(string): Number of a slot
+
             Returns:
                 (string): channel if successfull channel_id, when not None
     """
-    sql = "SELECT User, Event, SlotNumber FROM CampaignMessage WHERE MessageID = %s;"
-    mycursor.execute(sql, [str(msg_id)])
-    slot = mycursor.fetchone()
 
-    if not slot:
-        return None
-
-    sql = "DELETE FROM CampaignMessage WHERE MessageID = %s;"
+    sql = "DELETE FROM Message WHERE MessageID = %s;"
     mycursor.execute(sql, [str(msg_id)])
     mydb.commit()
 
     sql = "UPDATE Slot SET User = %s WHERE Event = %s AND User = %s"
-    var = [None, slot[1], slot[0]]
+    var = [None, user, event]
     mycursor.execute(sql, var)
     mydb.commit()
 
     sql = "UPDATE Slot SET User = %s WHERE Event = %s AND Number = %s;"
-    mycursor.execute(sql, slot)
+    mycursor.execute(sql, [user, event, slotnumber])
     mydb.commit()
 
-    return slot[1]
+    return event
+
+def acceptTrade(msg_id, event, req_user, rec_user):
+
+    sql = "SELECT Number FROM Slot WHERE Event = %s AND User = %s"
+    val = [(event, req_user), (event, rec_user)]
+    mycursor.executemany(sql, val)
+    slots = mycursor.fetchall() #TODO: ?
+
+    sql = "UPDATE Slot SET User = %s WHERE Event = %s AND Slot = %s;"
+    val = [(req_user, event, slots[0]), (rec_user, event, slots[1])]
+    mycursor.executemany(sql, val)
+    mydb.commit()
+
+    sql = "DELETE FROM Message WHERE msg_id = %s"
+    mycursor.execute(sql, [msg_id])
+    mydb.commit()
+
+    return [event, req_user, rec_user], slots
 
 
-def denyReservation(msg_id):
+def denyMessage(msg_id):
+    sql = "SELECT * FROM Message WHERE MessageID = %s;"
+    mycursor.execute(sql, [str(msg_id)])
+    result = mycursor.fetchone()
+
+    if not result:
+        return None
+    if result[2] is None:
+        return "campaign", denyReservation(msg_id, result[0], result[3])
+    else:
+        sql = "DELETE FROM Message WHERE msg_id = %s"
+        mycursor.execute(sql, [msg_id])
+        mydb.commit()
+
+        return "trade", [result[0], result[1], result[2]]
+
+def denyReservation(msg_id, event, slotnumber):
     """
             Deny a Reservation
             Args:
@@ -561,36 +604,31 @@ def denyReservation(msg_id):
                 (string): channel if successfull channel_id, when not None
     """
 
-    sql = "SELECT Event, SlotNumber FROM CampaignMessage WHERE MessageID = %s;"
-    mycursor.execute(sql, [str(msg_id)])
-    slot = mycursor.fetchone()
-
-    if not slot:
-        return None
-
-    sql = "DELETE FROM CampaignMessage WHERE MessageID = %s;"
+    sql = "DELETE FROM Message WHERE MessageID = %s;"
     mycursor.execute(sql, [str(msg_id)])
     mydb.commit()
 
     sql = "UPDATE Slot SET User = %s WHERE Event = %s AND Number = %s;"
-    var = [None, slot[0], slot[1]]
+    var = [None, event, slotnumber]
     mycursor.execute(sql, var)
     mydb.commit()
 
-    return slot[0]
+    return event
 
 
-def cleanupReservation(date):
+
+def cleanupMessage(date):
     """
-            Deletes all timeouted reservations
+            Deletes all timeouted messages
             Args:
                 date (date): given date
             Returns:
-                (list): list of effected channel ids's
-                (list): list of effected user and msg id's
+                (list): list of effected channel ids's (campaign)
+                (list): list of effected user and msg id's (campaign)
+                (list): list of effected users (campaign)
     """
 
-    sql = "SELECT Event, User, SlotNumber, MessageID FROM CampaignMessage WHERE (DATEDIFF(DateUntil, %s) < 0);"
+    sql = "SELECT Event, User, SlotNumber, MessageID FROM Message WHERE (DATEDIFF(DateUntil, %s) < 0) AND RecUser is Null;"
     mycursor.execute(sql, [str(date)])
     slots = mycursor.fetchall()
 
@@ -602,11 +640,17 @@ def cleanupReservation(date):
     mycursor.executemany(sql, var)
     mydb.commit()
 
-    sql = "DELETE FROM CampaignMessage WHERE (DATEDIFF(DateUntil, %s) < 0);"
+    sql = "DELETE FROM Message WHERE (DATEDIFF(DateUntil, %s) < 0);"
     mycursor.execute(sql, [str(date)])
     mydb.commit()
 
-    return [x[0] for x in slots], [(x[1], x[3]) for x in slots]
+    sql = "SELECT Event, User, RecUser, MessageID FROM Message WHERE (DATEDIFF(DateUntil, %s) < 0) AND RecUser is not Null;"
+    mycursor.execute(sql, [str(date)])
+
+    channels = list(dict.fromkeys([x[0] for x in slots]))
+    campUsers = [(x[1], x[3]) for x in slots]
+
+    return [channels, campUsers], mycursor.fetchall()
 
 
 def slotEvent(channel, user_id, num, user_displayname=None, force=False):
@@ -679,6 +723,29 @@ def unslotEvent(channel, user_id):
 
     return mycursor.rowcount != 0
 
+def validateTrade(event, reqUser, recUser):
+    sql = "SELECT COUNT(*) FROM TradeMessage WHERE Event = %s AND reqUser = %s GROUP BY reqUser;"
+    val = [event, reqUser]
+    mycursor.execute(sql, val)
+
+    if mycursor.fetchone() == 1:
+        return False
+
+    sql = "SELECT User FROM Slot WHERE Event = %s;"
+    mycursor.execute(sql, [event])
+    result = mycursor.fetchall()
+
+    if not (reqUser in result and recUser in result):
+        return False
+
+    return False
+
+def createTrade(event, reqUser, recUser, msg_id, date):
+
+    sql = "INSERT INTO Message (Event, User, RecUser, Message, Date) VALUES (%s, %s, %s, %s, %s);"
+    val = [event, reqUser, recUser, msg_id, date]
+    mycursor.execute(sql, val)
+    mydb.commit()
 
 def addSlot(channel, slot, group, desc):
     """
