@@ -595,8 +595,8 @@ def acceptSwap(msg_id, event, req_user, rec_user):
     mycursor.execute(sql, val)
     slot_2 = mycursor.fetchone()
 
-    sql = "UPDATE Slot SET User =%s WHERE Number = %s;"
-    mycursor.execute(sql, [None, slot_1[0]])
+    sql = "UPDATE Slot SET User = Null WHERE Number = %s AND Event = %s;"
+    mycursor.execute(sql, [slot_1[0], event])
     mydb.commit()
 
     sql = "UPDATE Slot SET User = %s WHERE Event = %s AND Number = %s;"
