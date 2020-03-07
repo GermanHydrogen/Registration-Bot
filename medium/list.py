@@ -56,7 +56,7 @@ def get_line_data(line):
     """
     output = {"Description": "", "User": ""}
     num = ""
-    line = line.split("-")
+    line = line.replace("**", "").split("-")
 
     output["User"] = line[-1].replace("**", "")
     line = "".join(line[:-1])
@@ -459,9 +459,9 @@ async def writeEvent(channel):
                 mycursor.execute(sql, [x[2]])
                 user = mycursor.fetchone()[0]
 
-                output += f"#{x[0]} {x[1]} - **{user}**"
+                output += f"#{x[0]} {x[1]} - {user}"
             else:
-                output += f"#{x[0]} {x[1]} - "
+                output += f"#**{x[0]} {x[1]}** - "
             output += "\n"
 
     sql = "SELECT Message FROM Event WHERE ID = %s;"
@@ -760,12 +760,22 @@ def unslotEvent(channel, user_id):
                (bool): if successful
 
        """
+
+    sql = "SELECT Number FROM Slot WHERE STRCMP(User, %s) = 0 and Event = %s;"
+    var = [user_id, channel.id]
+    mycursor.execute(sql, var)
+
+    result = mycursor.fetchone()
+
     sql = "UPDATE Slot SET User = NULL WHERE STRCMP(User, %s) = 0 and Event = %s;"
     var = [user_id, channel.id]
     mycursor.execute(sql, var)
     mydb.commit()
 
-    return mycursor.rowcount != 0
+    if result:
+        return result[0]
+    else:
+        return False
 
 
 def validateSwap(event, req_user, rec_user):
