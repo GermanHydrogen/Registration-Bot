@@ -60,9 +60,10 @@ trade:
     error:
       arg: "Bitte gib einen gültigen Nutzer an!"
       val: "Bitte git einen gültigen Nutzer an, welcher auch in der Slotliste eingetragen ist!"
+      limit: "Du hast bereits für das Event eine Anfrage gestellt!"
       send: "Ein Fehler ist aufgetreten, bitte wende dich an [RR] Wasserstoff!"
 
-    sucess: "Du hast erfolgreich ein Tauschangebot abgeschickt."
+    success: "Du hast erfolgreich ein Tauschangebot abgeschickt."
 
 # -------------------------------------------------------------------
 # Admin Commands

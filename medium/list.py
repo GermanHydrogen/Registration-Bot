@@ -503,7 +503,7 @@ def reserveSlots(query):
     """
 
     try:
-        sql = "INSERT INTO Message VALUES (%s, %s, %s, %s, %s);"
+        sql = "INSERT INTO Message (Event, User, SlotNumber, MessageID, DateUntil) VALUES (%s, %s, %s, %s, %s);"
         mycursor.executemany(sql, query)
         mydb.commit()
     except:
@@ -522,6 +522,15 @@ def reserveSlots(query):
 
 
 def acceptMessage(msg_id):
+    """
+        Accept a request
+            Args:
+                msg_id (string): Message ID
+            Returns:
+                (string): Type of Message (campaign/trade)
+                (list): result of acceptance
+    """
+
     sql = "SELECT * FROM Message WHERE MessageID = %s;"
     mycursor.execute(sql, [str(msg_id)])
     result = mycursor.fetchone()
@@ -530,7 +539,8 @@ def acceptMessage(msg_id):
     if result[2] is None:
         return "campaign", acceptReservation(msg_id, result[0], result[1], result[3])
     else:
-        return "trade", acceptTrade(msg_id, result[0], result[1], result[2])
+        return "trade", acceptSwap(msg_id, result[0], result[1], result[2])
+
 
 def acceptReservation(msg_id, event, user, slotnumber):
     """
@@ -560,26 +570,56 @@ def acceptReservation(msg_id, event, user, slotnumber):
 
     return event
 
-def acceptTrade(msg_id, event, req_user, rec_user):
 
-    sql = "SELECT Number FROM Slot WHERE Event = %s AND User = %s"
-    val = [(event, req_user), (event, rec_user)]
-    mycursor.executemany(sql, val)
-    slots = mycursor.fetchall() #TODO: ?
+def acceptSwap(msg_id, event, req_user, rec_user):
+    """
+        Accept a Reservation
+            Args:
+                msg_id (string): ID of the reservation message
+                event(string): ID of an event
+                req_user(string): ID of a requester
+                rec_user(string): Number of a recipient
 
-    sql = "UPDATE Slot SET User = %s WHERE Event = %s AND Slot = %s;"
-    val = [(req_user, event, slots[0]), (rec_user, event, slots[1])]
+            Returns:
+                (list): if successfull event, req_user, rec_user, when not None
+    """
+
+    sql = "SELECT Number FROM Slot WHERE Event = %s AND User = %s;"
+    val = [event, req_user]
+    mycursor.execute(sql, val)
+    slot_1 = mycursor.fetchone()
+
+
+    sql = "SELECT Number FROM Slot WHERE Event = %s AND User = %s;"
+    val = [event, rec_user]
+    mycursor.execute(sql, val)
+    slot_2 = mycursor.fetchone()
+
+    sql = "UPDATE Slot SET User =%s WHERE Number = %s;"
+    mycursor.execute(sql, [None, slot_1[0]])
+    mydb.commit()
+
+    sql = "UPDATE Slot SET User = %s WHERE Event = %s AND Number = %s;"
+    val = [(req_user, event, slot_2[0]), (rec_user, event, slot_1[0])]
     mycursor.executemany(sql, val)
     mydb.commit()
 
-    sql = "DELETE FROM Message WHERE msg_id = %s"
+    sql = "DELETE FROM Message WHERE MessageID = %s;"
     mycursor.execute(sql, [msg_id])
     mydb.commit()
 
-    return [event, req_user, rec_user], slots
+    return [event, req_user, rec_user]
 
 
 def denyMessage(msg_id):
+    """
+        Deny a request
+            Args:
+                msg_id (string): Message ID
+            Returns:
+                (string): Type of Message (campaign/trade)
+                (list): result of deny
+    """
     sql = "SELECT * FROM Message WHERE MessageID = %s;"
     mycursor.execute(sql, [str(msg_id)])
     result = mycursor.fetchone()
@@ -589,17 +629,20 @@ def denyMessage(msg_id):
     if result[2] is None:
         return "campaign", denyReservation(msg_id, result[0], result[3])
     else:
-        sql = "DELETE FROM Message WHERE msg_id = %s"
+        sql = "DELETE FROM Message WHERE MessageID = %s"
         mycursor.execute(sql, [msg_id])
         mydb.commit()
 
         return "trade", [result[0], result[1], result[2]]
+
 
 def denyReservation(msg_id, event, slotnumber):
     """
             Deny a Reservation
             Args:
                 msg_id (string): ID of the reservation message
+                event (string): ID of an event
+                slotnumber (string): Slotnumber with possible leading zeros
             Returns:
                 (string): channel if successfull channel_id, when not None
     """
@@ -616,19 +659,19 @@ def denyReservation(msg_id, event, slotnumber):
     return event
 
 
-
 def cleanupMessage(date):
     """
-            Deletes all timeouted messages
+        Deletes all timeouted messages
             Args:
                 date (date): given date
             Returns:
                 (list): list of effected channel ids's (campaign)
-                (list): list of effected user and msg id's (campaign)
                 (list): list of effected users (campaign)
+                (list): list of effected event id, user, recUser, msgID (trade)
     """
 
-    sql = "SELECT Event, User, SlotNumber, MessageID FROM Message WHERE (DATEDIFF(DateUntil, %s) < 0) AND RecUser is Null;"
+    sql = "SELECT Event, User, SlotNumber, MessageID FROM Message " \
+          "WHERE (DATEDIFF(DateUntil, %s) < 0) AND RecUser is Null;"
     mycursor.execute(sql, [str(date)])
     slots = mycursor.fetchall()
 
@@ -644,13 +687,14 @@ def cleanupMessage(date):
     mycursor.execute(sql, [str(date)])
     mydb.commit()
 
-    sql = "SELECT Event, User, RecUser, MessageID FROM Message WHERE (DATEDIFF(DateUntil, %s) < 0) AND RecUser is not Null;"
+    sql = "SELECT Event, User, RecUser, MessageID FROM Message " \
+          "WHERE (DATEDIFF(DateUntil, %s) < 0) AND RecUser is not Null;"
     mycursor.execute(sql, [str(date)])
 
     channels = list(dict.fromkeys([x[0] for x in slots]))
     campUsers = [(x[1], x[3]) for x in slots]
 
-    return [channels, campUsers], mycursor.fetchall()
+    return [[channels, campUsers], mycursor.fetchall()]
 
 
 def slotEvent(channel, user_id, num, user_displayname=None, force=False):
@@ -723,29 +767,53 @@ def unslotEvent(channel, user_id):
 
     return mycursor.rowcount != 0
 
-def validateTrade(event, reqUser, recUser):
-    sql = "SELECT COUNT(*) FROM TradeMessage WHERE Event = %s AND reqUser = %s GROUP BY reqUser;"
-    val = [event, reqUser]
+
+def validateSwap(event, req_user, rec_user):
+    """
+        Validate a swap message
+            Args:
+                event (string): Event ID
+                req_user (string): User ID of the requester
+                rec_user (string): User ID of the recipient
+            Returns:
+                (int): Status (1: valid, 2: exceeds limit, 0: not in the list)
+    """
+
+    sql = "SELECT COUNT(*) FROM Message WHERE Event = %s AND User = %s GROUP BY User;"
+    val = [event, req_user]
     mycursor.execute(sql, val)
 
-    if mycursor.fetchone() == 1:
-        return False
+    if mycursor.fetchone() is not None:
+        return 2
 
     sql = "SELECT User FROM Slot WHERE Event = %s;"
     mycursor.execute(sql, [event])
     result = mycursor.fetchall()
 
-    if not (reqUser in result and recUser in result):
-        return False
+    if not ((str(req_user),) in result and (str(rec_user),) in result):
+        return 0
 
-    return False
+    return 1
 
-def createTrade(event, reqUser, recUser, msg_id, date):
 
-    sql = "INSERT INTO Message (Event, User, RecUser, Message, Date) VALUES (%s, %s, %s, %s, %s);"
-    val = [event, reqUser, recUser, msg_id, date]
+def createSwap(event, req_user, rec_user, msg_id, date):
+    """
+        Creates a swap request
+            Args:
+                event (string): Event ID
+                req_user (string): User ID of the requester
+                rec_user (string): User ID of the recipient
+                msg_id (string): Message ID of the request
+                date (date): Date until the request is due
+            Returns:
+
+    """
+
+    sql = "INSERT INTO Message (Event, User, RecUser, MessageID, DateUntil) VALUES (%s, %s, %s, %s, %s);"
+    val = [event, req_user, rec_user, msg_id, date]
     mycursor.execute(sql, val)
     mydb.commit()
+
 
 def addSlot(channel, slot, group, desc):
     """

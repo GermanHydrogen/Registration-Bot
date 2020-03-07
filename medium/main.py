@@ -57,41 +57,45 @@ discord_logger.addHandler(discord_handler)
 @client.event
 async def on_ready():
     guild = client.get_guild(int(cfg['guild']))
-    camp, trade = cleanupMessage(TODAY)
+    result = cleanupMessage(TODAY)
 
-    if camp is not None:
-        channels = camp[0]
-        users = camp[1]
+    if result is not None:
+        camp = result[0]
+        trade = result[1]
 
-        for elem in channels:
-            channel = guild.get_channel(int(elem))
-            await writeEvent(channel)
+        if camp is not None:
+            channels = camp[0]
+            users = camp[1]
 
-        for elem in users:
-            user = client.get_user(int(elem[0]))
-            msg = await user.fetch_message(int(elem[1]))
+            for elem in channels:
+                channel = guild.get_channel(int(elem))
+                await writeEvent(channel)
 
-            await msg.delete()
-            await user.send("``` " + msg.content + " ```")
-            await user.send(lang['campaign']['private']['timeout'])
+            for elem in users:
+                user = client.get_user(int(elem[0]))
+                msg = await user.fetch_message(int(elem[1]))
 
-    if trade is not None:
-        for elem in trade:
-            channel_name = guild.get_channel(int(elem[0])).name
+                await msg.delete()
+                await user.send("``` " + msg.content + " ```")
+                await user.send(lang['campaign']['private']['timeout'])
 
-            req_user = client.get_user(int(elem[1]))
-            rec_user = client.get_user(int(elem[2]))
+        if trade is not None:
+            for elem in trade:
+                channel_name = guild.get_channel(int(elem[0])).name
 
-            nickname = guild.get_member(req_user).display_name
+                req_user = client.get_user(int(elem[1]))
+                rec_user = client.get_user(int(elem[2]))
 
-            msg = await rec_user.fetch_message(int(elem[3]))
+                nickname = guild.get_member(req_user).display_name
 
-            await msg.delete()
-            await rec_user.send("``` " + msg.content + " ```")
-            await rec_user.send(lang['trade']['private']['timeout']['rec'].format(nickname, channel_name))
+                msg = await rec_user.fetch_message(int(elem[3]))
 
-            nickname = guild.get_member(rec_user).display_name
-            await req_user.send(lang['trade']['private']['timeout']['req'].format(nickname, channel_name))
+                await msg.delete()
+                await rec_user.send("``` " + msg.content + " ```")
+                await rec_user.send(lang['trade']['private']['timeout']['rec'].format(nickname, channel_name))
+
+                nickname = guild.get_member(rec_user).display_name
+                await req_user.send(lang['trade']['private']['timeout']['req'].format(nickname, channel_name))
 
     print("Done")
     logger.info("Server Started")
@@ -140,12 +144,13 @@ async def on_raw_reaction_add(payload):
     msg = await channel.fetch_message(payload.message_id)
 
     if payload.emoji.name == '👎':
-        types, result = denyMessage(str(msg.id))
+        result = denyMessage(str(msg.id))
 
         if not result:
-            await author.send(lang[types]['private']['deny']['error'])
+            await author.send(lang['trade']['private']['deny']['error'])
         else:
-
+            types = result[0]
+            result = result[1]
             if types == "campaign":
                 guild = client.get_guild(int(cfg['guild']))
                 result = guild.get_channel(int(result))
@@ -155,28 +160,29 @@ async def on_raw_reaction_add(payload):
                 await channel.send("``` " + msg.content + " ```")
                 await author.send(lang['campaign']['private']['deny']['success'])
 
-
             else:
                 channel_name = guild.get_channel(int(result[0])).name
 
                 req_user = client.get_user(int(result[1]))
                 rec_user = client.get_user(int(result[2]))
 
-                nickname = guild.get_member(rec_user).display_name
+                nickname = guild.get_member(int(result[2])).display_name
 
                 await req_user.send(lang['trade']['private']['deny']['req'].format(nickname, channel_name))
 
                 await msg.delete()
-                await channel.send("``` " + msg.content + " ```")
+                await rec_user.send("``` " + msg.content + " ```")
 
-                nickname = guild.get_member(req_user).display_name
+                nickname = guild.get_member(int(result[1])).display_name
                 await author.send(lang['trade']['private']['deny']['rec'].format(nickname, channel_name))
 
     elif payload.emoji.name == '👍':
-        types, result = acceptMessage(str(msg.id))
+        result = acceptMessage(str(msg.id))
         if not result:
-            await author.send(lang[types]['private']['accept']['error'])
+            await author.send(lang['trade']['private']['accept']['error'])
         else:
+            types = result[0]
+            result = result[1]
             if types == "campaign":
                 guild = client.get_guild(int(cfg['guild']))
                 result = guild.get_channel(int(result))
@@ -186,20 +192,22 @@ async def on_raw_reaction_add(payload):
                 await channel.send("```" + msg.content + " ```")
                 await author.send(lang['campaign']['private']['accept']['success'])
             else:
-                channel_name = guild.get_channel(int(result[0])).name
+                channel = guild.get_channel(int(result[0]))
+
+                await writeEvent(channel)
 
                 req_user = client.get_user(int(result[1]))
                 rec_user = client.get_user(int(result[2]))
 
-                nickname = guild.get_member(rec_user).display_name
+                nickname = guild.get_member(int(result[2])).display_name
 
-                await req_user.send(lang['trade']['private']['accept']['req'].format(nickname, channel_name))
+                await req_user.send(lang['trade']['private']['accept']['req'].format(nickname, channel.name))
 
                 await msg.delete()
-                await channel.send("```" + msg.content + " ```")
+                await rec_user.send("```" + msg.content + " ```")
 
-                nickname = guild.get_member(rec_user).display_name
-                await author.send(lang['trade']['private']['accept']['rec'].format(nickname, channel_name))
+                nickname = guild.get_member(int(result[1])).display_name
+                await author.send(lang['trade']['private']['accept']['rec'].format(nickname, channel.name))
 
 
 ''' --- User Commands --- '''
@@ -318,11 +326,11 @@ async def unslot(ctx):
                            delete_after=5)
         await ctx.message.delete()
 
-@client.command(hidden=False, description="[user] Sends a trademsg to the user")
+
+@client.command(hidden=False, description="[user] Sends a swap request to the user")
 @commands.cooldown(1, 0.5, commands.BucketType.channel)
 @commands.guild_only()
-async def trade(ctx):
-    pass
+async def swap(ctx):
     channel = ctx.message.channel
     date = datetime.date.today() + datetime.timedelta(days=1)
 
@@ -330,19 +338,26 @@ async def trade(ctx):
 
     if not len(argv) >= 2:
         await ctx.message.delete()
-        await channel.send(ctx.message.author.mention + " " + lang["trade"]["channel"]["error"]["argv"],
+        await channel.send(ctx.message.author.mention + " " + lang["trade"]["channel"]["error"]["arg"],
                            delete_after=5)
         return
 
     reqUser = ctx.message.author.id
-    recUser = get_user_id(" ".join(argv[0:]), channel)
 
-    if not validateTrade(channel.id, reqUser, recUser):
+    recUser = get_user_id(" ".join(argv[1:]), channel)
+
+    valid = validateSwap(channel.id, reqUser, recUser)
+
+    if valid == 0:
         await ctx.message.delete()
         await channel.send(ctx.message.author.mention + " " + lang["trade"]["channel"]["error"]["val"],
                            delete_after=5)
 
         return
+    elif valid == 2:
+        await ctx.message.delete()
+        await channel.send(ctx.message.author.mention + " " + lang["trade"]["channel"]["error"]["limit"],
+                           delete_after=5)
 
     try:
         user = client.get_user(int(recUser))
@@ -350,7 +365,7 @@ async def trade(ctx):
         await msg.add_reaction('\N{THUMBS UP SIGN}')
         await msg.add_reaction('\N{THUMBS DOWN SIGN}')
 
-        createTrade(str(channel.id), str(reqUser), str(recUser), str(msg.id), date)
+        createSwap(str(channel.id), str(reqUser), str(recUser), str(msg.id), date)
     except:
         await ctx.message.delete()
         await channel.send(ctx.message.author.mention + " " + lang["trade"]["channel"]["error"]["send"],
