@@ -147,7 +147,7 @@ async def on_raw_reaction_add(payload):
         result = denyMessage(str(msg.id))
         if not result:
             await author.send(lang['trade']['private']['deny']['error'])
-        elif isinstance(result[1], str):
+        elif result[0] == 'trade' and isinstance(result[1], str):
             guild = client.get_guild(int(cfg['guild']))
             user = guild.get_member(int(result[1])).display_name
 
@@ -184,10 +184,9 @@ async def on_raw_reaction_add(payload):
 
     elif payload.emoji.name == '👍':
         result = acceptMessage(str(msg.id))
-        print(result)
         if not result:
             await author.send(lang['trade']['private']['accept']['error'])
-        elif isinstance(result[1], str):
+        elif result[0] == 'trade' and isinstance(result[1], str):
             guild = client.get_guild(int(cfg['guild']))
             user = guild.get_member(int(result[1])).display_name
 
