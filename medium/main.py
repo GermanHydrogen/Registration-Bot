@@ -86,7 +86,7 @@ async def on_ready():
                 req_user = client.get_user(int(elem[1]))
                 rec_user = client.get_user(int(elem[2]))
 
-                nickname = guild.get_member(req_user).display_name
+                nickname = guild.get_member(int(elem[1])).display_name
 
                 msg = await rec_user.fetch_message(int(elem[3]))
 
@@ -94,7 +94,7 @@ async def on_ready():
                 await rec_user.send("``` " + msg.content + " ```")
                 await rec_user.send(lang['trade']['private']['timeout']['rec'].format(nickname, channel_name))
 
-                nickname = guild.get_member(rec_user).display_name
+                nickname = guild.get_member(int(elem[2])).display_name
                 await req_user.send(lang['trade']['private']['timeout']['req'].format(nickname, channel_name))
 
     print("Done")
@@ -145,9 +145,15 @@ async def on_raw_reaction_add(payload):
 
     if payload.emoji.name == '👎':
         result = denyMessage(str(msg.id))
-
         if not result:
             await author.send(lang['trade']['private']['deny']['error'])
+        elif isinstance(result[1], str):
+            guild = client.get_guild(int(cfg['guild']))
+            user = guild.get_member(int(result[1])).display_name
+
+            await msg.delete()
+            await channel.send("```" + msg.content + " ```")
+            await author.send(lang['trade']['private']['unslot'].format(user))
         else:
             types = result[0]
             result = result[1]
@@ -178,8 +184,16 @@ async def on_raw_reaction_add(payload):
 
     elif payload.emoji.name == '👍':
         result = acceptMessage(str(msg.id))
+        print(result)
         if not result:
             await author.send(lang['trade']['private']['accept']['error'])
+        elif isinstance(result[1], str):
+            guild = client.get_guild(int(cfg['guild']))
+            user = guild.get_member(int(result[1])).display_name
+
+            await msg.delete()
+            await channel.send("```" + msg.content + " ```")
+            await author.send(lang['trade']['private']['unslot'].format(user))
         else:
             types = result[0]
             result = result[1]
@@ -375,6 +389,7 @@ async def swap(ctx):
     await ctx.message.delete()
     await channel.send(ctx.message.author.mention + " " + lang["trade"]["channel"]["success"],
                        delete_after=5)
+
 
 @client.command()
 async def help(ctx):

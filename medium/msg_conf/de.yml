@@ -51,6 +51,8 @@ trade:
       req: "{} hat deinem Tauschangebot für das Event {} zugestimmt."
       error: "Ein Fehler ist aufgetreten. Bitte wende dich an [RR] Wasserstoff."
 
+    unslot: "{} ist nicht mehr angemeldet!"
+
     deny:
       rec: "Du hast das Tauschangebot von {} für das Event {} abgelehnt."
       req: "{} hat das Tauschangebot für das Event {} abgelehnt."
@@ -59,7 +61,8 @@ trade:
   channel:
     error:
       arg: "Bitte gib einen gültigen Nutzer an!"
-      val: "Bitte git einen gültigen Nutzer an, welcher auch in der Slotliste eingetragen ist!"
+      val: "Bitte git einen gültigen Nutzer an, welcher auch in der Slotliste eingetragen ist! \n
+            Du darfst dich nicht in der Reserve befinden."
       limit: "Du hast bereits für das Event eine Anfrage gestellt!"
       send: "Ein Fehler ist aufgetreten, bitte wende dich an [RR] Wasserstoff!"
 

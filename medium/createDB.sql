@@ -71,10 +71,10 @@ INSERT INTO User VALUES ('B00000000000000000', 'M.I.A.');
 INSERT INTO User VALUES ('C00000000000000000', 'BLOCKED');
 INSERT INTO User VALUES ('D00000000000000000', 'Auf Nachfrage beim Missionsbauer');
 
-CREATE TRIGGER BotTest before update on Slot
+CREATE TRIGGER BotTest after update on Slot
   for each row
    begin
-    if 0 < (SELECT COUNT(*) FROM Slot s
+    if 1 < (SELECT COUNT(*) FROM Slot s
         WHERE new.User regexp '^[0-9]' AND
               new.User = s.User AND
               new.Event = s.Event
