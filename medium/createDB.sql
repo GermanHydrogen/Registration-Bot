@@ -65,12 +65,6 @@ CREATE TABLE IF NOT EXISTS Message
     FOREIGN KEY (Event, SlotNumber) REFERENCES Slot(Event, Number)
 );
 
-
-INSERT INTO User VALUES ('A00000000000000000', 'K.I.A.');
-INSERT INTO User VALUES ('B00000000000000000', 'M.I.A.');
-INSERT INTO User VALUES ('C00000000000000000', 'BLOCKED');
-INSERT INTO User VALUES ('D00000000000000000', 'Auf Nachfrage beim Missionsbauer');
-
 CREATE TRIGGER BotTest after update on Slot
   for each row
    begin
@@ -84,3 +78,7 @@ CREATE TRIGGER BotTest after update on Slot
       end if;
       end;
 
+INSERT INTO User VALUES ('A00000000000000000', 'K.I.A.');
+INSERT INTO User VALUES ('B00000000000000000', 'M.I.A.');
+INSERT INTO User VALUES ('C00000000000000000', 'BLOCKED');
+INSERT INTO User VALUES ('D00000000000000000', 'Auf Nachfrage beim Missionsbauer');

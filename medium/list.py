@@ -775,10 +775,14 @@ def slotEvent(channel, user_id, num, user_displayname=None, force=False):
         mycursor.execute(sql, var)
         mydb.commit()
 
-    sql = "UPDATE Slot SET User = %s WHERE Number = %s and Event = %s;"
-    var = [user_id, num, channel.id]
-    mycursor.execute(sql, var)
-    mydb.commit()
+    try:
+        sql = "UPDATE Slot SET User = %s WHERE Number = %s and Event = %s;"
+        var = [user_id, num, channel.id]
+        mycursor.execute(sql, var)
+        mydb.commit()
+
+    except mysql.connector.errors.DatabaseError:
+        return False
 
     return True
 
