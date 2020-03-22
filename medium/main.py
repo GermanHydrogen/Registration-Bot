@@ -235,22 +235,30 @@ async def slot(ctx, num=""):
 
     author = ctx.message.author
 
-    instructor = ctx.guild.get_member(cfg["arma3"])
-    if not instructor:
-        instructor = ctx.guild.get_member(cfg['backup'])
-
     backup = ctx.guild.get_member(cfg['backup'])
 
     if not ("ArmA3-Rudelkrieger" in [x.name for x in ctx.message.author.roles]):  # TODO: STATIC
 
+
+        # Instructor-Message
+        instructor = []
+        for elem in cfg["arma3"].replace(" ", "").split(","):
+            buffer = ctx.guild.get_member(int(elem))
+            if buffer:
+                instructor.append(buffer)
+                await buffer.send(
+                    lang["slot"]["new_user"]["instructor"].format(author, author.display_name, channel.name, num))
+
+        if not instructor:
+            instructor.append(ctx.guild.get_member(cfg['backup']))
+            await instructor[0].send(
+                lang["slot"]["new_user"]["instructor"].format(author, author.display_name, channel.name, num))
+
         # User-Message
-        await author.send(lang["slot"]["new_user"]["user"].format(instructor.display_name).replace('\\n', '\n'))
+        await author.send(lang["slot"]["new_user"]["user"].format(instructor[0].display_name).replace('\\n', '\n'))
         # Channel-Message
         await channel_author.send(
             lang["slot"]["new_user"]["channel"].format(author, author.display_name, channel.name, num))
-        # Instructor-Message
-        await instructor.send(
-            lang["slot"]["new_user"]["instructor"].format(author, author.display_name, channel.name, num))
         # Assign-Rule
         await author.add_roles([x for x in ctx.guild.roles if x.name == "ArmA3-Rudelanwärter"][0])
 
