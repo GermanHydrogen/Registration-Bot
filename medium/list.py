@@ -58,8 +58,8 @@ def get_line_data(line):
     num = ""
     line = line.replace("**", "").split("-")
 
-    output["User"] = line[-1].replace("**", "")
-    line = "".join(line[:-1])
+    output["User"] = "-".join(line[1:]).replace("**", "")
+    line = line[0]
 
     count = 0
 
