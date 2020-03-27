@@ -431,16 +431,16 @@ async def create(ctx):  # makes the slotlist editable for the bot
     async for x in channel.history(limit=1000):
         if re.search("Slotliste", x.content):
 
-            out.append("Slotlist")
-
-            createEvent(x, ctx.message.author, client.user)
-            await writeEvent(channel)
-            if not x.author == client.user:
+            if x.author == ctx.message.author:
+                out.append(x)
                 await x.delete()
+            elif x.author == client.user:
+                out.append(x)
 
-            break
+    if out:
+        createEvent(out, ctx.message.author, client.user)
+        await writeEvent(channel, True)
 
-    if "Slotlist" in out:
         await ctx.message.author.send(lang["create"]["success"]["user"])
 
     else:
@@ -580,7 +580,7 @@ async def forceUnslot(ctx):  # [Admin Function] unslots an user
         return
 
     player = " ".join(player)
-    if not (len(player) > 1 and player[1:].isdigit()):
+    if not (len(player) == 18 and player[1:].isdigit()):
         player = get_user_id(player, channel)
 
     if unslotEvent(channel, player):
@@ -625,7 +625,7 @@ async def addslot(ctx):
     desc = " ".join(argv[3:])
 
     if addSlot(channel, slot_num, group, desc):
-        await writeEvent(channel)
+        await writeEvent(channel, True)
 
         await channel.send(ctx.message.author.mention + " " + lang["addslot"]["success"]["channel"], delete_after=5)
 
@@ -644,7 +644,7 @@ async def delslot(ctx, slot_num):
     channel = ctx.message.channel
 
     if delSlot(channel, slot_num):
-        await writeEvent(channel)
+        await writeEvent(channel, True)
 
         await channel.send(ctx.message.author.mention + " " + lang["delslot"]["success"]["channel"], delete_after=5)
 
@@ -674,7 +674,7 @@ async def editslot(ctx):
     desc = " ".join(argv[2:])
 
     if editSlot(channel, slot_num, desc):
-        await writeEvent(channel)
+        await writeEvent(channel, True)
 
         await channel.send(ctx.message.author.mention + " " + lang["editslot"]["success"]["channel"], delete_after=5)
 
@@ -706,7 +706,7 @@ async def addgroup(ctx):
         name = ""
 
     if addGroup(channel, number, name):
-        await writeEvent(channel)
+        await writeEvent(channel, True)
 
         await channel.send(ctx.message.author.mention + " " + lang["addgroup"]["success"]["channel"], delete_after=5)
 
@@ -737,7 +737,7 @@ async def delgroup(ctx):
         name = ""
 
     if delGroup(channel, name):
-        await writeEvent(channel)
+        await writeEvent(channel, True)
 
         await channel.send(ctx.message.author.mention + " " + lang["delgroup"]["success"]["channel"],
                            delete_after=5)
