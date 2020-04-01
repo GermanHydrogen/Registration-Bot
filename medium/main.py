@@ -273,13 +273,10 @@ async def slot(ctx, num=""):
                 await channel_author.send(
                     lang["slot"]["slot"]["success"]["channel_author"].format(author, ctx.message.author.display_name,
                                                                              channel.name, num))
+                await backup.send(lang["slot"]["slot"]["success"]["channel_author"].format(author,
+                                                                                           ctx.message.author.display_name,
+                                                                                           channel.name, num))
             except:
-                try:
-                    await backup.send(lang["slot"]["slot"]["success"]["channel_author"].format(author,
-                                                                                               ctx.message.author.display_name,
-                                                                                               channel.name, num))
-                except:
-                    pass
                 pass
 
             log = "User: " + str(ctx.message.author).ljust(20) + "\t"
