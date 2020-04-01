@@ -13,7 +13,6 @@ create TABLE IF NOT EXISTS Event(
     Author VARCHAR(18) NOT NULL,
     Date DATE,
     Type VARCHAR(15),
-    Message VARCHAR(18),
 
     PRIMARY KEY (ID),
     FOREIGN KEY (Author) REFERENCES User(ID)
