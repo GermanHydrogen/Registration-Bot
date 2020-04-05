@@ -13,11 +13,23 @@ create TABLE IF NOT EXISTS Event(
     Author VARCHAR(18) NOT NULL,
     Date DATE,
     Type VARCHAR(15),
-    Message VARCHAR(18),
 
     PRIMARY KEY (ID),
     FOREIGN KEY (Author) REFERENCES User(ID)
 );
+
+CREATE TABLE IF NOT EXISTS EventMessage
+(
+    Event VARCHAR(18),
+
+    MsgID VARCHAR(18),
+    Number INT UNSIGNED UNIQUE AUTO_INCREMENT,
+
+    CONSTRAINT prim PRIMARY KEY (Number),
+
+    FOREIGN KEY (Event) REFERENCES Event(ID)
+);
+
 
 CREATE TABLE IF NOT EXISTS SlotGroup(
     Number TINYINT UNSIGNED ,
@@ -25,9 +37,14 @@ CREATE TABLE IF NOT EXISTS SlotGroup(
     Name VARCHAR(100)
         CHARACTER SET utf8mb4
         COLLATE utf8mb4_unicode_ci,
-    Struct VARCHAR(10) NOT NULL ,
+    Struct VARCHAR(10) NOT NULL,
+
+    Msg INT UNSIGNED,
+    Length INT UNSIGNED,
+
     CONSTRAINT slotgroup PRIMARY KEY (Number, Event),
-    FOREIGN KEY (Event) REFERENCES Event(ID)
+    FOREIGN KEY (Event) REFERENCES Event(ID),
+    FOREIGN KEY (Msg) REFERENCES EventMessage(Number) ON DELETE SET NULL
 );
 
 
@@ -64,6 +81,7 @@ CREATE TABLE IF NOT EXISTS Message
     FOREIGN KEY (RecUser) REFERENCES User(ID),
     FOREIGN KEY (Event, SlotNumber) REFERENCES Slot(Event, Number)
 );
+
 
 CREATE TRIGGER BotTest after update on Slot
   for each row
