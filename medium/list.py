@@ -428,7 +428,7 @@ def createEvent(msg_list, author, bot=None):
     mydb.commit()
 
     if not reserve:
-        lenght = int(len(list(slots)) * 0.1) + 1
+        lenght = int(len(list(slots)) * cfg["res_ratio"]) + 1
         begin = ceil((int(list(slots)[-1]) + 1) / 10) * 10
         msg_format = len(list(slots)[-1]) - 1
 
