@@ -429,7 +429,6 @@ async def create(ctx):  # makes the slotlist editable for the bot
 
             if x.author == ctx.message.author:
                 out.append(x)
-                await x.delete()
             elif x.author == client.user:
                 out.append(x)
 
@@ -438,6 +437,10 @@ async def create(ctx):  # makes the slotlist editable for the bot
         await writeEvent(channel, True)
 
         await ctx.message.author.send(lang["create"]["success"]["user"])
+
+        for x in out:
+            if x.author != client.user:
+                await x.delete()
 
     else:
         await ctx.message.author.send(lang["create"]["error"]["general"]["user"])
