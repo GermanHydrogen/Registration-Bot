@@ -222,6 +222,17 @@ async def on_raw_reaction_add(payload):
                 nickname = guild.get_member(int(result[1])).display_name
                 await author.send(lang['trade']['private']['accept']['rec'].format(nickname, channel.name))
 
+                try:
+                    backup = guild.get_member(cfg['backup'])
+
+                    await backup.send(lang["trade"]["private"]["accept"]["backup"].format(
+                                                                    guild.get_member(int(result[2])).display_name,
+                                                                    guild.get_member(int(result[1])).display_name,
+                                                                    channel.name))
+
+                except:
+                    pass
+
 
 ''' --- User Commands --- '''
 

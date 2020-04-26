@@ -479,7 +479,6 @@ async def writeEvent(channel, manage = False, new = False):
 
         ids = mycursor.fetchall()
 
-
         if not ids or new:
             number = int((total+400)/2000)+1
             limit = int(total/number)

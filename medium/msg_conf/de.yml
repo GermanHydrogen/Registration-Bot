@@ -49,6 +49,7 @@ trade:
     accept:
       rec: "Du hast den Slot mit {} in dem Event {} getauscht."
       req: "{} hat deinem Tauschangebot für das Event {} zugestimmt."
+      backup: "{} hat mit {} im Event {} getauscht"
       error: "Ein Fehler ist aufgetreten. Bitte wende dich an [RR] Wasserstoff."
 
     unslot: "{} ist nicht mehr angemeldet!"
