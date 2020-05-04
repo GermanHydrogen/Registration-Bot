@@ -61,20 +61,14 @@ def get_line_data(line):
     output["User"] = "-".join(line[1:]).replace("**", "")
     line = line[0]
 
-    count = 0
-
     for x in line[1:]:
         if x.isdigit():
             num += x
-            count += 1
         else:
             break
 
-    for x in line[count:]:
-        if x.isalpha() or x in " ()-":
-            output["Description"] += x
+    output["Description"] = line[len(num)+1:].strip()
 
-    output["Description"] = output["Description"].strip()
     output["User"] = output["User"].strip()
 
     return {num: output}
@@ -376,6 +370,7 @@ def createEvent(msg_list, author, bot=None):
             pass
         elif line and line[0] == "#":
             data = get_line_data(line)
+            print(data)
 
             if not struct or current_buffer:
                 struct.append({"Name": "", "Struct": current_buffer, "Length": len(current_buffer)})
