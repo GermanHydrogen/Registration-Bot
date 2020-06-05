@@ -1,5 +1,5 @@
 class Util:
-    def __index__(self, db, cursor):
+    def __init__(self, db, cursor):
         self.db = db
         self.cursor = cursor
         

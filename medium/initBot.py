@@ -10,8 +10,13 @@ from main.commands.user import User
 from main.commands.admin import Admin
 from main.util.handler import Handler
 
+from notify.commands.master import Global
+from notify.commands.locale import Locale
+
 from dmInteraction.commands import Campaign
 from dmInteraction.util.handler import Handler as dmHandler
+
+from notify.util.handler import Handler as ntHandler
 
 from config.loader import cfg
 from config.loader import lang
@@ -58,5 +63,12 @@ client.add_cog(dmHandler(client, lang, logger, mydb, mycursor))
 
 client.add_cog(User(client, lang, logger, mydb, mycursor))
 client.add_cog(Admin(client, lang, logger, mydb, mycursor))
+
+client.add_cog(Campaign(client, lang, logger, mydb, mycursor))
+
+client.add_cog(Global(client, lang, logger, mydb, mycursor))
+client.add_cog(Locale(client, lang, logger, mydb, mycursor))
+
+client.add_cog(ntHandler(client, lang, logger, mydb, mycursor))
 
 client.run(cfg['token'])

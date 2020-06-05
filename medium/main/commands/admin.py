@@ -29,6 +29,7 @@ class Admin(commands.Cog):
     async def create(self, ctx):  # makes the slotlist editable for the bot
         channel = ctx.message.channel
         out = []
+        time = ""
 
         async for x in channel.history(limit=1000):
             if re.search("Slotliste", x.content):
@@ -37,9 +38,12 @@ class Admin(commands.Cog):
                     out.append(x)
                 elif x.author == self.client.user:
                     out.append(x)
+            elif re.findall(r"Eventstart:.*$", x.content, re.MULTILINE):
+                if x.author == ctx.message.author:
+                    time = ":".join(x.content.split(":")[1:]).strip()
 
         if out:
-            self.io.createEvent(out, ctx.message.author, self.client.user)
+            self.io.createEvent(out, ctx.message.author, time, self.client.user)
             await self.io.writeEvent(channel, True)
 
             await ctx.message.author.send(self.lang["create"]["success"]["user"])

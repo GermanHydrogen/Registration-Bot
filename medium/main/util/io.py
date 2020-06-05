@@ -1,4 +1,6 @@
 from math import ceil
+from datetime import datetime, timedelta
+from config.loader import cfg
 
 
 def get_line_data(line):
@@ -161,12 +163,13 @@ class IO:
 
                 count += 1
 
-    def createEvent(self, msg_list, author, bot=None):
+    def createEvent(self, msg_list, author, time, bot=None):
         """
                Creates an event in the database
                Args:
                    msg_list (list of msg object): The message containing the slotlist
                    author (user object): Author of the slotlist
+                   time (str): start time of the event
                    bot (user object): Used Bot user (optional)
 
                Returns:
@@ -176,6 +179,8 @@ class IO:
 
         channel = msg_list[0].channel
         split = channel.name.split("-")
+        time = time.strip() + ":00"
+
         if not (len(split) == 4 and len(split[0]) == 4 and len(split[1]) == 2 and len(split[2]) == 2 and split[3]):
             return False
 
@@ -191,23 +196,32 @@ class IO:
             self.cursor.execute(sql, [event])
             self.db.commit()
 
-            sql = f"DELETE FROM SlotGroup WHERE Event = %s;"
+            sql = "DELETE FROM SlotGroup WHERE Event = %s;"
             self.cursor.execute(sql, [event])
-
             self.db.commit()
+
+            sql = "DELETE FROM Notify WHERE Event = %s;"
+            self.cursor.execute(sql, [event])
+            self.db.commit()
+
+            sql = "UPDATE Event SET Name=%s, Author=%s, Date=%s, Time=%s,Type=%s WHERE ID = %s;"
+            var = [channel.name, author.id, date, time, name, event]
+            self.cursor.execute(sql, var)
+            self.db.commit()
+
         else:
             # Check if Author User exists
             sql = "SELECT ID FROM User WHERE ID = %s;"
             self.cursor.execute(sql, [author.id])
 
             if not self.cursor.fetchall():
-                sql = "INSERT INTO User VALUES (%s, %s);"
+                sql = "INSERT INTO User (ID, Nickname) VALUES (%s, %s);"
                 var = [author.id, author.display_name]
                 self.cursor.execute(sql, var)
                 self.db.commit()
 
-            sql = "INSERT INTO Event (ID, Name, Author, Date, Type) VALUES (%s, %s, %s, %s, %s);"
-            var = [event, channel.name, author.id, date, name]
+            sql = "INSERT INTO Event (ID, Name, Author, Date, Time, Type) VALUES (%s, %s, %s, %s, %s, %s);"
+            var = [event, channel.name, author.id, date, time, name]
             self.cursor.execute(sql, var)
 
             self.db.commit()
@@ -299,6 +313,18 @@ class IO:
         sql = "INSERT INTO Slot VALUES (%s, %s, %s, %s, %s)"
         var = [(event, index, elem["Description"], elem["User"], elem["GroupNum"]) for index, elem in
                slots.items()]
+        self.cursor.executemany(sql, var)
+        self.db.commit()
+
+        # Notify System
+
+        result = datetime.strptime(date + " " + time, '%Y-%m-%d %H:%M:%S')
+        delta = timedelta(hours=cfg["std_notify"])
+
+        delta = result - delta
+
+        sql = "INSERT INTO Notify VALUES (%s, %s, %s, %s)"
+        var = [(event, elem["User"], 1, delta) for index, elem in slots.items() if elem["User"]]
         self.cursor.executemany(sql, var)
         self.db.commit()
 

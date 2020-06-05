@@ -1,7 +1,12 @@
+from notify.util.editLocale import EditLocale
+
+
 class EditList:
     def __init__(self, db, cursor):
         self.db = db
         self.cursor = cursor
+
+        self.notify = EditLocale(db, cursor)
 
     def slotEvent(self, channel, user_id, num, user_displayname=None, force=False):
         """
@@ -46,6 +51,8 @@ class EditList:
             var = [str(user_id), str(channel.id)]
             self.cursor.execute(sql, var)
             self.db.commit()
+
+        self.notify.create(channel.id, user_id)
 
         try:
             sql = "UPDATE Slot SET User = %s WHERE Number = %s and Event = %s;"
