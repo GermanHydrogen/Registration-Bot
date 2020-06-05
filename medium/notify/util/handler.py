@@ -1,5 +1,6 @@
 from discord.ext import commands
 from datetime import datetime
+from config.loader import cfg
 import asyncio
 
 
@@ -12,7 +13,7 @@ class Handler(commands.Cog):
         self.db = db
         self.cursor = cursor
 
-    async def notify(self, event, user, delay):
+    async def notify(self, event, user_id, delay):
         """
             Calculates datetime for notification
                 Args:
@@ -24,13 +25,16 @@ class Handler(commands.Cog):
 
         await asyncio.sleep(delay)
 
-        user = self.client.get_user(int(user))
+        user = self.client.get_user(int(user_id))
         if user:
             sql = "SELECT Name, Time FROM Event WHERE ID = %s;"
             self.cursor.execute(sql, [event])
             result = self.cursor.fetchone()
 
-            await user.send(self.lang["notify_global"]["noti"].format(str(result[0]), str(result[1])))
+            guild = self.client.get_guild(int(cfg['guild']))
+            nickname = guild.get_member(int(user_id)).display_name
+
+            await user.send(self.lang["notify_global"]["noti"].format(nickname, str(result[0]), str(result[1])))
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -42,7 +46,6 @@ class Handler(commands.Cog):
         for elem in result:
             now = datetime.now()
             delta = (elem[1]-now).total_seconds()
-            print(delta)
             if delta > 0:
                 await self.notify(elem[2], elem[0], delta)
 
