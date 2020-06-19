@@ -1,4 +1,5 @@
 from notify.util.editLocale import EditLocale
+import mysql.connector
 
 
 class EditList:
@@ -60,7 +61,7 @@ class EditList:
             self.cursor.execute(sql, var)
             self.db.commit()
 
-        except self.db.connector.errors.DatabaseError:
+        except mysql.connector.errors.DatabaseError:
             return False
 
         return True
@@ -89,6 +90,8 @@ class EditList:
             var = [user_id, channel.id]
             self.cursor.execute(sql, var)
             self.db.commit()
+
+            self.notify.toggle(channel.id, user_id, True)
 
             return result[0]
         else:

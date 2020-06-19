@@ -49,12 +49,13 @@ class EditLocale:
         self.cursor.execute(sql, var)
         self.db.commit()
 
-    def toggle(self, event, user):
+    def toggle(self, event, user, overwrite = False):
         """
             Toggles notification for a specific event
                 Args:
                     event(string): ID of an event
                     user(string): User ID
+                    overwrite (Bool): disable notification for event
 
                 Returns:
                     (Bool): Currents notification status if successfull, when not None
@@ -67,7 +68,10 @@ class EditLocale:
         if not result:
             return None
 
-        sql = "UPDATE Notify SET Enabled = NOT Enabled WHERE Event=%s AND User=%s;"
+        if not overwrite:
+            sql = "UPDATE Notify SET Enabled = NOT Enabled WHERE Event=%s AND User=%s;"
+        else:
+            sql = "UPDATE Notify SET Enabled = False WHERE Event=%s AND User=%s;"
 
         self.cursor.execute(sql, var)
         self.db.commit()

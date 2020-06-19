@@ -78,13 +78,13 @@ notify_global:
 
 notify_local:
     toggle:
-      private: "Du wirst nun {} benachrichtigt."
+      private: "Du wirst nun {} für das Event {} benachrichtigt."
       channel:
         suc: "Die Änderung war Erfolgreich."
         fail: "Du musst dich für das Event eingetragen haben, um eine Änderung durchzuführen."
 
     time:
-      private: "Du wirst für das Event nun {}h im Voraus benachrichtigt."
+      private: "Du wirst für das Event {} nun {}h im Voraus benachrichtigt."
       channel:
         suc: "Die Änderung war Erfolgreich."
         dig: "Die Zeit in [h] muss ganzzahlig angegeben werden!"

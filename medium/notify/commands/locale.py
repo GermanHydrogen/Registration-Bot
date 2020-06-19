@@ -28,7 +28,7 @@ class Locale(commands.Cog):
             result = ["nicht mehr", "wieder"][result]
             await channel.send(ctx.message.author.mention + " " +
                                self.lang["notify_local"]["toggle"]["channel"]["suc"], delete_after=5)
-            await author.send(self.lang["notify_global"]["toggle"]["private"].format(result))
+            await author.send(self.lang["notify_local"]["toggle"]["private"].format(result, channel.name))
         else:
             await channel.send(ctx.message.author.mention + " " +
                                self.lang["notify_global"]["toggle"]["channel"]["fail"], delete_after=5)
@@ -48,7 +48,7 @@ class Locale(commands.Cog):
         elif self.edit.changeTime(channel.id, author.id, time):
             await channel.send(ctx.message.author.mention + " " +
                                self.lang["notify_local"]["time"]["channel"]["suc"], delete_after=5)
-            await author.send(self.lang["notify_local"]["time"]["private"].format(int(time)))
+            await author.send(self.lang["notify_local"]["time"]["private"].format(channel.name, int(time)))
         else:
             await channel.send(ctx.message.author.mention + " " +
                                self.lang["notify_local"]["time"]["channel"]["fail"], delete_after=5)

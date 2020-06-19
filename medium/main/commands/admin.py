@@ -143,7 +143,16 @@ class Admin(commands.Cog):
 
         player = " ".join(player)
         if not (len(player) == 18 and player[1:].isdigit()):
-            player = self.io.get_user_id(player, channel)
+            buffer = self.io.get_user_id(player, channel)
+            if not buffer:
+                await ctx.message.delete()
+                await channel.send(
+                    ctx.message.author.mention + " " + self.lang["forceUnslot"]["error"]["general"]["channel"].format(
+                        player),
+                    delete_after=5)
+                return
+            else:
+                player = buffer
 
         if self.list.unslotEvent(channel, player):
             await self.io.writeEvent(channel)
