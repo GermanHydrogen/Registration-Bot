@@ -77,10 +77,11 @@ class IO:
             return result[0][0]
         else:
             nname = get_members(nname, channel)
+
             if not nname:
                 return None
-
-            sql = f"INSERT IGNORE INTO User VALUES (%s, %s);"
+            print(nname)
+            sql = f"INSERT IGNORE INTO User (ID, Nickname) VALUES (%s, %s);"
             var = [nname.id, nname.display_name]
             self.cursor.execute(sql, var)
             self.db.commit()

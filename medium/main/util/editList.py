@@ -37,7 +37,7 @@ class EditList:
         result = self.cursor.fetchone()
 
         if (not force) and (result is None):
-            sql = "INSERT INTO User VALUES (%s, %s);"
+            sql = "INSERT INTO User (ID, Nickname) VALUES (%s, %s);"
             var = [str(user_id), user_displayname]
             self.cursor.execute(sql, var)
             self.db.commit()

@@ -24,7 +24,7 @@ class Locale(commands.Cog):
 
         result = self.edit.toggle(channel.id, author.id)
 
-        if result:
+        if result is not None:
             result = ["nicht mehr", "wieder"][result]
             await channel.send(ctx.message.author.mention + " " +
                                self.lang["notify_local"]["toggle"]["channel"]["suc"], delete_after=5)
@@ -45,6 +45,9 @@ class Locale(commands.Cog):
         if not time.isdigit():
             await channel.send(ctx.message.author.mention + " " +
                                self.lang["notify_local"]["time"]["channel"]["dig"], delete_after=5)
+        elif int(time) > 2400:
+            await channel.send(ctx.message.author.mention + " " +
+                               self.lang["notify_local"]["time"]["channel"]["large"], delete_after=5)
         elif self.edit.changeTime(channel.id, author.id, time):
             await channel.send(ctx.message.author.mention + " " +
                                self.lang["notify_local"]["time"]["channel"]["suc"], delete_after=5)

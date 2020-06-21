@@ -95,6 +95,12 @@ class Campaign(commands.Cog):
 
         recUser = self.io.get_user_id(" ".join(argv[1:]), channel)
 
+        if not recUser:
+            await ctx.message.delete()
+            await channel.send(ctx.message.author.mention + " " + self.lang["trade"]["channel"]["error"]["val"],
+                               delete_after=5)
+
+            return
         valid = self.edit.validateSwap(channel.id, reqUser, recUser)
 
         if valid == 0:

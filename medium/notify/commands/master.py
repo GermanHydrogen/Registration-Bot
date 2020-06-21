@@ -45,7 +45,7 @@ class Global(commands.Cog):
 
         result = self.toggle(author.id)
 
-        if result:
+        if result is not None:
 
             result = ["nicht mehr", "wieder"][result]
 

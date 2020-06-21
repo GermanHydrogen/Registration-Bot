@@ -18,7 +18,7 @@ class Handler(commands.Cog):
             Calculates datetime for notification
                 Args:
                     event(string): ID of an event
-                    user(string): User ID
+                    user_id(string): User ID
                     delay(int): delay in sec.
 
         """
