@@ -1,5 +1,6 @@
 from config.loader import cfg
 from datetime import datetime, timedelta
+from notify.util.handler import Handler
 
 
 class EditLocale:
@@ -97,4 +98,7 @@ class EditLocale:
         self.cursor.execute(sql, var)
         self.db.commit()
 
-        return self.cursor.rowcount == 1
+        if self.cursor.rowcount == 1:
+            return time
+        else:
+            return None

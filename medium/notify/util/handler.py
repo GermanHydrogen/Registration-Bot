@@ -27,6 +27,19 @@ class Handler(commands.Cog):
 
         user = self.client.get_user(int(user_id))
         if user:
+            sql = "SELECT Time FROM Notify WHERE Event = %s AND User = %s"
+            self.cursor.execute(sql, [event, user_id])
+            result = self.cursor.fetchall()
+
+            if not result:
+                return
+
+            now = datetime.now()
+            delta = (result[0] - now).total_seconds()
+
+            if abs(delta) > 1200:
+                return
+
             sql = "SELECT Name, Time FROM Event WHERE ID = %s;"
             self.cursor.execute(sql, [event])
             result = self.cursor.fetchone()
@@ -47,5 +60,5 @@ class Handler(commands.Cog):
             now = datetime.now()
             delta = (elem[1]-now).total_seconds()
             if delta > 0:
-                await self.notify(elem[2], elem[0], delta)
+                asyncio.create_task(self.notify(elem[2], elem[0], delta))
 
