@@ -3,6 +3,7 @@ from datetime import datetime
 from config.loader import cfg
 import asyncio
 
+import discord
 
 class Handler(commands.Cog):
     def __init__(self, client, lang, logger, db, cursor):
@@ -35,7 +36,7 @@ class Handler(commands.Cog):
                 return
 
             now = datetime.now()
-            delta = (result[0] - now).total_seconds()
+            delta = (result[0][0] - now).total_seconds()
 
             if abs(delta) > 1200:
                 return
@@ -46,8 +47,13 @@ class Handler(commands.Cog):
 
             guild = self.client.get_guild(int(cfg['guild']))
             nickname = guild.get_member(int(user_id)).display_name
-
-            await user.send(self.lang["notify_global"]["noti"].format(nickname, str(result[0]), str(result[1])))
+            try:
+                await user.send(self.lang["notify_global"]["noti"].format(nickname, str(result[0]), str(result[1])))
+            except discord.errors.Forbidden:
+                log = "User: " + str(nickname).ljust(20) + "\t"
+                log += "Channel:" + str(event).ljust(20) + "\t"
+                log += "Command: " + "Notify: discord.errors.Forbidden".ljust(20) + "\t"
+                self.logger.log(log)
 
     @commands.Cog.listener()
     async def on_ready(self):
