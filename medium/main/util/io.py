@@ -180,7 +180,7 @@ class IO:
 
         channel = msg_list[0].channel
         split = channel.name.split("-")
-        time = time.strip() + ":00"
+        time = time[:2] + ':' + time[2:] + ":00"
 
         if not (len(split) == 4 and len(split[0]) == 4 and len(split[1]) == 2 and len(split[2]) == 2 and split[3]):
             return False
