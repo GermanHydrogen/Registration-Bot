@@ -38,7 +38,7 @@ class Global(commands.Cog):
 
     @commands.command(hidden=False, description="toggles if you recieve a notification before an event globaly")
     @commands.guild_only()
-    async def toggleGlobal(self, ctx):
+    async def toggleReminderGlobal(self, ctx):
 
         author = ctx.message.author
         channel = ctx.message.channel

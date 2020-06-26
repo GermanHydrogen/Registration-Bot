@@ -22,7 +22,7 @@ class Locale(commands.Cog):
     @commands.command(hidden=False, description="toggles if you recieve a notification before an event")
     @commands.cooldown(1, 0.5, commands.BucketType.channel)
     @commands.guild_only()
-    async def toggleNotify(self, ctx):
+    async def toggleReminder(self, ctx):
         author = ctx.message.author
         channel = ctx.message.channel
 

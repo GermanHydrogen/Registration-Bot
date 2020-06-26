@@ -44,11 +44,22 @@ class EditLocale:
 
         time = self.deltaEventTime(event, time)
 
-        sql = "INSERT IGNORE INTO Notify (Event, User, Time) VALUES (%s, %s, %s);"
-        var = [event, str(user), time]
-
+        sql = "SELECT * FROM Notify WHERE Event = %s AND User = %s;"
+        var = [event, str(user)]
         self.cursor.execute(sql, var)
-        self.db.commit()
+
+        if self.cursor.fetchall():
+            sql = "UPDATE Notify SET Enabled = True WHERE Event = %s AND User = %s;"
+            var = [event, str(user)]
+            self.cursor.execute(sql, var)
+            self.db.commit()
+
+        else:
+            sql = "INSERT IGNORE INTO Notify (Event, User, Time) VALUES (%s, %s, %s);"
+            var = [event, str(user), time]
+
+            self.cursor.execute(sql, var)
+            self.db.commit()
 
     def toggle(self, event, user, overwrite = False):
         """
