@@ -14,7 +14,7 @@ This bot is part of the german multi-gaming discord community Rosenrudel: https:
 - Import of slotlists for e.g. campaigns
 - Notification/Reminding of users for upcomming events
 
-The medium version is recommended for larger communities, because it minimizes the api-traffic.
+The medium version is recommended for larger communities, because of minimized the api-traffic.
 
 ## Usage
 *English versions coming soon*
