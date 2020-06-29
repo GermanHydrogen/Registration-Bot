@@ -1,41 +1,23 @@
 # Registration-Bot
 A simple Discord Bot for managing registrations to events for your community. It's using the discord.py package by Rapptz.
 
+Two versions are available for this Bot. The light variant doesn't requiere any additional software, medium requires an mysql database.<br>
+All light version features are also found in the medium version. <br> <br>
+
+This bot is part of the german multi-gaming discord community Rosenrudel: https://discord.gg/ep8FcXT
+## Features
+### Light
+- Easy slotlist creation and managment for event builders
+- Easy registration to slot-based Events for normal users
+
+### Medium
+- Import of slotlists for e.g. campaigns
+- Notification/Reminding of users for upcomming events
+
+The medium version is recommended for larger communities, because it minimizes the api-traffic.
+
 ## Usage
-First of all create an Slotlist with following requirements:
-- Begins with "Slotliste"
-- Each slot has its own line
-- Each slot description begins with "#[Number of the slot]"
-- Each slot description ends with an "-"
+*English versions coming soon*
 
-### Example
-
-```
-Slotliste
-
-#01-CO-
-#02-XO-
-
-Anvil
-#03 Squadleader -
-#04 Fireteamleader -
-```
----
-
-Then init the bot with !create.
-
-### Commands
-- !create
-
-- !slot [num]
-- !unslot
-
-- !addgroup [first slot] [last slot] [name]
-- !delslot [name]
-
-- !addslot [num] [group] [desc]
-- !editslot [num] [desc]
-- !delslot [num]
-
-- !forceSlot [num] [player]
-- !forceUnslot [player]
+For users: https://github.com/GermanHydrogen/Registration-Bot/wiki/User-Guide-DE <br>
+For admins and event builders: https://github.com/GermanHydrogen/Registration-Bot/wiki/Admin-Usage-DE
