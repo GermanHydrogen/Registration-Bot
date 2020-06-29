@@ -38,9 +38,10 @@ class Admin(commands.Cog):
                     out.append(x)
                 elif x.author == self.client.user:
                     out.append(x)
-            elif re.findall(r"Eventstart:.*$", x.content.replace("*", ""), re.MULTILINE):
+            elif content := re.findall(r"Eventstart:.*$", x.content.replace("*", ""), re.MULTILINE):
+                print(content)
                 if x.author == ctx.message.author:
-                    time = re.sub("[^0-9]", "", x.content)
+                    time = re.sub("[^0-9]", "", content[0])
 
         if time == "" or len(time) != 4:
             await ctx.message.author.send(self.lang["create"]["error"]["general"]["user"])
