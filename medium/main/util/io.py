@@ -325,7 +325,7 @@ class IO:
         delta = result - delta
 
         sql = "INSERT INTO Notify VALUES (%s, %s, %s, %s)"
-        var = [(event, elem["User"], 1, delta) for index, elem in slots.items() if elem["User"]]
+        var = [(str(event), elem["User"], 1, delta) for index, elem in slots.items() if elem["User"] and elem["User"].isdigit()]
         self.cursor.executemany(sql, var)
         self.db.commit()
 
