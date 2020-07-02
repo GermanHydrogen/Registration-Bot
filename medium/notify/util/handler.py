@@ -58,7 +58,7 @@ class Handler(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         sql = "SELECT n.User, n.Time, n.Event FROM Notify n, User u \
-                WHERE n.User = u.ID AND u.Notify AND n.Time >= CURDATE();"
+                WHERE n.User = u.ID AND u.Notify AND n.Enabled AND n.Time >= CURDATE();"
         self.cursor.execute(sql)
         result = self.cursor.fetchall()
 
