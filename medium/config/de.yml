@@ -101,7 +101,8 @@ create:
     user: "Das Event wurde erfolgreich erstellt"
   error:
     general:
-      user: "Die Slotliste wurde nicht erkannt!"
+      user: "Die Slotliste wurde nicht erkannt!\n
+      Slotlisten müssen mit `>Slotliste<` gekenntzeichnet sein!"
     time:
       user: "Es wurde kein Eventstart gefunden. Bitte gib diesen im Channel an mit der Syntax: \n
       `Eventstart: [Uhrzeit]` \n im Format hh:mm"

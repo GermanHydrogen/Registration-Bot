@@ -32,7 +32,7 @@ class Admin(commands.Cog):
         time = ""
 
         async for x in channel.history(limit=1000):
-            if re.search("Slotliste", x.content):
+            if re.search(">Slotliste<", x.content):
 
                 if x.author == ctx.message.author:
                     out.append(x)
