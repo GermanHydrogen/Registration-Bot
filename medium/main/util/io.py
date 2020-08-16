@@ -3,14 +3,15 @@ from datetime import datetime, timedelta
 from config.loader import cfg
 
 
-def get_line_data(line):
+def get_line_data(line, last):
     """
     Extracts information from a line of a slotlist
     Args:
         line (string): line of a slotlist
+        last (int): last slot number
 
     Returns:
-       {num: {"User": playername, "Description": description}}
+       int(num), {num: {"User": playername, "Description": description}}
 
     """
     output = {"Description": "", "User": ""}
@@ -26,11 +27,14 @@ def get_line_data(line):
         else:
             break
 
+    if int(num) == 0:  # If slotnumber is 0, then autofit slotnumber
+        num = str(last+1).zfill(len(num))
+
     output["Description"] = line[len(num)+1:].strip()
 
     output["User"] = output["User"].strip()
 
-    return {num: output}
+    return int(num), {num: output}
 
 
 def get_members(name, channel):
@@ -257,6 +261,7 @@ class IO:
 
         slots = {}
         struct = []
+        last = 0
 
         current_buffer = ""
 
@@ -266,7 +271,7 @@ class IO:
             if "Slotliste" in line:
                 pass
             elif line and line[0] == "#":
-                data = get_line_data(line)
+                last, data = get_line_data(line, last)
 
                 if not struct or current_buffer:
                     struct.append({"Name": "", "Struct": current_buffer, "Length": len(current_buffer)})
