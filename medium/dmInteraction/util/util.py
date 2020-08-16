@@ -56,3 +56,25 @@ class Util:
         self.cursor.execute(sql, [str(channel_id), 'Reserve'])
 
         return self.cursor.fetchall()
+
+    def get_slot_description(self, event, user):
+        """
+               Gets all taken slots of the channel
+               Args:
+                    event (string): Server Channel/ Event id
+                    user (string): User ID
+
+                Returns:
+                    (string): '#[num] [description]'
+
+
+        """
+        sql = "SELECT Number, Description FROM Slot WHERE Event = %s AND User = %s"
+        self.cursor.execute(sql, [str(event), str(user)])
+
+        result = self.cursor.fetchone()
+
+        if result:
+            return '#' + str(result[0]) + " " + str(result[1])
+        else:
+            return None

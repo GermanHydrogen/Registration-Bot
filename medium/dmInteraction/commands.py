@@ -116,7 +116,10 @@ class Campaign(commands.Cog):
 
         try:
             user = self.client.get_user(int(recUser))
-            msg = await user.send(self.lang["trade"]["request"].format(ctx.message.author, channel.name))
+            descr_req = self.util.get_slot_description(str(channel.id), str(reqUser))
+            descr_rec = self.util.get_slot_description(str(channel.id), str(recUser))
+
+            msg = await user.send(self.lang["trade"]["request"].format(ctx.message.author, descr_rec, descr_req, channel.name))
             await msg.add_reaction('\N{THUMBS UP SIGN}')
             await msg.add_reaction('\N{THUMBS DOWN SIGN}')
 
