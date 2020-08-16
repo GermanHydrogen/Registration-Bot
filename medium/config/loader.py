@@ -7,12 +7,8 @@ if os.path.isfile(path + '/config.yml'):
     with open(path + "/config.yml", 'r') as ymlfile:
         cfg = yaml.safe_load(ymlfile)
 else:
-    print("Please add config.yml to the dir")
-    exit()
-
-if not cfg["token"] and cfg["role"] and cfg["language"]:
-    print("No valid token in config.yml")
-    exit()
+    with open(path + "/default.yml", 'r') as ymlfile:
+        cfg = yaml.safe_load(ymlfile)
 
 if os.path.isfile(path + f'/{cfg["language"]}.yml'):
     with open(path + f'/{cfg["language"]}.yml') as ymlfile:

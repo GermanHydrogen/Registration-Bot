@@ -1,0 +1,35 @@
+# Bot Token (from discord.com/developers/)
+token: "TOKEN"
+# Bot Language (de/en)
+language: "de"
+# Discord Server ID
+guild: 123456789012345678
+# Admin Role name
+role: 'ROLE'
+# Reservation Slot Ratio (Slots/Reservation)
+res_ratio: 0.2
+
+# Default notificationtime before event (in h)
+std_notify: 24
+
+#DB Credentials
+host: "host"
+user: "user"
+passwd: "password"
+database: "database"
+
+
+# Game Instructor (User ID)
+backup: 123456789012345678
+
+# Restricting access to a certain game to a certain role with channel name JJJJ-MM-DD-game
+# Optional
+games:
+  game:
+    name: "name"
+    role: "role name"
+    beginner-role: "role name"
+    instructor: 123456789012345678, 123456789012345678
+
+
+
