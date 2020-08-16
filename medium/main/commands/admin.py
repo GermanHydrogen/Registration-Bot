@@ -43,7 +43,7 @@ class Admin(commands.Cog):
                     time = re.sub("[^0-9]", "", content[0])
 
         if time == "" or len(time) != 4:
-            await ctx.message.author.send(self.lang["create"]["error"]["general"]["user"])
+            await ctx.message.author.send(self.lang["create"]["error"]["time"]["user"])
         elif out:
             self.io.createEvent(out, ctx.message.author, time, self.client.user)
             await self.io.writeEvent(channel, True)

@@ -74,7 +74,7 @@ notify_global:
       channel:
         suc: "Die Änderung war Erfolgreich."
         fail: "Du musst dich schon einmal für Event eingetragen haben, um eine Änderung durchzuführen."
-    noti: "Hey {},\n\n nicht vergessen: Im Rudel ist das Event {} um {}. Rechner in Form bringen, Getränke bereitstellen und gute Laune einpacken :D"
+    noti: "Hey {},\n nicht vergessen: Im Rudel ist das Event {} um {}. Rechner in Form bringen, Getränke bereitstellen und gute Laune einpacken :D"
 
 notify_local:
     toggle:
@@ -102,6 +102,9 @@ create:
   error:
     general:
       user: "Die Slotliste wurde nicht erkannt!"
+    time:
+      user: "Es wurde kein Eventstart gefunden. Bitte gib diesen im Channel an mit der Syntax: \n
+      `Eventstart: [Uhrzeit]` \n im Format hh:mm"
 
 campaign:
   request: "{} macht Dir ein Angebot was Du nicht ablehnen kannst. Möchtest Du beim nächsten Teil seiner Kampagne am
