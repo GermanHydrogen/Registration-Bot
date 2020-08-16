@@ -26,7 +26,7 @@ class Admin(commands.Cog):
     @commands.command(hidden=True, description="Initialize the slotlist")
     @has_role(cfg["role"])
     @commands.guild_only()
-    async def create(self, ctx):  # makes the slotlist editable for the bot
+    async def create(self, ctx, arg=""):  # makes the slotlist editable for the bot
         channel = ctx.message.channel
         out = []
         time = ""
@@ -45,7 +45,7 @@ class Admin(commands.Cog):
         if time == "" or len(time) != 4:
             await ctx.message.author.send(self.lang["create"]["error"]["time"]["user"])
         elif out:
-            self.io.createEvent(out, ctx.message.author, time, self.client.user)
+            self.io.createEvent(out, ctx.message.author, time, self.client.user, (arg == 'manuel'))
             await self.io.writeEvent(channel, True)
 
             await ctx.message.author.send(self.lang["create"]["success"]["user"])

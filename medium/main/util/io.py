@@ -3,12 +3,13 @@ from datetime import datetime, timedelta
 from config.loader import cfg
 
 
-def get_line_data(line, last):
+def get_line_data(line, last, manuel=False):
     """
     Extracts information from a line of a slotlist
     Args:
         line (string): line of a slotlist
         last (int): last slot number
+        manuel (bool): disables automatic slotnumber generation
 
     Returns:
        int(num), {num: {"User": playername, "Description": description}}
@@ -27,7 +28,7 @@ def get_line_data(line, last):
         else:
             break
 
-    if int(num) == 0:  # If slotnumber is 0, then autofit slotnumber
+    if not manuel and int(num) == 0:  # If slotnumber is 0, then autofit slotnumber
         num = str(last+1).zfill(len(num))
 
     output["Description"] = line[len(num)+1:].strip()
@@ -168,7 +169,7 @@ class IO:
 
                 count += 1
 
-    def createEvent(self, msg_list, author, time, bot=None):
+    def createEvent(self, msg_list, author, time, bot=None, manuel=False):
         """
                Creates an event in the database
                Args:
@@ -176,6 +177,7 @@ class IO:
                    author (user object): Author of the slotlist
                    time (str): start time of the event
                    bot (user object): Used Bot user (optional)
+                   manuel (bool): if slotgeneration should be manuel
 
                Returns:
                    (bool): if successful
@@ -271,7 +273,7 @@ class IO:
             if "Slotliste" in line:
                 pass
             elif line and line[0] == "#":
-                last, data = get_line_data(line, last)
+                last, data = get_line_data(line, last, manuel)
 
                 if not struct or current_buffer:
                     struct.append({"Name": "", "Struct": current_buffer, "Length": len(current_buffer)})
