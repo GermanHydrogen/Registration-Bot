@@ -5,10 +5,10 @@
 slot:
 
   new_user:
-    user:   'Willkommen im Rudel,\n
+    user:  'Willkommen im Rudel,\n
             du bekommst diese kurze Nachricht hier, weil du dich für ein {}-Event anmelden wolltest, ohne das du unseren kleinen Technik-Check absolviert hast. Der ist gar nicht so unwichtig! Wir führen ihn im Moment auf
             wöchentlicher Basis durch oder nach Absprache. Du erfährst da ein paar nette Details, die dir am Anfang weiterhelfen und wie du möglichst ohne technische Probleme hier mitmachen kannst.\n
-            Schreib doch bitte **{}** an, das ist unser {}-Einstiegshelfer.\n\n
+            Schreib doch bitte **{}** an, das ist unser {}-Einstiegshelfer-Team.\n\n
             Wir machen das im Sinne der Gemeinschaft und damit jeder ein möglichst angenehmes Spielerlebnis hat. Und damit für die Zukunft noch ein: viel Spaß!'
 
     channel: "{} ({}) hat versucht sich für das Event {} in der Position #{} einzutragen"

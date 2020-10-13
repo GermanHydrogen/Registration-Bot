@@ -55,7 +55,7 @@ class User(commands.Cog):
             # User-Message
             await author.send(
                 self.lang["slot"]["new_user"]["user"].format(cfg["games"][game]["name"],
-                                                             instructor[0].display_name,
+                                                             " oder ".join([x.display_name for x in instructor]),
                                                              cfg["games"][game]["name"]).replace('\\n', '\n'))
             # Channel-Message
             await channel_author.send(
