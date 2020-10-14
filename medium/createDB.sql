@@ -15,6 +15,7 @@ create TABLE IF NOT EXISTS Event(
     Date DATE,
     Time TIME DEFAULT '19:00:00',
     Type VARCHAR(15),
+    Locked BOOL DEFAULT FALSE,
 
     PRIMARY KEY (ID),
     FOREIGN KEY (Author) REFERENCES User(ID)

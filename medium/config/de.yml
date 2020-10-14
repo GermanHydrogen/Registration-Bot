@@ -36,6 +36,12 @@ unslot:
     general:
       channel: "Du kannst dich nicht austragen, wenn du nicht in der Liste eingetragen bist"
 
+lock:
+  toggle:
+    success: "Die Sperrung wurde umgeschalten."
+    error: "Die Sperrung konnte nicht umgeschalten werden."
+  slotlist: "Gesperrt"
+
 trade:
   request: "{} möchte mit Dir ({}) seinen Slot ({}) für das Event {} tauschen. Du kannst dies in den nächsten 24h mittels
             Reaktion bestätigen oder ablehnen. Bei Ablauf der Frist, wird die Anfrage automatisch abgelehnt."

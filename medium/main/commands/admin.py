@@ -324,3 +324,21 @@ class Admin(commands.Cog):
             await channel.send(ctx.message.author.mention + " " + self.lang["delgroup"]["error"]["general"]["channel"],
                                delete_after=5)
             await ctx.message.delete()
+
+    @commands.command(hidden=True, description="Sperrt bzw. öffnet die Slotliste")
+    @has_role(cfg["role"])
+    @commands.cooldown(1, 2, commands.BucketType.channel)
+    @commands.guild_only()
+    async def toggleLock(self, ctx):
+        channel = ctx.message.channel
+
+        result = self.list.toggleLock(channel)
+        if result:
+            await channel.send(ctx.message.author.mention + " " + self.lang["lock"]["toggle"]["success"],
+                               delete_after=5)
+            await self.io.writeEvent(channel, True)
+        else:
+            await channel.send(ctx.message.author.mention + " " + self.lang["lock"]["toggle"]["error"],
+                               delete_after=5)
+
+        await ctx.message.delete()

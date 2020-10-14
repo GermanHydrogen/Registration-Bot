@@ -369,6 +369,7 @@ class IO:
                    (bool): if successful
 
            """
+        locked_modifier = {True: '', False: '**'}
 
         channel_id = channel.id
 
@@ -438,7 +439,15 @@ class IO:
         self.cursor.execute(sql, [channel_id])
         msgs = self.cursor.fetchall()
 
+        sql = "SELECT Locked FROM Event WHERE ID =  %s;"
+        self.cursor.execute(sql, [channel_id])
+        locked = self.cursor.fetchone()[0]
+
         output = "**Slotliste**\n"
+
+        if locked:
+            output = "**[Gesperrt]** " + output
+
         for msg_id in msgs:
             sql = "SELECT Number, Name, Struct, Length FROM SlotGroup WHERE Event = %s AND Msg = %s ORDER BY Number;"
             self.cursor.execute(sql, [channel_id, msg_id[0]])
@@ -479,7 +488,9 @@ class IO:
 
                         output += f"#{x[0]} {x[1]} - {user}"
                     else:
-                        output += f"#**{x[0]} {x[1]}** - "
+                        output += "#{locked}{number} {descr} {locked}- ".format(
+                                number=x[0], descr=x[1], locked=locked_modifier[locked])
+
                     output += "\n"
 
             if msg_id[1] is not None:

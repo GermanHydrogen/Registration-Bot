@@ -24,8 +24,8 @@ class EditList:
 
         """
 
-        sql = "SELECT User FROM Slot WHERE Event = %s and Number = %s;"
-        var = [channel.id, num]
+        sql = "SELECT User FROM Slot, Event WHERE Event.ID = Slot.Event and Event = %s and Number = %s and (NOT Event.Locked OR %s);"
+        var = [channel.id, num, force]
         self.cursor.execute(sql, var)
         slot = self.cursor.fetchone()
 
@@ -302,3 +302,19 @@ class EditList:
         self.db.commit()
 
         return True
+
+    def toggleLock(self, channel):
+        """
+        Toggles the lock on an event
+        Args:
+            channel (channel): Server channel
+
+        Returns:
+            (bool): if successful
+        """
+
+        sql = "UPDATE Event SET Locked = NOT Locked WHERE ID = %s;"
+        self.cursor.execute(sql, [channel.id])
+        self.db.commit()
+
+        return self.cursor.rowcount == 1
