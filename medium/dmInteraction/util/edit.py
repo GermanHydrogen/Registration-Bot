@@ -50,6 +50,28 @@ class Edit:
 
         return True
 
+    def deleteAllMessages(self, event):
+        """
+        Deletes all eventmessages for an event
+
+        Args:
+            event (str): event id
+
+        Returns:
+            list: deleted msgs
+        """
+
+        sql = "SELECT User, MessageID FROM Message " \
+              "WHERE Event = %s AND RecUser is NULL;"
+        self.cursor.execute(sql, [str(event)])
+        slots = self.cursor.fetchall()
+
+        sql = "DELETE FROM Message WHERE Event = %s;"
+        self.cursor.execute(sql, [str(event)])
+        self.db.commit()
+
+        return slots
+
     def cleanupMessage(self, date):
         """
             Deletes all timeouted messages

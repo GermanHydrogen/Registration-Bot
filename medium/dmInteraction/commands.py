@@ -36,6 +36,16 @@ class Campaign(commands.Cog):
                     delete_after=5)
                 return
 
+        # Cleanup
+        old = self.edit.deleteAllMessages(str(ctx.message.channel.id))
+        for elem in old:
+            user = self.client.get_user(int(elem[0]))
+            msg = await user.fetch_message(int(elem[1]))
+
+            await msg.delete()
+            await user.send("``` " + msg.content + " ```")
+            await user.send(self.lang['campaign']['private']['timeout'])
+
         slots = self.util.get_slots(str(event).strip(), str(ctx.message.channel.id))
         result = []
         date = datetime.date.today() + datetime.timedelta(days=2)
@@ -63,7 +73,7 @@ class Campaign(commands.Cog):
                         result.append((str(ctx.message.channel.id), elem[0], elem[1], str(msg.id), str(date)))
                     except:
                         continue
-        print(event)
+
         if self.edit.reserveSlots(result) and self.edit.copyDummies(ctx.message.channel.id, event):
             await ctx.message.channel.send(
                 ctx.message.author.mention + " " + self.lang["campaign"]["channel"]["success"],
