@@ -7,6 +7,7 @@ from config.loader import cfg
 from main.util.io import IO
 from dmInteraction.util.edit import Edit
 from dmInteraction.util.choice import Choice
+from notify.util.editLocale import EditLocale
 
 
 class Handler(commands.Cog):
@@ -19,6 +20,8 @@ class Handler(commands.Cog):
         self.io = IO(cfg, db, cursor)
         self.choice = Choice(db, cursor)
         self.edit = Edit(db, cursor)
+
+        self.notify = EditLocale(db, cursor)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -168,6 +171,8 @@ class Handler(commands.Cog):
                     await msg.delete()
                     await channel.send("```" + msg.content + " ```")
                     await author.send(self.lang['campaign']['private']['accept']['success'])
+
+                    self.notify.create(result.id, author.id)
 
                     log = "User: " + str(author.display_name).ljust(20) + "\t"
                     log += "Channel:" + str('DM').ljust(20) + "\t"
