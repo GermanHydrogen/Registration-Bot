@@ -30,6 +30,26 @@ class Edit:
 
         return True
 
+    def copyDummies(self, target, origin):
+        """
+        Copies dummy user from one event to another
+        Args:
+            target (str): target event
+            origin (str): origin event
+
+        Returns:
+            (bool): if successful
+        """
+
+        sql = "UPDATE Slot s1, (SELECT User, Number FROM Slot WHERE (NOT User regexp '^[0-9]') AND Event = %s) s2 " \
+              "SET s1.User = s2.User WHERE s1.Event = %s AND s1.Number = s2.Number"
+
+        var = [str(origin), str(target)]
+        self.cursor.execute(sql, var)
+        self.db.commit()
+
+        return True
+
     def cleanupMessage(self, date):
         """
             Deletes all timeouted messages

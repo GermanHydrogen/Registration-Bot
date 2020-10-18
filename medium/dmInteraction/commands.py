@@ -63,11 +63,13 @@ class Campaign(commands.Cog):
                         result.append((str(ctx.message.channel.id), elem[0], elem[1], str(msg.id), str(date)))
                     except:
                         continue
-
-        if self.edit.reserveSlots(result):
+        print(event)
+        if self.edit.reserveSlots(result) and self.edit.copyDummies(ctx.message.channel.id, event):
             await ctx.message.channel.send(
                 ctx.message.author.mention + " " + self.lang["campaign"]["channel"]["success"],
                 delete_after=5)
+
+
 
             log = "User: " + str(ctx.message.author).ljust(20) + "\t"
             log += "Channel:" + str(ctx.message.channel).ljust(20) + "\t"

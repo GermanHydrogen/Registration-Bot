@@ -57,7 +57,7 @@ class Util:
             sql = "SELECT User, Number, Description FROM Slot WHERE Event = %s AND Description != %s AND User IS NOT NULL;"
             self.cursor.execute(sql, [str(channel_id), 'Reserve'])
         else:
-            sql = "SELECT User, Number, Description FROM Slot s1 WHERE Event = %s AND Description != %s AND User IS NOT NULL " \
+            sql = "SELECT User, Number, Description FROM Slot s1 WHERE Event = %s AND Description != %s AND User IS NOT NULL AND User regexp '^[0-9]'" \
                   "AND NOT EXISTS(SELECT * FROM Slot s2 WHERE Event = %s AND s1.Number = s2.Number AND s2.User = 'A00000000000000000');"
             self.cursor.execute(sql, [str(channel_id), 'Reserve', str(intersection)])
 
