@@ -42,18 +42,24 @@ class Util:
         else:
             return None
 
-    def get_slots(self, channel_id):
+    def get_slots(self, channel_id, intersection = ''):
         """
                 Gets all taken slots of the channel
+                If intersection is given, K.I.A (marked in the intersection channel) are removed
                 Args:
                     channel_id (string): Server Channel
-
+                    intersection (string): Server Channel to intersect with
                 Returns:
                     (list): [(user, slot-number, description)]
 
            """
-        sql = "SELECT User, Number, Description FROM Slot WHERE Event = %s AND Description != %s AND User IS NOT NULL;"
-        self.cursor.execute(sql, [str(channel_id), 'Reserve'])
+        if intersection == '':
+            sql = "SELECT User, Number, Description FROM Slot WHERE Event = %s AND Description != %s AND User IS NOT NULL;"
+            self.cursor.execute(sql, [str(channel_id), 'Reserve'])
+        else:
+            sql = "SELECT User, Number, Description FROM Slot s1 WHERE Event = %s AND Description != %s AND User IS NOT NULL " \
+                  "AND NOT EXISTS(SELECT * FROM Slot s2 WHERE Event = %s AND s1.Number = s2.Number AND s2.User = 'A00000000000000000');"
+            self.cursor.execute(sql, [str(channel_id), 'Reserve', str(intersection)])
 
         return self.cursor.fetchall()
 

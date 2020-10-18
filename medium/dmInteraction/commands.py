@@ -36,7 +36,7 @@ class Campaign(commands.Cog):
                     delete_after=5)
                 return
 
-        slots = self.util.get_slots(str(event).strip())
+        slots = self.util.get_slots(str(event).strip(), str(ctx.message.channel.id))
         result = []
         date = datetime.date.today() + datetime.timedelta(days=2)
 
