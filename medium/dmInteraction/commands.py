@@ -68,6 +68,12 @@ class Campaign(commands.Cog):
             await ctx.message.channel.send(
                 ctx.message.author.mention + " " + self.lang["campaign"]["channel"]["success"],
                 delete_after=5)
+
+            log = "User: " + str(ctx.message.author).ljust(20) + "\t"
+            log += "Channel:" + str(ctx.message.channel).ljust(20) + "\t"
+            log += "Command: " + str(ctx.message.content).ljust(20) + "\t"
+            self.logger.debug(log)
+
         else:
             await ctx.message.channel.send(ctx.message.author.mention + " " + self.lang["campaign"]["channel"]["error"],
                                            delete_after=5)

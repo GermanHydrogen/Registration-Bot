@@ -88,9 +88,17 @@ class Handler(commands.Cog):
 
         if payload.emoji.name == '👎':
             result = self.choice.denyMessage(str(msg.id))
-            if not result:
+            if not result:  # if no message is found in db corresponding to the msg id
                 await author.send(self.lang['trade']['private']['deny']['error'])
-            elif result[0] == 'trade' and isinstance(result[1], str):
+
+                log = "User: " + str(author.display_name).ljust(20) + "\t"
+                log += "Channel:" + str('DM').ljust(20) + "\t"
+                log += "Command: " + str('deny campaing-msg').ljust(20) + "\t"
+                log += 'No corresponding msg was found in the DB'
+
+                self.logger.debug(log)
+
+            elif result[0] == 'trade' and isinstance(result[1], str):   # if one of the users has unslotted themselfes
                 guild = self.client.get_guild(int(cfg['guild']))
                 user = guild.get_member(int(result[1])).display_name
 
@@ -108,6 +116,11 @@ class Handler(commands.Cog):
                     await msg.delete()
                     await channel.send("``` " + msg.content + " ```")
                     await author.send(self.lang['campaign']['private']['deny']['success'])
+
+                    log = "User: " + str(author.display_name).ljust(20) + "\t"
+                    log += "Channel:" + str('DM').ljust(20) + "\t"
+                    log += "Command: " + str('deny campaing-msg').ljust(20) + "\t"
+                    self.logger.debug(log)
 
                 else:
                     channel_name = guild.get_channel(int(result[0])).name
@@ -127,8 +140,16 @@ class Handler(commands.Cog):
 
         elif payload.emoji.name == '👍':
             result = self.choice.acceptMessage(str(msg.id))
-            if not result:
+            if not result:      # if no message is found in db corresponding to the msg id
                 await author.send(self.lang['trade']['private']['accept']['error'])
+
+                log = "User: " + str(author).ljust(20) + "\t"
+                log += "Channel:" + str('DM').ljust(20) + "\t"
+                log += "Command: " + str('accept campaing-msg').ljust(20) + "\t"
+                log += 'No corresponding msg was found in the DB'
+
+                self.logger.debug(log)
+
             elif result[0] == 'trade' and isinstance(result[1], str):
                 guild = self.client.get_guild(int(cfg['guild']))
                 user = guild.get_member(int(result[1])).display_name
@@ -147,6 +168,11 @@ class Handler(commands.Cog):
                     await msg.delete()
                     await channel.send("```" + msg.content + " ```")
                     await author.send(self.lang['campaign']['private']['accept']['success'])
+
+                    log = "User: " + str(author.display_name).ljust(20) + "\t"
+                    log += "Channel:" + str('DM').ljust(20) + "\t"
+                    log += "Command: " + str('accept campaing-msg').ljust(20) + "\t"
+                    self.logger.debug(log)
                 else:
                     channel = guild.get_channel(int(result[0]))
 
