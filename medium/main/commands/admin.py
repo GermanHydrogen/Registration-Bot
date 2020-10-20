@@ -87,16 +87,10 @@ class Admin(commands.Cog):
 
         player = " ".join(player)
 
-        try:
-            player = self.io.get_user_id(player, channel)
-        except:
-            await ctx.message.delete()
-            await channel.send(
-                ctx.message.author.mention + " " + self.lang["forceSlot"]["error"]["missing_target"]["channel"],
-                delete_after=5)
-            return
+        player = self.io.get_user_id(player, channel)
 
         if player is None:
+            await ctx.message.delete()
             await channel.send(
                 ctx.message.author.mention + " " + self.lang["forceSlot"]["error"]["missing_target"]["channel"],
                 delete_after=5)
