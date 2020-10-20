@@ -58,7 +58,7 @@ discord_logger.addHandler(discord_handler)
 
 # load commands
 
-client.add_cog(Handler(logger))
+client.add_cog(Handler(logger, mydb))
 client.add_cog(dmHandler(client, lang, logger, mydb, mycursor))
 
 client.add_cog(User(client, lang, logger, mydb, mycursor))
