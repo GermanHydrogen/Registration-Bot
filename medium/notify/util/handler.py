@@ -5,6 +5,7 @@ import asyncio
 
 import discord
 
+
 class Handler(commands.Cog):
     def __init__(self, client, lang, logger, db, cursor):
         self.client = client

@@ -4,6 +4,7 @@ import os
 
 import mysql.connector
 
+import discord
 from discord.ext.commands import Bot
 
 from main.commands.user import User
@@ -22,7 +23,10 @@ from config.loader import cfg
 from config.loader import lang
 
 ''' --- onLoad ----'''
-client = Bot(command_prefix="!", case_insensitive=True)
+
+intents = discord.Intents.default()
+intents.members = True
+client = Bot(command_prefix="!", case_insensitive=True, intents=intents)
 client.remove_command("help")
 
 
