@@ -2,3 +2,4 @@
 **/.idea
 **/config.*
 **/__pycache__
+/venv/
