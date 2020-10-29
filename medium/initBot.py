@@ -2,10 +2,10 @@ import datetime
 import logging
 import os
 
-import mysql.connector
-
 import discord
 from discord.ext.commands import Bot
+
+import mysql.connector
 
 from main.commands.user import User
 from main.commands.admin import Admin
