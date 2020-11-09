@@ -128,29 +128,54 @@ class Admin(commands.Cog):
     @commands.guild_only()
     async def forceUnslot(self, ctx):  # [Admin Function] unslots an user
         channel = ctx.message.channel
+        args = ctx.message.content.split(" ")[1:]
 
-        player = ctx.message.content.split(" ")[1:]
-        if not player:
+        if not args:
             await ctx.message.delete()
             await channel.send(
                 ctx.message.author.mention + " " + self.lang["forceUnslot"]["error"]["missing_target"]["channel"],
                 delete_after=5)
             return
 
-        player = " ".join(player)
-        if not (len(player) == 18 and player[1:].isdigit()):
-            buffer = self.io.get_user_id(player, channel)
-            if not buffer:
+        player = ""
+        slot = ""
+
+        if args[0].lower() == '--slot':
+            if len(args) == 2:
+                slot = args[1]
+            else:
                 await ctx.message.delete()
                 await channel.send(
-                    ctx.message.author.mention + " " + self.lang["forceUnslot"]["error"]["general"]["channel"].format(
-                        player),
+                    ctx.message.author.mention + " " + self.lang["forceUnslot"]["error"]["missing_slot"]["channel"],
                     delete_after=5)
                 return
+        else:
+            if args[0].lower() == '--user':
+                if len(args) > 1:
+                    player = " ".join(args[1:])
+                else:
+                    await ctx.message.delete()
+                    await channel.send(
+                        ctx.message.author.mention + " " + self.lang["forceUnslot"]["error"]["missing_target"][
+                            "channel"],
+                        delete_after=5)
+                    return
             else:
-                player = buffer
+                player = " ".join(args)
 
-        if self.list.unslotEvent(channel, player):
+            if not (len(player) == 18 and player[1:].isdigit()):
+                buffer = self.io.get_user_id(player, channel)
+                if not buffer:
+                    await ctx.message.delete()
+                    await channel.send(
+                        ctx.message.author.mention + " " + self.lang["forceUnslot"]["error"]["general"]["channel"].format(
+                            player),
+                        delete_after=5)
+                    return
+                else:
+                    player = buffer
+        print(slot)
+        if self.list.unslotEvent(channel, player, slot):
             await self.io.writeEvent(channel)
             await channel.send(
                 ctx.message.author.mention + " " + self.lang["forceUnslot"]["success"]["channel"].format(player),

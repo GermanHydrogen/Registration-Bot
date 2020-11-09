@@ -156,8 +156,9 @@ forceUnslot:
     general:
       channel: "{} ist nicht eingetragen!"
     missing_target:
-      channel: "Bitte gib einen **User** an!"
-
+      channel: "Bitte gib Argumente an!"
+    missing_slot:
+      channel: "Bitte gib einen **Slot** an!"
 addslot:
 
   success:
