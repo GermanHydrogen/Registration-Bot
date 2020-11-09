@@ -122,11 +122,11 @@ class Admin(commands.Cog):
                                delete_after=5)
             await ctx.message.delete()
 
-    @commands.command(hidden=True, description="[User] Unslots an User")
+    @commands.command(hidden=True, description="[User] Unslots an User or slot")
     @has_role(cfg["role"])
     @commands.cooldown(1, 0.5, commands.BucketType.channel)
     @commands.guild_only()
-    async def forceUnslot(self, ctx):  # [Admin Function] unslots an user
+    async def forceUnslot(self, ctx):  # [Admin Function] unslots an user or slot
         channel = ctx.message.channel
         args = ctx.message.content.split(" ")[1:]
 
@@ -174,7 +174,7 @@ class Admin(commands.Cog):
                     return
                 else:
                     player = buffer
-        print(slot)
+
         if self.list.unslotEvent(channel, player, slot):
             await self.io.writeEvent(channel)
             await channel.send(

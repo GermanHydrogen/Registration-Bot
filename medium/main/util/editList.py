@@ -89,7 +89,7 @@ class EditList:
         if result:
 
             sql = f"UPDATE Slot SET User = NULL WHERE STRCMP({type}, %s) = 0 and Event = %s;"
-            var = [ arg, channel.id]
+            var = [arg, channel.id]
             self.cursor.execute(sql, var)
             self.db.commit()
 
