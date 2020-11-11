@@ -47,7 +47,6 @@ class Campaign(commands.Cog):
             await user.send(self.lang['campaign']['private']['timeout'])
 
         slots = self.util.get_slots(str(event).strip(), str(ctx.message.channel.id))
-        result = []
         date = datetime.date.today() + datetime.timedelta(days=2)
 
         if not slots:
@@ -62,24 +61,32 @@ class Campaign(commands.Cog):
                 if elem[0][0].isalpha():
                     continue
                 else:
-                    try:
-                        user = self.client.get_user(int(elem[0]))
-                        msg = await user.send(self.lang["campaign"]["request"].format(ctx.message.author.display_name,
-                                                                                      event_date,
-                                                                                      elem[2],
-                                                                                      elem[1]))
+
+                    user = self.client.get_user(int(elem[0]))
+                    msg = await user.send(self.lang["campaign"]["request"]['message'].format(
+                        ctx.message.author.display_name,
+                        event_date,
+                        elem[2],
+                        elem[1]))
+
+                    if self.edit.reserveSlots(str(ctx.message.channel.id), elem[0], elem[1], str(msg.id), str(date)):
                         await msg.add_reaction('\N{THUMBS UP SIGN}')
                         await msg.add_reaction('\N{THUMBS DOWN SIGN}')
-                        result.append((str(ctx.message.channel.id), elem[0], elem[1], str(msg.id), str(date)))
-                    except:
-                        continue
+                    else:
+                        await user.send(self.lang["campaign"]['request']['error']['user'])
+                        await ctx.message.author.send(self.lang["campaign"]['request']['error']['admin'])
 
-        if self.edit.reserveSlots(result) and self.edit.copyDummies(ctx.message.channel.id, event):
+                        log = "User: " + str(user.name).ljust(20) + "\t"
+                        log += "Channel:" + str('DM').ljust(20) + "\t"
+                        log += "Command: " + str('creating campaing-msg').ljust(20) + "\t"
+                        log += 'Campaign message could not be created'
+
+                        self.logger.error(log)
+
+        if self.edit.copyDummies(ctx.message.channel.id, event):
             await ctx.message.channel.send(
                 ctx.message.author.mention + " " + self.lang["campaign"]["channel"]["success"],
                 delete_after=5)
-
-
 
             log = "User: " + str(ctx.message.author).ljust(20) + "\t"
             log += "Channel:" + str(ctx.message.channel).ljust(20) + "\t"
@@ -137,7 +144,8 @@ class Campaign(commands.Cog):
             descr_req = self.util.get_slot_description(str(channel.id), str(reqUser))
             descr_rec = self.util.get_slot_description(str(channel.id), str(recUser))
 
-            msg = await user.send(self.lang["trade"]["request"].format(ctx.message.author, descr_rec, descr_req, channel.name))
+            msg = await user.send(
+                self.lang["trade"]["request"].format(ctx.message.author, descr_rec, descr_req, channel.name))
             await msg.add_reaction('\N{THUMBS UP SIGN}')
             await msg.add_reaction('\N{THUMBS DOWN SIGN}')
 

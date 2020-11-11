@@ -3,7 +3,7 @@ class Edit:
         self.db = db
         self.cursor = cursor
 
-    def reserveSlots(self, query):
+    def reserveSlots(self, event, user, slotnumber, msg_id, date):
         """
                 Creates Requests to Users for paticipating again
                 Args:
@@ -11,10 +11,10 @@ class Edit:
                 Returns:
                     (bool): if successful
         """
-
+        print('TEST')
         try:
             sql = "INSERT INTO Message (Event, User, SlotNumber, MessageID, DateUntil) VALUES (%s, %s, %s, %s, %s);"
-            self.cursor.executemany(sql, query)
+            self.cursor.execute(sql, [event, user, slotnumber, msg_id, date])
             self.db.commit()
         except:
             return False
@@ -22,8 +22,7 @@ class Edit:
         # Blocks all reserved slots
         try:
             sql = "UPDATE Slot SET User = %s WHERE Event = %s AND Number = %s;"
-            var = [('C00000000000000000', x[0], x[2]) for x in query]
-            self.cursor.executemany(sql, var)
+            self.cursor.execute(sql, ['C00000000000000000', event, slotnumber])
             self.db.commit()
         except:
             return False

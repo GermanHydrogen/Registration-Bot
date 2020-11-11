@@ -66,28 +66,30 @@ class EditList:
 
         return True
 
-    def unslotEvent(self, channel, user_id):
+    def unslotEvent(self, channel, user_id="", slot=""):
         """
-                Unslots a user from an Event
+                Unslots a user or clears an slot from an Event
                 Args:
                     channel (channel): Server channel
                     user_id (string): User ID
+                    slot (string) ; Slotnumber
 
                Returns:
                    (bool): if successful
 
            """
+        type = ['Number', 'User'][int(slot == "")]
+        arg = [slot, user_id][int(slot == "")]
 
-        sql = "SELECT Number FROM Slot WHERE STRCMP(User, %s) = 0 and Event = %s;"
-        var = [user_id, channel.id]
+        sql = f"SELECT Number FROM Slot WHERE STRCMP({type} , %s) = 0 and Event = %s;"
+        var = [arg, channel.id]
         self.cursor.execute(sql, var)
-
         result = self.cursor.fetchone()
 
         if result:
 
-            sql = "UPDATE Slot SET User = NULL WHERE STRCMP(User, %s) = 0 and Event = %s;"
-            var = [user_id, channel.id]
+            sql = f"UPDATE Slot SET User = NULL WHERE STRCMP({type}, %s) = 0 and Event = %s;"
+            var = [arg, channel.id]
             self.cursor.execute(sql, var)
             self.db.commit()
 

@@ -114,9 +114,13 @@ create:
       `Eventstart: [Uhrzeit]` \n im Format hh:mm"
 
 campaign:
-  request: "{} macht Dir ein Angebot was Du nicht ablehnen kannst. Möchtest Du beim nächsten Teil seiner Kampagne am
-          {} als {} auf dem Slot {} wieder mitspielen? Bestätige dies bitte innerhalb der nächsten 2 Tage mittels Reaktion,
-          ansonsten steht der Slot wieder zur freien Verfügung."
+  request:
+    message: "{} macht Dir ein Angebot was Du nicht ablehnen kannst. Möchtest Du beim nächsten Teil seiner Kampagne am
+              {} als {} auf dem Slot {} wieder mitspielen? Bestätige dies bitte innerhalb der nächsten 2 Tage mittels Reaktion,
+              ansonsten steht der Slot wieder zur freien Verfügung."
+    error:
+      user: "Ein Fehler ist aufgetreten, bitte wende dich an den Missionsbauer oder [RR] Wasserstoff"
+      admin: "Die Kampangen-Nachricht beim Nutzer {} wurde nicht erstellt!"
   channel:
     success: "Die Anfragen wurden erfolgreich generiert"
     error: "Es liegt ein Fehler vor; ist der Event-Name bzw. die Event-ID korrekt?"
@@ -152,8 +156,9 @@ forceUnslot:
     general:
       channel: "{} ist nicht eingetragen!"
     missing_target:
-      channel: "Bitte gib einen **User** an!"
-
+      channel: "Bitte gib Argumente an!"
+    missing_slot:
+      channel: "Bitte gib einen **Slot** an!"
 addslot:
 
   success:
