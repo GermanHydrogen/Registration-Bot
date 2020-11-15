@@ -4,6 +4,7 @@ from discord.ext import commands
 from main.util.io import IO
 from main.util.util import Util
 from main.util.editList import EditList
+from main.util.mark import Mark
 
 from config.loader import cfg
 
@@ -22,6 +23,7 @@ class User(commands.Cog):
         self.io = IO(cfg, db, cursor)
         self.util = Util(db, cursor)
         self.list = EditList(db, cursor)
+        self.mark = Mark(db, cursor)
 
     @commands.command(hidden=False, description="[number] slots the author of the message in the slot")
     @commands.cooldown(1, 0.5, commands.BucketType.channel)
@@ -148,6 +150,74 @@ class User(commands.Cog):
             await channel.send(ctx.message.author.mention + " " + self.lang["unslot"]["error"]["general"]["channel"],
                                delete_after=5)
             await ctx.message.delete()
+
+    @commands.command(hidden=False, description="[type] adds an mark to the user in the slotlist")
+    @commands.cooldown(1, 0.5, commands.BucketType.channel)
+    @commands.guild_only()
+    async def mark(self, ctx):
+        channel = ctx.message.channel
+        user = ctx.message.author
+
+        args = ctx.message.content.split(" ")[1:]
+        if len(args) == 0:
+            await channel.send(
+                ctx.message.author.mention + " " + self.lang["mark"]["error"]["args"],
+                delete_after=5)
+            await ctx.message.delete()
+            return
+
+        emoji_name = " ".join(args)
+        if emoji_name in cfg['marks'].keys():
+            emoji_name = cfg['marks'][emoji_name]
+            if self.mark.addMark(user.id, channel.id, emoji_name):
+                await self.io.writeEvent(channel)
+                await channel.send(
+                    ctx.message.author.mention + " " + self.lang["mark"]["suc"],
+                    delete_after=5)
+            else:
+                await channel.send(
+                    ctx.message.author.mention + " " + self.lang["mark"]["error"]["duplicate"],
+                    delete_after=5)
+        else:
+            await channel.send(
+                ctx.message.author.mention + " " + self.lang["mark"]["error"]["typeNotFound"],
+                delete_after=5)
+
+        await ctx.message.delete()
+
+    @commands.command(hidden=False, description="[type] adds an mark to the user in the slotlist")
+    @commands.cooldown(1, 0.5, commands.BucketType.channel)
+    @commands.guild_only()
+    async def unmark(self, ctx):
+        channel = ctx.message.channel
+        user = ctx.message.author
+
+        args = ctx.message.content.split(" ")[1:]
+        if len(args) == 0:
+            await channel.send(
+                ctx.message.author.mention + " " + self.lang["unmark"]["error"]["args"],
+                delete_after=5)
+            await ctx.message.delete()
+            return
+
+        emoji_name = " ".join(args)
+        if emoji_name in cfg['marks'].keys():
+            emoji_name = cfg['marks'][emoji_name]
+            if self.mark.removeMark(user.id, channel.id, emoji_name):
+                await self.io.writeEvent(channel)
+                await channel.send(
+                    ctx.message.author.mention + " " + self.lang["unmark"]["suc"],
+                    delete_after=5)
+            else:
+                await channel.send(
+                    ctx.message.author.mention + " " + self.lang["unmark"]["error"]["duplicate"],
+                    delete_after=5)
+        else:
+            await channel.send(
+                ctx.message.author.mention + " " + self.lang["unmark"]["error"]["typeNotFound"],
+                delete_after=5)
+
+        await ctx.message.delete()
 
     @commands.command()
     async def help(self, ctx):

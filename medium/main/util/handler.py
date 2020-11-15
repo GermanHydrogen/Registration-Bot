@@ -29,6 +29,7 @@ class Handler(commands.Cog):
                     log += str(error.original)
 
                     self.logger.error(log)
+                    raise
                 return
 
         else:
