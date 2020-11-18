@@ -32,11 +32,11 @@ class Admin(commands.Cog):
         time = ""
 
         async for x in channel.history(limit=1000):
-            if re.search(">Slotliste<", x.content):
+            if re.search("Slotliste", x.content):
 
-                if x.author == ctx.message.author:
+                if x.author == ctx.message.author and re.search(">Slotliste<", x.content):
                     out.append(x)
-                elif x.author == self.client.user:
+                elif x.author == self.client.user and re.search(re.escape("**Slotliste**"), x.content):
                     out.append(x)
             elif content := re.findall(r"Eventstart:.*$", x.content.replace("*", ""), re.MULTILINE):
                 if x.author == ctx.message.author:

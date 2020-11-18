@@ -1,3 +1,4 @@
+from discord import utils as dutils
 from math import ceil
 from datetime import datetime, timedelta
 from config.loader import cfg
@@ -50,11 +51,14 @@ def get_members(name, channel):
         (discord.Member)
 
     """
-    guild_member = channel.guild.members
-    for member in guild_member:
-        if member.name == name or member.nick == name:
-            return member
-    return None
+
+    result = dutils.find(lambda x: x.name == name or x.nick == name, channel.guild.members)
+    if result:
+        return result
+    else:   # If user has as mark try to find without mark
+        name = name.split("<:")[0].strip()
+        result = dutils.find(lambda x: x.name == name or x.nick == name, channel.guild.members)
+        return result
 
 
 class IO:
@@ -88,13 +92,12 @@ class IO:
 
             if not nname:
                 return None
-            print(nname)
             sql = f"INSERT IGNORE INTO User (ID, Nickname) VALUES (%s, %s);"
             var = [nname.id, nname.display_name]
             self.cursor.execute(sql, var)
             self.db.commit()
 
-            return nname.id
+            return str(nname.id)
 
     def pull_reserve(self, event_id):
         """
