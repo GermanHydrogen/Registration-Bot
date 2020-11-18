@@ -20,7 +20,7 @@ class Campaign(commands.Cog):
         self.db = db
         self.cursor = cursor
 
-        self.io = IO(cfg, db, cursor)
+        self.io = IO(cfg, client, db, cursor)
         self.util = Util(db, cursor)
         self.edit = Edit(db, cursor)
 
