@@ -29,7 +29,9 @@ games:
     name: "name"
     role: "role name"
     beginner-role: "role name"
-    instructor: 123456789012345678, 123456789012345678
+    instructor:
+      - 123456789012345678
+      - 123456789012345678
 
 
 

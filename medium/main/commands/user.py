@@ -41,7 +41,7 @@ class User(commands.Cog):
 
             # Instructor-Message
             instructor = []
-            for elem in cfg["games"][game]["instructor"].replace(" ", "").split(","):
+            for elem in cfg["games"][game]["instructor"]:
                 buffer = ctx.guild.get_member(int(elem))
                 if buffer:
                     instructor.append(buffer)
