@@ -124,6 +124,7 @@ campaign:
   channel:
     success: "Die Anfragen wurden erfolgreich generiert"
     error: "Es liegt ein Fehler vor; ist der Event-Name bzw. die Event-ID korrekt?"
+    not_event: "In diesem Kanal gibt es noch keine initialisierte Slotliste!"
   private:
     accept:
       success: "Du hast dich erfolgreich zurückgemeldet"

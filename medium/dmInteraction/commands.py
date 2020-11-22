@@ -36,6 +36,13 @@ class Campaign(commands.Cog):
                     delete_after=5)
                 return
 
+        # Check if an event exists in this channel
+        if self.util.get_event_id(ctx.message.channel.name) is None:
+            await ctx.message.channel.send(
+                ctx.message.author.mention + " " + self.lang["campaign"]["channel"]["not_event"],
+                delete_after=5)
+            return
+
         # Cleanup
         old = self.edit.deleteAllMessages(str(ctx.message.channel.id))
         for elem in old:
