@@ -17,7 +17,7 @@ class Handler(commands.Cog):
         self.lang = lang
         self.logger = logger
 
-        self.io = IO(cfg, db, cursor)
+        self.io = IO(cfg, client, db, cursor)
         self.choice = Choice(db, cursor)
         self.edit = Edit(db, cursor)
 

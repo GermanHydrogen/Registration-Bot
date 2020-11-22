@@ -1,6 +1,8 @@
+from discord import utils as dutils
 from math import ceil
 from datetime import datetime, timedelta
 from config.loader import cfg
+from main.util.util import Util
 
 
 def get_line_data(line, last, manuel=False):
@@ -29,9 +31,9 @@ def get_line_data(line, last, manuel=False):
             break
 
     if not manuel and int(num) == 0:  # If slotnumber is 0, then autofit slotnumber
-        num = str(last+1).zfill(len(num))
+        num = str(last + 1).zfill(len(num))
 
-    output["Description"] = line[len(num)+1:].strip()
+    output["Description"] = line[len(num) + 1:].strip()
 
     output["User"] = output["User"].strip()
 
@@ -49,18 +51,23 @@ def get_members(name, channel):
         (discord.Member)
 
     """
-    guild_member = channel.guild.members
-    for member in guild_member:
-        if member.name == name or member.nick == name:
-            return member
-    return None
+
+    result = dutils.find(lambda x: x.name == name or x.nick == name, channel.guild.members)
+    if result:
+        return result
+    else:   # If user has as mark try to find without mark
+        name = name.split("<:")[0].strip()
+        result = dutils.find(lambda x: x.name == name or x.nick == name, channel.guild.members)
+        return result
 
 
 class IO:
-    def __init__(self, cfg, db, cursor):
+    def __init__(self, cfg, client, db, cursor):
         self.cfg = cfg
         self.db = db
         self.cursor = cursor
+
+        self.util = Util(client, db, cursor)
 
     def get_user_id(self, nname, channel):
         """
@@ -85,13 +92,12 @@ class IO:
 
             if not nname:
                 return None
-            print(nname)
             sql = f"INSERT IGNORE INTO User (ID, Nickname) VALUES (%s, %s);"
             var = [nname.id, nname.display_name]
             self.cursor.execute(sql, var)
             self.db.commit()
 
-            return nname.id
+            return str(nname.id)
 
     def pull_reserve(self, event_id):
         """
@@ -332,7 +338,8 @@ class IO:
         delta = result - delta
 
         sql = "INSERT INTO Notify VALUES (%s, %s, %s, %s)"
-        var = [(str(event), elem["User"], 1, delta) for index, elem in slots.items() if elem["User"] and elem["User"].isdigit()]
+        var = [(str(event), elem["User"], 1, delta) for index, elem in slots.items() if
+               elem["User"] and elem["User"].isdigit()]
         self.cursor.executemany(sql, var)
         self.db.commit()
 
@@ -474,8 +481,12 @@ class IO:
                         output += element[2]
 
                 sql = "SELECT " \
-                      "Number , Description, User FROM Slot " \
-                      "WHERE Event = %s and GroupNumber = %s ORDER BY CONVERT(Number,UNSIGNED INTEGER);"
+                      "Number , Description, s.User, GROUP_CONCAT(m.Type SEPARATOR '|') FROM Slot s " \
+                      "LEFT JOIN UserEventMark m ON s.User = m.User AND s.Event = m.Event " \
+                      "WHERE s.Event = %s AND s.GroupNumber = %s " \
+                      "GROUP BY Number " \
+                      "ORDER BY CONVERT(Number,UNSIGNED INTEGER);"
+
                 var = [channel_id, element[0]]
                 self.cursor.execute(sql, var)
                 slots = self.cursor.fetchall()
@@ -485,11 +496,16 @@ class IO:
                         sql = "SELECT Nickname FROM User WHERE ID = %s;"
                         self.cursor.execute(sql, [x[2]])
                         user = self.cursor.fetchone()[0]
-
+                        mark = x[3]
                         output += f"#{x[0]} {x[1]} - {user}"
+                        if mark is not None:
+                            output += " " + " ".join(
+                                [f"<:{x.name}:{x.id}>" if (x := self.util.get_emoji(dict_name=elem)) is not None
+                                 else str(elem) for elem in mark.split("|")])
+
                     else:
                         output += "#{locked}{number} {descr} {locked}- ".format(
-                                number=x[0], descr=x[1], locked=locked_modifier[locked])
+                            number=x[0], descr=x[1], locked=locked_modifier[locked])
 
                     output += "\n"
 

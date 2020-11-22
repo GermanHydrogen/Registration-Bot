@@ -97,6 +97,17 @@ CREATE TABLE IF NOT EXISTS Notify
     FOREIGN KEY (Event) REFERENCES Event(ID)
 );
 
+CREATE TABLE IF NOT EXISTS UserEventMark
+(
+    Event VARCHAR(18),
+    User VARCHAR(18) CHECK(User regexp '^[0-9]'),
+    Type VARCHAR(32),
+
+    CONSTRAINT prim PRIMARY KEY (Event, User, Type),
+    FOREIGN KEY (User) REFERENCES User(ID),
+    FOREIGN KEY (Event) REFERENCES Event(ID)
+);
+
 CREATE TRIGGER BotTest after update on Slot
   for each row
    begin
