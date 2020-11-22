@@ -36,11 +36,20 @@ unslot:
     general:
       channel: "Du kannst dich nicht austragen, wenn du nicht in der Liste eingetragen bist"
 
-lock:
-  toggle:
-    success: "Die Sperrung wurde umgeschalten."
-    error: "Die Sperrung konnte nicht umgeschalten werden."
-  slotlist: "Gesperrt"
+mark:
+  suc: "Die Markierung wurde erfolgreich hinzugefügt."
+  error:
+    typeNotFound: "Die Art der Markierung wurde nicht gefunden."
+    duplicate: "Du hast bereits diese Art der Markierung für dieses Event ausgewählt."
+    args: "Du musst eine Markierung angeben, welche du dir für dieses Event geben möchtest."
+
+unmark:
+  suc: "Die Markierung wurde erfolgreich entfernt."
+  error:
+    typeNotFound: "Die Art der Markierung wurde nicht gefunden."
+    duplicate: "Du hast diese Art der Markierung nicht."
+    args: "Du musst eine Markierung angeben, welche du dir für dieses Event geben möchtest."
+
 
 trade:
   request: "{} möchte mit Dir ({}) seinen Slot ({}) für das Event {} tauschen. Du kannst dies in den nächsten 24h mittels
@@ -112,6 +121,12 @@ create:
     time:
       user: "Es wurde kein Eventstart gefunden. Bitte gib diesen im Channel an mit der Syntax: \n
       `Eventstart: [Uhrzeit]` \n im Format hh:mm"
+
+lock:
+  toggle:
+    success: "Die Sperrung wurde umgeschalten."
+    error: "Die Sperrung konnte nicht umgeschalten werden."
+  slotlist: "Gesperrt"
 
 campaign:
   request:
