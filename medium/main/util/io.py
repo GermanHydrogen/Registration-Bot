@@ -500,8 +500,8 @@ class IO:
                         output += f"#{x[0]} {x[1]} - {user}"
                         if mark is not None:
                             output += " " + " ".join(
-                                [f"<:{x.name}:{x.id}>" if (x := self.util.get_emoji(elem)) is not None else str(elem)
-                                 for elem in mark.split("|")])
+                                [f"<:{x.name}:{x.id}>" if (x := self.util.get_emoji(dict_name=elem)) is not None
+                                 else str(elem) for elem in mark.split("|")])
 
                     else:
                         output += "#{locked}{number} {descr} {locked}- ".format(

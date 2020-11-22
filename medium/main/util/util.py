@@ -32,9 +32,12 @@ class Util:
             return None
 
     @lru_cache(maxsize=None)
-    def get_emoji(self, name):
-        if name is None:
-            return None
+    def get_emoji(self, name=None, dict_name=None):
+        if name is None and dict_name is not None:
+            if dict_name in cfg['marks'].keys():
+                name = cfg['marks'][dict_name]
+            else:
+                return None
 
         if not self.guild:
             self.guild = self.client.get_guild(int(cfg['guild']))

@@ -168,7 +168,6 @@ class User(commands.Cog):
 
         emoji_name = " ".join(args)
         if emoji_name in cfg['marks'].keys():
-            emoji_name = cfg['marks'][emoji_name]
             if self.mark.addMark(user.id, channel.id, emoji_name):
                 await self.io.writeEvent(channel)
                 await channel.send(
@@ -202,7 +201,6 @@ class User(commands.Cog):
 
         emoji_name = " ".join(args)
         if emoji_name in cfg['marks'].keys():
-            emoji_name = cfg['marks'][emoji_name]
             if self.mark.removeMark(user.id, channel.id, emoji_name):
                 await self.io.writeEvent(channel)
                 await channel.send(
