@@ -62,6 +62,12 @@ class Locale(commands.Cog):
                 return
 
             else:
+                if not (0 < int(time) < 2400):
+                    await channel.send(ctx.message.author.mention + " " +
+                                       self.lang["update"]["command"]["time_error"].format(channel.name),
+                                       delete_after=5)
+                    return
+                
                 time = time[:2] + ':' + time[2:] + ":00"
                 self.edit.updateNotify(channel.id, str(before[0]) + " " + str(before[1]),
                                        str(date) + " " + str(time))
