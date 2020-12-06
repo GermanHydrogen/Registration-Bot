@@ -122,6 +122,19 @@ create:
       user: "Es wurde kein Eventstart gefunden. Bitte gib diesen im Channel an mit der Syntax: \n
       `Eventstart: [Uhrzeit]` \n im Format hh:mm"
 
+update:
+  auto:
+    success: "Das Datum von {} wurde geändert!"
+    date_error: "Das Datum von {} wurde nicht geändert! Das Datum (im Discord) ist ungültig."
+    error: "Das Datum von {} wurde nicht geändert!"
+  command:
+    success: "Das Datum und der Evenstart von {} wurde geändert!"
+    broadcast: "Die Uhrzeit und/oder das Datum des Events <#{}> um {} wurden verändert."
+    date_error: "Das Event {} wurde nicht geändert! Das Datum (im Discord) ist ungültig."
+    time_error: "Das Event {} wurde nicht geändert! Die Eventzeit (im Discord) ist ungültig."
+    error: "Das Event {} wurde nicht geändert!"
+
+
 lock:
   toggle:
     success: "Die Sperrung wurde umgeschalten."

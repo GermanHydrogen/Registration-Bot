@@ -1,12 +1,37 @@
 from config.loader import cfg
 from datetime import datetime, timedelta
-from notify.util.handler import Handler
 
 
 class EditLocale:
     def __init__(self, db, cursor):
         self.db = db
         self.cursor = cursor
+
+    def getEvent(self, id):
+        sql = "SELECT Date, Time FROM Event WHERE ID = %s;"
+        self.cursor.execute(sql, [id])
+        result = self.cursor.fetchone()
+        return result
+
+    def updateEvent(self, id, name, date, time=""):
+        if time == "":
+            sql = "UPDATE Event SET Name = %s, Date = %s WHERE ID = %s;"
+            var = [name, date, id]
+        else:
+            sql = "UPDATE Event SET Name = %s, Date = %s, Time = %s WHERE ID = %s;"
+            var = [name, date, time, id]
+
+        self.cursor.execute(sql, var)
+        self.db.commit()
+        return self.cursor.rowcount
+
+    def updateNotify(self, event, old_time, new_time):
+        sql = "UPDATE Notify SET time= ADDTIME(%s, TIMEDIFF(time, %s))   WHERE Event = %s;"
+        var = [new_time, old_time, event]
+        self.cursor.execute(sql, var)
+        self.db.commit()
+
+        return self.cursor.rowcount != 0
 
     def deltaEventTime(self, event, time):
         """
