@@ -1,5 +1,9 @@
+import datetime as dt
+
 from discord.ext import commands
-from datetime import datetime
+from notify.util.editLocale import EditLocale
+from main.util.util import Util
+
 from config.loader import cfg
 import asyncio
 
@@ -14,6 +18,8 @@ class Handler(commands.Cog):
 
         self.db = db
         self.cursor = cursor
+        self.edit = EditLocale(db, cursor)
+        self.util = Util(client, db, cursor)
 
     async def notify(self, event, user_id, delay):
         """
@@ -36,7 +42,7 @@ class Handler(commands.Cog):
             if not result:
                 return
 
-            now = datetime.now()
+            now = dt.datetime.now()
             delta = (result[0][0] - now).total_seconds()
 
             if abs(delta) > 1200:
@@ -64,8 +70,28 @@ class Handler(commands.Cog):
         result = self.cursor.fetchall()
 
         for elem in result:
-            now = datetime.now()
-            delta = (elem[1]-now).total_seconds()
+            now = dt.datetime.now()
+            delta = (elem[1] - now).total_seconds()
             if delta > 0:
                 asyncio.create_task(self.notify(elem[2], elem[0], delta))
+
+    @commands.Cog.listener()
+    async def on_guild_channel_update(self, before, after):
+        if before.name != after.name:
+            if (event := self.edit.getEvent(after.id)) is not None:
+                author = self.util.get_channel_author(after)
+
+                try:
+                    date = [int(x) for x in after.name.split("-")[:3]]
+                    date = dt.date(*date)
+                except ValueError:
+                    await author.send(self.lang["update"]["auto"]["date_error"].format(after.name))
+                    return
+
+                self.edit.updateNotify(after.id, str(event[0]) + " " + str(event[1]), str(date) + " " + str(event[1]))
+                if self.edit.updateEvent(after.id, after.name, date):
+                    await author.send(self.lang["update"]["auto"]["success"].format(after.name))
+                else:
+                    await author.send(self.lang["update"]["auto"]["error"].format(after.name))
+                    return
 
