@@ -1,6 +1,7 @@
 import os
 import yaml
 import datetime
+import logging
 
 import re
 from discord.ext import commands
@@ -17,35 +18,38 @@ path = os.path.dirname(os.path.abspath(__file__))
 
 
 #load conf
-if os.path.isfile(path + '/config.yml'):
-    with open(path + "/config.yml", 'r') as ymlfile:
+if os.path.isfile(os.path.join(path, 'config', 'config.yml')):
+    with open(os.path.join(path, 'config', 'config.yml'), 'r') as ymlfile:
+        cfg = yaml.safe_load(ymlfile)
+elif os.path.isfile(os.path.join(path, 'config', 'default.yml')):
+    with open(os.path.join(path, 'config', "default.yml"), 'r') as ymlfile:
         cfg = yaml.safe_load(ymlfile)
 else:
-    print("Please add config.yml to the dir")
+    print("Config file missing!")
     exit()
 
-if not cfg["token"] and cfg["role"] and cfg["language"]:
-    print("No valid token in config.yml")
-    exit()
-
-
-#load lang
-
-if os.path.isfile(path + f'/msg_conf/{cfg["language"]}.yml'):
-    with open(path + f'/msg_conf/{cfg["language"]}.yml') as ymlfile:
+if os.path.isfile(os.path.join(path, 'config', f'{cfg["language"]}.yml')):
+    with open(os.path.join(path, 'config', f'{cfg["language"]}.yml')) as ymlfile:
         lang = yaml.safe_load(ymlfile)
 else:
-    print("Language File missing")
+    print("Language file missing!")
     exit()
 
 #load log
 
 TODAY = datetime.date.today()
 
-if not os.path.isfile(path + f'/logs/{TODAY}.log'):
-    LOG_FILE = open(path + f"/logs/{TODAY}.log", "w+")
-    LOG_FILE.write(f"---- Created: {datetime.datetime.now()} ----\n\n")
-    LOG_FILE.close()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+handler = logging.FileHandler(filename=path + f"/logs/{TODAY}.log", encoding='utf-8', mode='a')
+handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s: %(message)s'))
+logger.addHandler(handler)
+
+discord_logger = logging.getLogger('discord')
+discord_logger.setLevel(logging.DEBUG)
+discord_handler = logging.FileHandler(filename=path + '/logs/discord.log', encoding='utf-8', mode='w')
+discord_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+discord_logger.addHandler(discord_handler)
 
 
 ''' ---        ----'''
@@ -53,22 +57,15 @@ if not os.path.isfile(path + f'/logs/{TODAY}.log'):
 
 @client.event
 async def on_command_error(ctx, error):
-    if(ctx.message.channel != "DMChannel" and ctx.message.channel != "GroupChannel"):
+    if ctx.message.channel != "DMChannel" and ctx.message.channel != "GroupChannel":
         await ctx.message.delete()
 
-    if isinstance(error, commands.CommandOnCooldown):
-        await ctx.send(ctx.message.author.mention + " " +str(error), delete_after=error.retry_after + 1)
-    else:
-        await ctx.send(ctx.message.author.mention + " Command not found! Check **!help** for all commands", delete_after=5)
-
-    f = open(path + f"/logs/{TODAY}.log", "a")
-    log =  str(datetime.datetime.now()) +                     "\t"
-    log += "User: " + str(ctx.message.author).ljust(20) +    "\t"
+    log = "User: " + str(ctx.message.author).ljust(20) + "\t"
     log += "Channel:" + str(ctx.message.channel).ljust(20) + "\t"
-    log += "Command: " + str(ctx.message.content) + "\t"
-    log += str(error) + "\n"
-    f.write(log)
-    f.close()
+    log += "Command: " + str(ctx.message.content).ljust(20) + "\t"
+    log += str(error)
+
+    logger.error(log)
 
     raise error
 
