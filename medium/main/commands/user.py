@@ -37,7 +37,7 @@ class User(commands.Cog):
         backup = ctx.guild.get_member(cfg['backup'])
 
         if game in cfg["games"].keys() and not (
-                cfg["games"][game]["role"] in [x.name for x in ctx.message.author.roles]):
+                cfg["games"][game]["role"] in [x.id for x in ctx.message.author.roles]):
 
             # Instructor-Message
             instructor = []
@@ -61,8 +61,7 @@ class User(commands.Cog):
                                                              " oder ".join([x.display_name for x in instructor]),
                                                              cfg["games"][game]["name"]).replace('\\n', '\n'))
             # Assign-Rule
-            await author.add_roles(
-                [x for x in ctx.guild.roles if x.name == cfg["games"][game]["beginner-role"]][0])
+            await author.add_roles(ctx.guild.get_role(cfg["games"][game]["beginner-role"]))
 
             if "strict" in cfg["games"][game].keys() and cfg["games"][game]["strict"]:
                 # Channel-Message

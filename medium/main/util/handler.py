@@ -60,12 +60,12 @@ class Handler(commands.Cog):
     # Valdiate Config
     @commands.Cog.listener()
     async def on_ready(self):
-        def validate_role(guild, name):
-            if dutils.get(guild.roles, name=name) is None:
-                print("\t" + '\033[91m' + name + ' NOT Found!' + '\033[0m')
-                self.logger.error("Role" + name + " was NOT Found!")
+        def validate_role(guild, id):
+            if (role := guild.get_role(id)) is None:
+                print("\t" + '\033[91m' + str(id) + ' NOT Found!' + '\033[0m')
+                self.logger.error("Role" + str(id) + " was NOT Found!")
             else:
-                print("\t" + '\033[92m' + name + ' Found! ' + '\033[0m')
+                print("\t" + '\033[92m' + role.name + ' Found! ' + '\033[0m')
 
         if (guild := self.client.get_guild(int(cfg['guild']))) is None:
             print('\033[91m' + "Guild" + ' NOT Found! ' + '\033[0m')
@@ -78,7 +78,7 @@ class Handler(commands.Cog):
             print('\033[91m' + 'The Backup-User was NOT Found!' + '\033[0m')
             self.logger.error("The Backup-User was NOT Found!")
         else:
-            print('\033[92m' + 'Backup-User:' + f'{backup.name}' + '\033[0m')
+            print('\033[92m' + 'Backup-User: ' + f'{backup.name}' + '\033[0m')
 
         print("Validating configured games")
         if len(cfg['games'].keys()) == 0:
