@@ -55,19 +55,24 @@ class User(commands.Cog):
                     self.lang["slot"]["new_user"]["instructor"].format(author, author.display_name, channel.name, num))
 
             # User-Message
-            await author.send(
-                self.lang["slot"]["new_user"]["user"].format(cfg["games"][game]["name"],
+            if "welcome-msg" in cfg['games'][game].keys() and cfg['games'][game]['welcome-msg'] != "":
+                await author.send(
+                    cfg['games'][game]['welcome-msg'].format(cfg["games"][game]["name"],
                                                              " oder ".join([x.display_name for x in instructor]),
                                                              cfg["games"][game]["name"]).replace('\\n', '\n'))
-            # Channel-Message
-            await channel_author.send(
-                self.lang["slot"]["new_user"]["channel"].format(author, author.display_name, channel.name, num))
             # Assign-Rule
             await author.add_roles(
                 [x for x in ctx.guild.roles if x.name == cfg["games"][game]["beginner-role"]][0])
 
-        elif num:
+            if "strict" in cfg["games"][game].keys() and cfg["games"][game]["strict"]:
+                # Channel-Message
+                await channel_author.send(
+                    self.lang["slot"]["new_user"]["channel"].format(author, author.display_name, channel.name, num))
 
+                await ctx.message.delete()
+                return
+
+        if num:
             if self.list.slotEvent(channel, author.id, num, user_displayname=author.display_name):
                 await self.io.writeEvent(channel)
 

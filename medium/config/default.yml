@@ -32,6 +32,11 @@ games:
     instructor:
       - 123456789012345678
       - 123456789012345678
+    # If the user can slo without the role
+    strict: True
+    # Optional welcome message on first slot
+    welcome-msg: >-
+                Welcome, you slottet for {}-event. Please write to {}, which is our moderator for {}.
 
 mark:
   mark-name: "Emoji-Name"
