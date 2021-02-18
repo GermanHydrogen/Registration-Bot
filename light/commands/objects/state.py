@@ -1,6 +1,8 @@
+import discord
+
 from functools import wraps
 
-from commands.objects.slotlist import SlotList
+from commands.objects.slotlist import SlotList, get_list, SlotlistNotFound
 
 
 class ClientState:
@@ -8,15 +10,33 @@ class ClientState:
         self.buffer = []
         self.size = size
 
-    def add_slotlist(self, slotlist: SlotList):
-        if (hit := next((x for x in self.buffer
-                         if x.guild == slotlist.guild and x.channel == slotlist.channel), None)) is None:
+    def __add_slotlist(self, slotlist: SlotList):
+        if len(self.buffer) + 1 > self.size:
+            self.buffer.pop(0)
+        self.buffer.append(slotlist)
 
-            if len(self.buffer) + 1 > self.size:
-                self.buffer.pop(0)
-            self.buffer.append(slotlist)
+    async def get_slotlist(self, channel: discord.TextChannel, author: discord.User, user: discord.User, delete=False):
+        """
+        Gets the slotlist from the buffer or constructs a new one
+        :param channel: Channel in which the slotlist is
+        :param author: Author of the command
+        :param user: Bot User
+        :param delete: if slotlist should be deleted
+        :return:
+        """
+        channel_id = channel.id
+        guild_id = channel.guild.id
+
+        if (hit := next((x for x in self.buffer if x.guild == guild_id and x.channel == channel_id), None)) is not None:
+            return hit
         else:
-            self.buffer[self.buffer.index(hit)] = slotlist
+            message = await get_list(channel, author, user)
+            if message is None:
+                raise SlotlistNotFound
 
-    def get_slotlist(self, guild_id: int, channel_id: int):
-        return next((x for x in self.buffer if x.guild == guild_id and x.channel == channel_id), None)
+            slotlist = SlotList(message)
+            self.__add_slotlist(slotlist)
+            if delete:
+                await message.delete()
+
+            return slotlist

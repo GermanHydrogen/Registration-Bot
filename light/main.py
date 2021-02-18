@@ -74,6 +74,6 @@ async def on_command_error(ctx, error):
 state = ClientState()
 
 client.add_cog(Admin(client=client, state=state, lang=lang))
-client.add_cog(User(state=state, lang=lang))
+client.add_cog(User(client=client, state=state, lang=lang))
 
 client.run(cfg['token'])

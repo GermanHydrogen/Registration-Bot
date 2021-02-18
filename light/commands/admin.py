@@ -20,14 +20,13 @@ class Admin(commands.Cog):
         channel = ctx.message.channel
 
         try:
-            slotlist = sl.SlotList(channel, self.client.user)
+            slotlist = await self.state.get_slotlist(channel, ctx.message.author, self.client.user, True)
         except sl.SlotlistNotFound:
             await ctx.message.author.send(self.lang["create"]["error"]["general"]["user"])
             await ctx.message.delete()
             return
 
         await slotlist.write(channel, False)
-        self.state.add_slotlist(slotlist)
 
         await ctx.message.author.send(self.lang["create"]["success"]["user"])
         await ctx.message.delete()

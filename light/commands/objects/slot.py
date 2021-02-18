@@ -6,6 +6,10 @@ class SlotNotTaken(Exception):
     pass
 
 
+class SlotForbidden(Exception):
+    pass
+
+
 class Slot:
     def __init__(self):
         self.group = -1
@@ -63,7 +67,7 @@ class Slot:
         :param user_name: user name
         :return:
         """
-        if user_name != self.user:
+        if self.user != "" and user_name != self.user:
             raise SlotTaken
         else:
             self.user = user_name
@@ -71,11 +75,13 @@ class Slot:
     def unslot_user(self, user_name: str):
         """
         Unslots user
-        :param user_name: user name
+        :param user_name: user nam
         :return:
         """
         if self.user == "":
             raise SlotNotTaken
+        elif self.user != user_name:
+            raise SlotForbidden
         else:
             self.user = ""
 

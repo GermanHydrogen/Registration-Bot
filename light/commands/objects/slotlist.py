@@ -4,15 +4,17 @@ from commands.objects.slot import *
 from commands.objects.slotgroup import SlotGroup
 
 
-async def get_list(channel: discord.TextChannel, user: discord.User):
+async def get_list(channel: discord.TextChannel, author:discord.User, user: discord.User):
     """
     Get slotlist from channel
     :param channel: Channel in which the slotlist is
-    :param user: Slotlist owner
+    :param author: Slotlist owner
+    :param user: Bot user
     :return: discord.Message
     """
     async for msg in channel.history(limit=1000):
-        if re.search("Slotliste", msg.content) and msg.author == user:
+        if (re.search(">Slotlist<", msg.content) and msg.author == author) \
+                or (re.search(re.escape("**Slotlist**"), msg.content) and msg.author == user):
             return msg
 
     raise SlotlistNotFound
@@ -30,31 +32,40 @@ class SlotNotFound(Exception):
     pass
 
 
+class UserNotSlotted(Exception):
+    pass
+
+
 class SlotList:
-    def __init__(self, channel: discord.TextChannel, user: discord.User):
+    def __init__(self, message: discord.message):
         """
         Creates slotlist
-        :param channel: Channel in which slotlist is
-        :param user: Slotlist user
+        :param message: Message in which slotlist is
         """
 
-        self.guild = channel.guild.id
-        self.channel = channel.id
+        self.message = message
+        self.guild = message.guild.id
+        self.channel = message.channel.id
 
         self.slots = []
         self.reserve = []
 
         self.struct = []
 
-        self.message = await get_list(channel, user)
-        self.content = self.message.content.splitlines(False)
+        self.__build_slotlist(message.content.splitlines(False))
 
+    def __build_slotlist(self, content: str):
+        """
+        Constructs the slotlist
+        :param content: slotlist string
+        :return:
+        """
         last = 0
         current_buffer = ""
         title_buffer = []
 
-        for line in self.content:
-            if ">Slotlist<" in line:  # TODO: Language
+        for line in content:
+            if "Slotlist" in line:  # TODO: Language
                 pass
             elif line and line[0] == '#':
                 slot = Slot().from_line(line)
@@ -96,14 +107,30 @@ class SlotList:
         self.struct.append(group)
 
     def slot(self, number: int, user: discord.User):
+        """
+        Slots a user
+        :param number: Slot number
+        :param user: User which should to be slotted
+        :return:
+        """
         if (hit := next((x for x in self.slots if int(x.number) == int(number))), None) is None:
             raise SlotNotFound
         else:
-            try:
-                self.slots[self.slots.index(hit)].slot_user(user.display_name)
-            except SlotTaken:
-                raise
+            if (taken := next(((x for x in self.slots if x.user == user.display_name)), None)) is not None:
+                taken.unslot_user(user.display_name)
 
+            hit.slot_user(user.display_name)
+
+    def unslot(self, user: discord.User):
+        """
+        Unslots a user
+        :param user: User which should be unslotted
+        :return:
+        """
+        if (hit := next(((x for x in self.slots if x.user == user.display_name))), None) is None:
+            raise SlotNotFound
+        else:
+            hit.unslot_user(user.display_name)
 
     async def write(self, channel=None, edit=True):
         """
@@ -113,7 +140,7 @@ class SlotList:
         :return:
         """
         if edit:
-            await self.message.edit(str(self))
+            await self.message.edit(content=str(self))
         else:
             self.message = await channel.send(str(self))
 
@@ -121,7 +148,6 @@ class SlotList:
         output = "**Slotlist**\n"  # TODO: Langugage
         for group in self.struct:
             output += str(group) + "\n"
-            print(str(group))
             output += "\n".join([str(x) for x in self.slots if x.group == group.prim])
             output += "\n"
 
