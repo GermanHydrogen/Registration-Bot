@@ -23,6 +23,11 @@ class User(commands.Cog):
 
         await author.send(f"You slotted yourself for the event **{channel.name}** by **{channel.guild.name}**.")
 
+        if self.client != slotlist.author:
+            await slotlist.author.send(f"{author.display_name} ({author}) "
+                                       f"slotted himself for the event {channel.name} "
+                                       f"for position #{slot_number} in the guild {channel.guild.name}.")
+
         await ctx.message.delete()
 
     @commands.command(hidden=False, description="unslot the author of the message")
@@ -37,5 +42,10 @@ class User(commands.Cog):
         await slotlist.write()
 
         await author.send(f"You unslotted yourself from the event **{channel.name}** by **{channel.guild.name}**.")
+
+        if self.client != slotlist.author:
+            await slotlist.author.send(f"{author.display_name} ({author}) "
+                                       f"unslotted himself from the event {channel.name} "
+                                       f"in the guild {channel.guild.name}.")
 
         await ctx.message.delete()

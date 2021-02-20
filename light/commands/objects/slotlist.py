@@ -5,7 +5,7 @@ from commands.objects.slot import *
 from commands.objects.slotgroup import SlotGroup
 
 
-async def get_list(channel: discord.TextChannel, author:discord.User, user: discord.User):
+async def get_list(channel: discord.TextChannel, author: discord.User, user: discord.User):
     """
     Get slotlist from channel
     :param channel: Channel in which the slotlist is
@@ -21,6 +21,20 @@ async def get_list(channel: discord.TextChannel, author:discord.User, user: disc
     raise SlotlistNotFound
 
 
+async def get_channel_author(channel: discord.TextChannel):
+    """
+    Gets the channel author aka
+    the user which has written the first message in the channel
+    :param channel: Discord channel
+    :return: Author
+    """
+    message = await channel.history(limit=1, oldest_first=True).flatten()
+    if message is None:
+        return None
+    else:
+        return message[0].author
+
+
 class SlotlistNotFound(CustomParentException):
     """ Raised if a slotlist is not found
 
@@ -28,6 +42,7 @@ class SlotlistNotFound(CustomParentException):
         channel: Channel in which the slotlist should be
         author: Author of the slotlist
     """
+
     def __init__(self, channel=None, author=None):
         super().__init__()
         self.message = "Slotlist message was not found!"
@@ -44,6 +59,7 @@ class DuplicateSlot(CustomParentException):
     Attributes:
         slot_number: Number of the slot
     """
+
     def __init__(self, slot_number: str):
         super().__init__()
         self.message = f"The slot {slot_number} already exists!"
@@ -55,6 +71,7 @@ class SlotNotFound(CustomParentException):
     Attributes:
         slot_number: Number of the slot
     """
+
     def __init__(self, slot_number: str):
         super().__init__()
         self.message = f"The slot {slot_number} doesn't exist!"
@@ -66,6 +83,7 @@ class UserNotSlotted(CustomParentException):
     Attributes:
         user_name: User name of the user
     """
+
     def __init__(self, user_name=None):
         super().__init__()
         if user_name is not None:
@@ -75,15 +93,18 @@ class UserNotSlotted(CustomParentException):
 
 
 class SlotList:
-    def __init__(self, message: discord.message):
+    def __init__(self, message: discord.message, author: discord.User):
         """
         Creates slotlist
         :param message: Message in which slotlist is
+        :param author: Author of the slotlist
         """
 
         self.message = message
         self.guild = message.guild.id
         self.channel = message.channel.id
+
+        self.author = author
 
         self.slots = []
         self.reserve = []

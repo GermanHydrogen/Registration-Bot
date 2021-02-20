@@ -2,7 +2,7 @@ import discord
 
 from functools import wraps
 
-from commands.objects.slotlist import SlotList, get_list, SlotlistNotFound
+from commands.objects.slotlist import SlotList, get_list, get_channel_author, SlotlistNotFound
 
 
 class ClientState:
@@ -31,10 +31,14 @@ class ClientState:
             return hit
         else:
             message = await get_list(channel, author, user)
+
             if message is None:
                 raise SlotlistNotFound
 
-            slotlist = SlotList(message)
+            if not delete:
+                author = await get_channel_author(channel)
+
+            slotlist = SlotList(message, author)
             self.__add_slotlist(slotlist)
             if delete:
                 await message.delete()
