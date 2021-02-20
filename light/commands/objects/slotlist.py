@@ -1,5 +1,6 @@
 import discord
 import re
+from util import CustomParentException
 from commands.objects.slot import *
 from commands.objects.slotgroup import SlotGroup
 
@@ -20,20 +21,56 @@ async def get_list(channel: discord.TextChannel, author:discord.User, user: disc
     raise SlotlistNotFound
 
 
-class SlotlistNotFound(Exception):
-    pass
+class SlotlistNotFound(CustomParentException):
+    """ Raised if a slotlist is not found
+
+    Attributes:
+        channel: Channel in which the slotlist should be
+        author: Author of the slotlist
+    """
+    def __init__(self, channel=None, author=None):
+        self.message = "Slotlist message was not found!"
+
+        if channel is not None and author is not None:
+            self.author_message = f"The slotlist in guild {channel.guild.name} in channel {channel.name} was not found." \
+                                  f"Did you declare it with `>Slotlist<`?"
+            self.author = author
 
 
-class DuplicateSlot(Exception):
-    pass
+class DuplicateSlot(CustomParentException):
+    """Raised when adding a slot but the slotnumber already exstists
+
+    Attributes:
+        slot_number: Number of the slot
+    """
+    def __init__(self, slot_number: str):
+        super().__init__()
+        self.message = f"The slot {slot_number} already exists!"
 
 
-class SlotNotFound(Exception):
-    pass
+class SlotNotFound(CustomParentException):
+    """ Raised when a slot number is not found.
+
+    Attributes:
+        slot_number: Number of the slot
+    """
+    def __init__(self, slot_number: str):
+        super().__init__()
+        self.message = f"The slot {slot_number} doesn't exist!"
 
 
-class UserNotSlotted(Exception):
-    pass
+class UserNotSlotted(CustomParentException):
+    """ Raised when unslotting a user but the user is not in the slotlist
+
+    Attributes:
+        user_name: User name of the user
+    """
+    def __init__(self, user_name=None):
+        super().__init__()
+        if user_name is not None:
+            self.message = f"{user_name} isn't slotted"
+        else:
+            self.message = "You arent slotted!"
 
 
 class SlotList:
@@ -113,10 +150,10 @@ class SlotList:
         :param user: User which should to be slotted
         :return:
         """
-        if (hit := next((x for x in self.slots if int(x.number) == int(number))), None) is None:
-            raise SlotNotFound
+        if (hit := next((x for x in self.slots if int(x.number) == int(number)), 0)) == 0:
+            raise SlotNotFound(slot_number=str(number))
         else:
-            if (taken := next(((x for x in self.slots if x.user == user.display_name)), None)) is not None:
+            if (taken := next(((x for x in self.slots if x.user == user.display_name)), 0)) != 0:
                 taken.unslot_user(user.display_name)
 
             hit.slot_user(user.display_name)
@@ -127,8 +164,8 @@ class SlotList:
         :param user: User which should be unslotted
         :return:
         """
-        if (hit := next(((x for x in self.slots if x.user == user.display_name))), None) is None:
-            raise SlotNotFound
+        if (hit := next(((x for x in self.slots if x.user == user.display_name)), 0)) == 0:
+            raise UserNotSlotted
         else:
             hit.unslot_user(user.display_name)
 

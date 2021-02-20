@@ -14,14 +14,14 @@ class User(commands.Cog):
     @commands.command(hidden=False, description="[number] slots the author of the message in the slot")
     @commands.cooldown(1, 0.5, commands.BucketType.channel)
     @commands.guild_only()
-    async def slot(self, ctx, num: int):
+    async def slot(self, ctx, slot_number: int):
         channel = ctx.message.channel
         author = ctx.message.author
 
         slotlist = await self.state.get_slotlist(channel, author, self.client.user)
 
         try:
-            slotlist.slot(num, author)
+            slotlist.slot(slot_number, author)
         except sl.SlotTaken:
             await channel.send(author.mention + " " + self.lang["slot"]["slot"]["error"]["general"]["channel"],
                                delete_after=5)
