@@ -1,13 +1,30 @@
-class SlotTaken(Exception):
-    pass
+from util import CustomParentException
 
 
-class SlotNotTaken(Exception):
-    pass
+class SlotTaken(CustomParentException):
+    """ Raised if a slot is taken
+    """
+    def __init__(self):
+        super().__init__()
+        self.message = "The slot is already taken"
 
 
-class SlotForbidden(Exception):
-    pass
+class SlotNotTaken(CustomParentException):
+    """ Raised if a slot is not taken
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.message = "The slot is empty"
+
+
+class SlotForbidden(CustomParentException):
+    """ Raised if a operation on a slot is forbidden
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.message = "This slot can't be accest by this command"
 
 
 class Slot:
