@@ -3,7 +3,6 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import has_role
 
-import commands.objects.slotlist as sl
 from commands.objects.state import ClientState
 
 
@@ -19,14 +18,9 @@ class Admin(commands.Cog):
     async def create(self, ctx):  # makes the slotlist editable for the bot
         channel = ctx.message.channel
 
-        try:
-            slotlist = await self.state.get_slotlist(channel, ctx.message.author, self.client.user, True)
-        except sl.SlotlistNotFound:
-            await ctx.message.author.send(self.lang["create"]["error"]["general"]["user"])
-            await ctx.message.delete()
-            return
-
+        slotlist = await self.state.get_slotlist(channel, ctx.message.author, self.client.user, True)
         await slotlist.write(channel, False)
 
-        await ctx.message.author.send(self.lang["create"]["success"]["user"])
+        await ctx.message.author.send(f"The event **{channel.name}** was succesfully created!")
+
         await ctx.message.delete()

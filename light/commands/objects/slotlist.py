@@ -29,6 +29,7 @@ class SlotlistNotFound(CustomParentException):
         author: Author of the slotlist
     """
     def __init__(self, channel=None, author=None):
+        super().__init__()
         self.message = "Slotlist message was not found!"
 
         if channel is not None and author is not None:

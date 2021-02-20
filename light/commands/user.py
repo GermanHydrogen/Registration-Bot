@@ -1,7 +1,6 @@
 import discord
 
 from discord.ext import commands
-import commands.objects.slotlist as sl
 from commands.objects.state import ClientState
 
 
@@ -19,16 +18,11 @@ class User(commands.Cog):
         author = ctx.message.author
 
         slotlist = await self.state.get_slotlist(channel, author, self.client.user)
-
-        try:
-            slotlist.slot(slot_number, author)
-        except sl.SlotTaken:
-            await channel.send(author.mention + " " + self.lang["slot"]["slot"]["error"]["general"]["channel"],
-                               delete_after=5)
-            await ctx.message.delete()
-            return
-
+        slotlist.slot(slot_number, author)
         await slotlist.write()
+
+        await author.send(f"You slotted yourself for the event **{channel.name}** by **{channel.guild.name}**.")
+
         await ctx.message.delete()
 
     @commands.command(hidden=False, description="unslot the author of the message")
@@ -39,14 +33,9 @@ class User(commands.Cog):
         author = ctx.message.author
 
         slotlist = await self.state.get_slotlist(channel, author, self.client.user)
-
-        try:
-            slotlist.unslot(author)
-        except sl.SlotTaken:
-            await channel.send(author.mention + " " + self.lang["slot"]["slot"]["error"]["general"]["channel"],
-                               delete_after=5)
-            await ctx.message.delete()
-            return
-
+        slotlist.unslot(author)
         await slotlist.write()
+
+        await author.send(f"You unslotted yourself from the event **{channel.name}** by **{channel.guild.name}**.")
+
         await ctx.message.delete()
