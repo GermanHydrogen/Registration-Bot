@@ -3,13 +3,12 @@ import yaml
 import datetime
 import logging
 
-import re
-from discord.ext import commands
-from discord.ext.commands import Bot, has_role
+from discord.ext.commands import Bot
 
 from commands.admin import Admin
 from commands.user import User
 from commands.objects.state import ClientState
+from util import Util
 
 ''' --- onLoad ----'''
 client = Bot(command_prefix="!", case_insensitive=True)
@@ -56,24 +55,10 @@ discord_logger.addHandler(discord_handler)
 
 ''' ---        ----'''
 
-
-@client.event
-async def on_command_error(ctx, error):
-    if ctx.message.channel != "DMChannel" and ctx.message.channel != "GroupChannel":
-        await ctx.message.delete()
-
-    log = "User: " + str(ctx.message.author).ljust(20) + "\t"
-    log += "Channel:" + str(ctx.message.channel).ljust(20) + "\t"
-    log += "Command: " + str(ctx.message.content).ljust(20) + "\t"
-    log += str(error)
-
-    logger.error(log)
-
-    raise error
-
 state = ClientState()
 
 client.add_cog(Admin(client=client, state=state, lang=lang))
 client.add_cog(User(client=client, state=state, lang=lang))
+client.add_cog(Util(logger=logger))
 
 client.run(cfg['token'])
