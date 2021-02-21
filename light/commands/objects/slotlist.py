@@ -165,31 +165,31 @@ class SlotList:
         """
         self.struct.append(group)
 
-    def slot(self, number: int, user: discord.User):
+    def slot(self, number: int, user_name: str):
         """
         Slots a user
         :param number: Slot number
-        :param user: User which should to be slotted
+        :param user_name: User which should to be slotted
         :return:
         """
         if (hit := next((x for x in self.slots if int(x.number) == int(number)), 0)) == 0:
             raise SlotNotFound(slot_number=str(number))
         else:
-            if (taken := next(((x for x in self.slots if x.user == user.display_name)), 0)) != 0:
-                taken.unslot_user(user.display_name)
+            if (taken := next(((x for x in self.slots if x.user == user_name)), 0)) != 0:
+                taken.unslot_user(user_name)
 
-            hit.slot_user(user.display_name)
+            hit.slot_user(user_name)
 
-    def unslot(self, user: discord.User):
+    def unslot(self, user_name: str):
         """
         Unslots a user
-        :param user: User which should be unslotted
+        :param user_name: User which should be unslotted
         :return:
         """
-        if (hit := next(((x for x in self.slots if x.user == user.display_name)), 0)) == 0:
+        if (hit := next(((x for x in self.slots if x.user == user_name)), 0)) == 0:
             raise UserNotSlotted
         else:
-            hit.unslot_user(user.display_name)
+            hit.unslot_user(user_name)
 
     async def write(self, channel=None, edit=True):
         """

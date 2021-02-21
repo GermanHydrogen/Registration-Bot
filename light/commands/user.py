@@ -18,7 +18,7 @@ class User(commands.Cog):
         author = ctx.message.author
 
         slotlist = await self.state.get_slotlist(channel, author, self.client.user)
-        slotlist.slot(slot_number, author)
+        slotlist.slot(slot_number, author.display_name)
         await slotlist.write()
 
         await author.send(f"You slotted yourself for the event **{channel.name}** by **{channel.guild.name}**.")
@@ -38,7 +38,7 @@ class User(commands.Cog):
         author = ctx.message.author
 
         slotlist = await self.state.get_slotlist(channel, author, self.client.user)
-        slotlist.unslot(author)
+        slotlist.unslot(author.display_name)
         await slotlist.write()
 
         await author.send(f"You unslotted yourself from the event **{channel.name}** by **{channel.guild.name}**.")
