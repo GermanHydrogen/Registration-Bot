@@ -7,6 +7,7 @@ from discord.ext.commands import Bot
 
 from commands.admin import Admin
 from commands.user import User
+from commands.moderator import Moderator
 from commands.objects.state import ClientState
 from util import Util
 
@@ -58,6 +59,7 @@ discord_logger.addHandler(discord_handler)
 state = ClientState()
 
 client.add_cog(Admin(client=client, state=state, lang=lang))
+client.add_cog(Moderator(client=client, state=state, lang=lang))
 client.add_cog(User(client=client, state=state, lang=lang))
 client.add_cog(Util(logger=logger))
 
