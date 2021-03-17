@@ -1,32 +1,34 @@
 import discord
 from discord.ext import commands
-from discord.ext.commands import has_role
 
 from commands.objects.state import ClientState
+from commands.objects.guildconfig import RoleConfig, is_moderator
 
 
 class Moderator(commands.Cog):
-    def __init__(self, client: discord.Client, state: ClientState, lang: dict):
+    def __init__(self, client: discord.Client, state: ClientState, lang: dict, guild_config: RoleConfig):
         self.client = client
         self.state = state
         self.lang = lang
 
+        self.guildConfig = guild_config
+
     @commands.command(hidden=True, description="Initialize the slotlist")
-    @has_role("Rosengarde")
     @commands.guild_only()
+    @is_moderator
     async def create(self, ctx):  # makes the slotlist editable for the bot
         channel = ctx.message.channel
 
         slotlist = await self.state.get_slotlist(channel, ctx.message.author, self.client.user, True)
         await slotlist.write(channel, False)
 
-        await ctx.message.author.send(f"The event **{channel.name}** was succesfully created!")
+        await ctx.message.author.send(f"The event **{channel.name}** was successfully created!")
 
         await ctx.message.delete()
 
     @commands.command(hidden=True, description="[Number] [User] Slots an User in a Slot")
-    @has_role("Rosengarde")
     @commands.guild_only()
+    @is_moderator
     async def forceSlot(self, ctx, slot_number: int, *, user_name: str):
         author = ctx.message.author
         channel = ctx.message.channel
@@ -35,13 +37,16 @@ class Moderator(commands.Cog):
         slotlist.slot(slot_number, user_name)
         await slotlist.write()
 
-        await ctx.send(f'{author.mention} {user_name} was succesfully slotted.', delete_after=5)
+        await ctx.send(f'{author.mention} {user_name} was successfully slotted.', delete_after=5)
 
-        await ctx.message.delete()
+        try:
+            await ctx.message.delete()
+        except discord.errors.NotFound:
+            pass
 
     @commands.command(hidden=True, description="[User] Unslots an User or slot")
-    @has_role("Rosengarde")
     @commands.guild_only()
+    @is_moderator
     async def forceUnslot(self, ctx, *, user_name: str):
         author = ctx.message.author
         channel = ctx.message.channel
@@ -50,6 +55,9 @@ class Moderator(commands.Cog):
         slotlist.unslot(user_name)
         await slotlist.write()
 
-        await ctx.send(f'{author.mention} {user_name} was succesfully slotted.', delete_after=5)
+        await ctx.send(f'{author.mention} {user_name} was successfully slotted.', delete_after=5)
 
-        await ctx.message.delete()
+        try:
+            await ctx.message.delete()
+        except discord.errors.NotFound:
+            pass
