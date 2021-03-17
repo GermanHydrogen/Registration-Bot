@@ -6,10 +6,9 @@ from commands.objects.guildconfig import RoleConfig, is_moderator
 
 
 class Moderator(commands.Cog):
-    def __init__(self, client: discord.Client, state: ClientState, lang: dict, guild_config: RoleConfig):
+    def __init__(self, client: discord.Client, state: ClientState, guild_config: RoleConfig):
         self.client = client
         self.state = state
-        self.lang = lang
 
         self.guildConfig = guild_config
 

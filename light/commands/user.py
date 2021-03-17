@@ -7,10 +7,9 @@ from util import send_msg
 
 
 class User(commands.Cog):
-    def __init__(self, client: discord.user, state: ClientState, lang: dict, guild_config: RoleConfig):
+    def __init__(self, client: discord.user, state: ClientState, guild_config: RoleConfig):
         self.state = state
         self.client = client
-        self.lang = lang
         self.guildConfig = guild_config
 
     @commands.command(hidden=False, description="[number] slots the author of the message in the slot")

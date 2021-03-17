@@ -1,5 +1,5 @@
 import os
-import yaml
+
 import datetime
 import logging
 
@@ -12,6 +12,8 @@ from commands.objects.state import ClientState
 from commands.objects.guildconfig import RoleConfig
 from util import Util
 
+from config.loader import cfg
+
 ''' --- onLoad ----'''
 client = Bot(command_prefix="!", case_insensitive=True)
 
@@ -19,24 +21,6 @@ client.remove_command("help")
 
 path = os.path.dirname(os.path.abspath(__file__))
 
-
-#load conf
-if os.path.isfile(os.path.join(path, 'config', 'config.yml')):
-    with open(os.path.join(path, 'config', 'config.yml'), 'r') as ymlfile:
-        cfg = yaml.safe_load(ymlfile)
-elif os.path.isfile(os.path.join(path, 'config', 'default.yml')):
-    with open(os.path.join(path, 'config', "default.yml"), 'r') as ymlfile:
-        cfg = yaml.safe_load(ymlfile)
-else:
-    print("Config file missing!")
-    exit()
-
-if os.path.isfile(os.path.join(path, 'config', f'{cfg["language"]}.yml')):
-    with open(os.path.join(path, 'config', f'{cfg["language"]}.yml')) as ymlfile:
-        lang = yaml.safe_load(ymlfile)
-else:
-    print("Language file missing!")
-    exit()
 
 #load log
 
@@ -61,9 +45,9 @@ state = ClientState()
 guildConfig = RoleConfig(os.path.join(path, 'config', 'guildConfig.yml'))
 guildConfig.load()
 
-client.add_cog(Admin(client=client, state=state, lang=lang, guild_config=guildConfig))
-client.add_cog(Moderator(client=client, state=state, lang=lang, guild_config=guildConfig))
-client.add_cog(User(client=client, state=state, lang=lang, guild_config=guildConfig))
+client.add_cog(Admin(client=client, state=state, guild_config=guildConfig))
+client.add_cog(Moderator(client=client, state=state, guild_config=guildConfig))
+client.add_cog(User(client=client, state=state, guild_config=guildConfig))
 client.add_cog(Util(logger=logger))
 
 client.run(cfg['token'])

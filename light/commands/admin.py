@@ -7,10 +7,9 @@ from util import send_msg
 
 
 class Admin(commands.Cog):
-    def __init__(self, client: discord.Client, state: ClientState, lang: dict, guild_config: RoleConfig):
+    def __init__(self, client: discord.Client, state: ClientState, guild_config: RoleConfig):
         self.client = client
         self.state = state
-        self.lang = lang
 
         self.guildConfig = guild_config
 
