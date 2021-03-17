@@ -1,3 +1,7 @@
+import os
+import datetime
+import logging
+
 import discord
 from discord.ext import commands
 from discord.ext.commands import errors as derrors
@@ -11,6 +15,29 @@ async def send_msg(ctx: discord.ext.commands.Context, error_msg: str) -> None:
     :return:
     """
     await ctx.send(f'{ctx.message.author.mention} {error_msg}', delete_after=5)
+
+
+def init_logger(path: str) -> logging.Logger:
+    """
+    Init the custom logger and the general discord logging
+    :param path: Path to the log dir
+    :return:
+    """
+    today = datetime.date.today()
+
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+    handler = logging.FileHandler(filename=os.path.join(path, 'logs', f'{today}.log'), encoding='utf-8', mode='a')
+    handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s: %(message)s'))
+    logger.addHandler(handler)
+
+    discord_logger = logging.getLogger('discord')
+    discord_logger.setLevel(logging.DEBUG)
+    discord_handler = logging.FileHandler(filename=os.path.join(path, 'logs', 'discord.log'), encoding='utf-8', mode='w')
+    discord_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+    discord_logger.addHandler(discord_handler)
+
+    return logger
 
 
 class CustomParentException(Exception):
