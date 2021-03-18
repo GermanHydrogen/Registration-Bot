@@ -106,4 +106,9 @@ class Slot:
         if self.number == "":
             raise ValueError
         else:
-            return f"#{self.number} {self.desc} - {self.user}"
+            bold = ""
+            if self.user == "":
+                bold = "**"
+
+            return f"#{bold}{self.number} {self.desc} - {self.user}{bold}"
+
