@@ -110,5 +110,5 @@ class Slot:
             if self.user == "":
                 bold = "**"
 
-            return f"#{bold}{self.number} {self.desc} - {self.user}{bold}"
+            return f"#{self.number} {bold}{self.desc}{bold} - {self.user}"
 

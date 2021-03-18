@@ -4,6 +4,8 @@ from util import CustomParentException
 from commands.objects.slot import *
 from commands.objects.slotgroup import SlotGroup
 
+from config.loader import cfg
+
 
 async def get_list(channel: discord.TextChannel, author: discord.User, user: discord.User):
     """
@@ -113,6 +115,11 @@ class SlotList:
 
         self.__build_slotlist(message.content.splitlines(False))
 
+    def __build_reserve(self) -> None:
+        amount = int(len(self.slots) * cfg['res_ratio'])+1
+        minim = int(max([int(x.number) for x in self.slots])/10 + 1) * 10
+        self.reserve = [Slot().from_data(str(minim+index), "Reserve", "") for index in range(amount)]
+
     def __build_slotlist(self, content: str):
         """
         Constructs the slotlist
@@ -143,8 +150,11 @@ class SlotList:
 
             elif line.strip() == "":
                 current_buffer += "\n"
-            elif line.strip().replace("**", "") != "Reserve":  # TODO: Language
+            elif line.strip().replace("**", "") != "Reserve":
                 title_buffer.append(line.strip())
+
+        if len(self.reserve) == 0:
+            self.__build_reserve()
 
     def add_slot(self, slot: Slot):
         """
@@ -172,10 +182,10 @@ class SlotList:
         :param user_name: User which should to be slotted
         :return:
         """
-        if (hit := next((x for x in self.slots if int(x.number) == int(number)), 0)) == 0:
+        if (hit := next((x for x in self.slots + self.reserve if int(x.number) == int(number)), 0)) == 0:
             raise SlotNotFound(slot_number=str(number))
         else:
-            if (taken := next(((x for x in self.slots if x.user == user_name)), 0)) != 0:
+            if (taken := next(((x for x in self.slots + self.reserve if x.user == user_name)), 0)) != 0:
                 taken.unslot_user(user_name)
 
             hit.slot_user(user_name)
@@ -191,6 +201,32 @@ class SlotList:
         else:
             hit.unslot_user(user_name)
 
+    def manage_reserve(self):
+        """
+        Manage reserve slots.
+        Puts user from reserve into free slots,
+        and sorts the reserve slots, so its filled from the button up
+        :return:
+        """
+
+        # Free slots
+        free_slots = [x for x in self.slots if x.user == ""]
+        # Filled reserve slots
+        filled_reserve = [x for x in self.reserve if x.user != ""]
+
+        #  Puts user from reserve into free slots
+        if len(free_slots) != 0 and len(filled_reserve) != 0:
+            for index, elem in enumerate(free_slots, start=0):
+                try:
+                    self.slot(elem.number, filled_reserve[index].user)
+                except KeyError:
+                    break
+        # Sorts the reserve slots, so its filled from button up
+        if len(free_slots) < len(filled_reserve):
+            for index, elem in enumerate(self.reserve, start=0):
+                if elem.user == "":
+                    self.reserve.append(self.reserve.pop(index))
+
     async def write(self, channel=None, edit=True):
         """
         Writes slotlist to channel
@@ -198,6 +234,8 @@ class SlotList:
         :param edit: if this is a edit
         :return:
         """
+        self.manage_reserve()
+
         if edit:
             await self.message.edit(content=str(self))
         else:
@@ -210,7 +248,8 @@ class SlotList:
             output += "\n".join([str(x) for x in self.slots if x.group == group.prim])
             output += "\n"
 
-        if self.reserve:
+        if self.reserve and \
+                (len([x for x in self.reserve if x.user != ""]) != 0 or discord.utils.get(self.slots, user="") is None):
             output += "**Reserve**" + "\n"  # TODO: Language
             output += "\n".join([str(x) for x in self.reserve])
             output += "\n"
