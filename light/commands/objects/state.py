@@ -27,7 +27,8 @@ class ClientState:
         channel_id = channel.id
         guild_id = channel.guild.id
 
-        if (hit := next((x for x in self.buffer if x.guild == guild_id and x.channel == channel_id), None)) is not None:
+        if (hit := next((x for x in self.buffer if x.guild == guild_id and x.channel == channel_id), None)) is not None \
+                and not delete:
             return hit
         else:
             message = await get_list(channel, author, user)
