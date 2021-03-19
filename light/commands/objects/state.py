@@ -11,7 +11,9 @@ class ClientState:
         self.size = size
 
     def __add_slotlist(self, slotlist: SlotList):
-        if len(self.buffer) + 1 > self.size:
+        if (hit := next((x for x in self.buffer if x.channel == slotlist.channel), None)) is not None:
+            self.buffer.remove(hit)
+        elif len(self.buffer) + 1 > self.size:
             self.buffer.pop(0)
         self.buffer.append(slotlist)
 
