@@ -20,7 +20,7 @@ async def get_list(channel: discord.TextChannel, author: discord.User, user: dis
                 or (re.search(re.escape("**Slotlist**"), msg.content) and msg.author == user):
             return msg
 
-    raise SlotlistNotFound
+    raise SlotlistNotFound(channel)
 
 
 async def get_channel_author(channel: discord.TextChannel):
@@ -42,17 +42,31 @@ class SlotlistNotFound(CustomParentException):
 
     Attributes:
         channel: Channel in which the slotlist should be
-        author: Author of the slotlist
     """
 
-    def __init__(self, channel=None, author=None):
+    def __init__(self, channel=None):
         super().__init__()
         self.message = "Slotlist message was not found!"
 
-        if channel is not None and author is not None:
-            self.author_message = f"The slotlist in guild {channel.guild.name} in channel {channel.name} was not found." \
+        if channel is not None:
+            self.author_message = f"The slotlist in guild {channel.guild.name} in channel {channel.name} was not found.\n" \
                                   f"Did you declare it with `>Slotlist<`?"
-            self.author = author
+
+
+class SlotlistNumberError(CustomParentException):
+    """ Raised if slot has no or a faulty number
+
+    :param channel: Channel in which the error accrued
+    """
+
+    def __init__(self, channel=None):
+        super().__init__()
+        self.message = "Faulty slotlist number!"
+
+        if channel is not None:
+            self.author_message = f"In the slotlist in guild {channel.guild.name} in channel {channel.name} " \
+                                  f"a faulty slot number was found!\n" \
+                                  f"Please use the format `#[number] [description] - [opt: user]` for your slots 😀"
 
 
 class DuplicateSlot(CustomParentException):
@@ -62,9 +76,14 @@ class DuplicateSlot(CustomParentException):
         slot_number: Number of the slot
     """
 
-    def __init__(self, slot_number: str):
+    def __init__(self, slot_number: str, channel=None):
         super().__init__()
-        self.message = f"The slot {slot_number} already exists!"
+        self.message = f"The slot {slot_number} is a duplicate!"
+
+        if channel is not None:
+            self.author_message = f"In the slotlist in guild {channel.guild.name} in channel {channel.name} " \
+                                  f"a duplicate slot with number {slot_number} was found.\n" \
+                                  f"Please change the slot number, because the the slot number has to be unique!"
 
 
 class SlotNotFound(CustomParentException):
@@ -116,9 +135,9 @@ class SlotList:
         self.__build_slotlist(message.content.splitlines(False))
 
     def __build_reserve(self) -> None:
-        amount = int(len(self.slots) * cfg['res_ratio'])+1
-        minim = int(max([int(x.number) for x in self.slots])/10 + 1) * 10
-        self.reserve = [Slot().from_data(str(minim+index), "Reserve", "") for index in range(amount)]
+        amount = int(len(self.slots) * cfg['res_ratio']) + 1
+        minim = int(max([int(x.number) for x in self.slots]) / 10 + 1) * 10
+        self.reserve = [Slot().from_data(str(minim + index), "Reserve", "") for index in range(amount)]
 
     def __build_slotlist(self, content: str):
         """
@@ -134,7 +153,11 @@ class SlotList:
             if "Slotlist" in line:  # TODO: Language
                 pass
             elif line and line[0] == '#':
-                slot = Slot().from_line(line)
+                try:
+                    slot = Slot().from_line(line)
+                except ValueError:
+                    raise SlotlistNumberError(self.message.channel)
+
                 if not self.struct or current_buffer or title_buffer:
                     self.add_group(SlotGroup(prim=last, title="\n".join(title_buffer), before=current_buffer))
                     last += 1
@@ -146,7 +169,7 @@ class SlotList:
                 if slot.desc.strip().replace("**", "") == "Reserve":
                     self.reserve.append(slot)
                 else:
-                    self.slots.append(slot)
+                    self.add_slot(slot)
 
             elif line.strip() == "":
                 current_buffer += "\n"
@@ -162,8 +185,8 @@ class SlotList:
         :param slot: Slot
         :return:
         """
-        if next((x for x in self.slots if x.number == slot.number), None) is None:
-            raise DuplicateSlot
+        if next((x for x in self.slots if x.number == slot.number), None) is not None:
+            raise DuplicateSlot(slot.number, self.message.channel)
         else:
             self.slots.append(slot)
 

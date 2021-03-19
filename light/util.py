@@ -43,6 +43,7 @@ def init_logger(path: str) -> logging.Logger:
 class CustomParentException(Exception):
     def __init__(self):
         self.message = ""
+        self.author_message = ""
         self.custom = True
         super().__init__()
 
@@ -76,6 +77,9 @@ class Util(commands.Cog):
 
         elif hasattr(error, 'original') and hasattr(error.original, 'custom'):
             await send_msg(ctx, error.original.message)
+
+            if error.original.author_message != "":
+                await ctx.author.send(error.original.author_message)
         else:
             await send_msg(ctx, "Unexpected error. Please contact your local admin.")
 
