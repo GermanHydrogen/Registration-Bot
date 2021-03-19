@@ -60,3 +60,21 @@ class Moderator(commands.Cog):
             await ctx.message.delete()
         except discord.errors.NotFound:
             pass
+
+    @commands.command(hidden=True, description="[Number] [Description] Edit the description of a slot")
+    @commands.guild_only()
+    @is_moderator
+    async def editSlot(self, ctx, number: str, *, description: str):
+        author = ctx.message.author
+        channel = ctx.message.channel
+
+        slotlist = await self.state.get_slotlist(channel, author, self.client.user)
+        slotlist.edit_slot(number, description)
+        await slotlist.write()
+
+        await ctx.send(f'The description of slot #{number} was changed to {description}.', delete_after=5)
+
+        try:
+            await ctx.message.delete()
+        except discord.errors.NotFound:
+            pass

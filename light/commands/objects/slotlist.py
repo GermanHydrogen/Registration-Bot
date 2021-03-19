@@ -137,7 +137,7 @@ class SlotList:
         minim = int(max([int(x.number) for x in self.slots]) / 10 + 1) * 10
         self.reserve = [Slot().from_data(str(minim + index), "Reserve", "") for index in range(amount)]
 
-    def __build_slotlist(self, content: str) ->None:
+    def __build_slotlist(self, content: str) -> None:
         """
         Constructs the slotlist
         :param content: slotlist string
@@ -176,6 +176,19 @@ class SlotList:
 
         if len(self.reserve) == 0:
             self.__build_reserve()
+
+    def edit_slot(self, number: str, description: str) -> None:
+        """
+        Changes the description of an slot
+        :param number: Slotnumber
+        :param description: New description
+        :return: None
+        """
+
+        if (slot := next((x for x in self.slots if x.number == number), None)) is None:
+            raise SlotNotFound(number)
+        else:
+            slot.desc = description
 
     def add_slot(self, slot: Slot) -> None:
         """
