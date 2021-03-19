@@ -82,6 +82,16 @@ class DuplicateSlot(CustomParentException):
                                   f"Please change the slot number, because the the slot number has to be unique!"
 
 
+class SlotGroupNotFound(CustomParentException):
+    def __init__(self, name: str):
+        """
+        Raised when a slot group is not found.
+        :param name: Number of the slot
+        """
+        super().__init__()
+        self.message = f"The slot group {name} doesn't exist!"
+
+
 class SlotNotFound(CustomParentException):
     def __init__(self, slot_number: str):
         """
@@ -167,9 +177,9 @@ class SlotList:
                 if slot.desc.strip().replace("**", "") == "Reserve":
                     self.reserve.append(slot)
                 else:
-                    self.add_slot(slot)
+                    self.__add_slot(slot)
 
-            elif line.strip() == "":
+            elif line.strip().replace("\u200b", "") == "":
                 current_buffer += "\n"
             elif line.strip().replace("**", "") != "Reserve":
                 title_buffer.append(line.strip())
@@ -190,7 +200,7 @@ class SlotList:
         else:
             slot.desc = description
 
-    def add_slot(self, slot: Slot) -> None:
+    def __add_slot(self, slot: Slot) -> None:
         """
         Adds slot to slotlist
         :param slot: Slot
@@ -200,6 +210,22 @@ class SlotList:
             raise DuplicateSlot(slot.number, self.message.channel)
         else:
             self.slots.append(slot)
+
+    def new_slot(self, number: str, group_name: str, description: str) -> None:
+        """
+        Creates a new slot and adds it to the given group
+        :param number:
+        :param group_name:
+        :param description:
+        :return:
+        """
+
+        group = self.__get_group(group_name)
+        slot = Slot().from_data(number, description, "")
+        slot.group = group.prim
+
+        self.__add_slot(slot)
+
 
     def remove_slot(self, number: str) -> None:
         """
@@ -211,6 +237,20 @@ class SlotList:
             raise SlotNotFound(number)
         else:
             self.slots.remove(slot)
+
+    def __get_group(self, name: str) -> SlotGroup:
+        print([str(x) for x in self.struct])
+
+        if name.isdigit():
+            try:
+                return self.struct[int(name)]
+            except KeyError:
+                pass
+
+        if (group := next((x for x in self.struct if x.title.replace("**", "").replace("\n", " ").strip() == name), None)) is None:
+            raise SlotGroupNotFound(name)
+        else:
+            return group
 
     def add_group(self, group: SlotGroup) -> None:
         """

@@ -96,3 +96,21 @@ class Moderator(commands.Cog):
             await ctx.message.delete()
         except discord.errors.NotFound:
             pass
+
+    @commands.command(hidden=True, description="[Number] [Group] [Description] Adds a slot to an group")
+    @commands.guild_only()
+    @is_moderator
+    async def addSlot(self, ctx, number: str, group: str, description: str):
+        author = ctx.message.author
+        channel = ctx.message.channel
+
+        slotlist = await self.state.get_slotlist(channel, author, self.client.user)
+        slotlist.new_slot(number, group, description)
+        await slotlist.write()
+
+        await ctx.send(f'The slot #{number} {description} was successfully created.', delete_after=5)
+
+        try:
+            await ctx.message.delete()
+        except discord.errors.NotFound:
+            pass
