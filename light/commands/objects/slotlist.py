@@ -201,6 +201,17 @@ class SlotList:
         else:
             self.slots.append(slot)
 
+    def remove_slot(self, number: str) -> None:
+        """
+        Changes the description of an slot
+        :param number: Slot number
+        :return: None
+        """
+        if (slot := next((x for x in self.slots if x.number == number), None)) is None:
+            raise SlotNotFound(number)
+        else:
+            self.slots.remove(slot)
+
     def add_group(self, group: SlotGroup) -> None:
         """
         Adds group
