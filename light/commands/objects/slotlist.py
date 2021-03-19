@@ -38,13 +38,11 @@ async def get_channel_author(channel: discord.TextChannel):
 
 
 class SlotlistNotFound(CustomParentException):
-    """ Raised if a slotlist is not found
-
-    Attributes:
-        channel: Channel in which the slotlist should be
-    """
-
     def __init__(self, channel=None):
+        """
+        Raised if a slotlist is not found
+        :param channel: Channel in which the slotlist should be
+        """
         super().__init__()
         self.message = "Slotlist message was not found!"
 
@@ -54,12 +52,11 @@ class SlotlistNotFound(CustomParentException):
 
 
 class SlotlistNumberError(CustomParentException):
-    """ Raised if slot has no or a faulty number
-
-    :param channel: Channel in which the error accrued
-    """
-
     def __init__(self, channel=None):
+        """
+        Raised if slot has no or a faulty number
+        :param channel: Channel in which the error accrued
+        """
         super().__init__()
         self.message = "Faulty slotlist number!"
 
@@ -70,13 +67,12 @@ class SlotlistNumberError(CustomParentException):
 
 
 class DuplicateSlot(CustomParentException):
-    """Raised when adding a slot but the slotnumber already exstists
-
-    Attributes:
-        slot_number: Number of the slot
-    """
-
     def __init__(self, slot_number: str, channel=None):
+        """
+        Raised when adding a slot but the slotnumber already exstists
+        :param slot_number: Number of the slot
+        :param channel: Channel in which the error was raised
+        """
         super().__init__()
         self.message = f"The slot {slot_number} is a duplicate!"
 
@@ -87,25 +83,21 @@ class DuplicateSlot(CustomParentException):
 
 
 class SlotNotFound(CustomParentException):
-    """ Raised when a slot number is not found.
-
-    Attributes:
-        slot_number: Number of the slot
-    """
-
     def __init__(self, slot_number: str):
+        """
+        Raised when a slot number is not found.
+        :param slot_number: Number of the slot
+        """
         super().__init__()
         self.message = f"The slot {slot_number} doesn't exist!"
 
 
 class UserNotSlotted(CustomParentException):
-    """ Raised when unslotting a user but the user is not in the slotlist
-
-    Attributes:
-        user_name: User name of the user
-    """
-
     def __init__(self, user_name=None):
+        """
+        Raised when unslotting a user but the user is not in the slotlist
+        :param user_name: User name of the user
+        """
         super().__init__()
         if user_name is not None:
             self.message = f"{user_name} isn't slotted"
@@ -116,7 +108,12 @@ class UserNotSlotted(CustomParentException):
 class SlotList:
     def __init__(self, message: discord.message, author: discord.User):
         """
-        Creates slotlist
+        The slotlist consists of user defined slot groups which
+        contain all regular slots and a reserve slot group which contain
+        all reserve slots, which is only displayed if all regular slots are full.
+
+        It is constructed from a message containing a string.
+
         :param message: Message in which slotlist is
         :param author: Author of the slotlist
         """
@@ -130,6 +127,7 @@ class SlotList:
         self.slots = []
         self.reserve = []
 
+        # Slot Groups
         self.struct = []
 
         self.__build_slotlist(message.content.splitlines(False))
@@ -139,7 +137,7 @@ class SlotList:
         minim = int(max([int(x.number) for x in self.slots]) / 10 + 1) * 10
         self.reserve = [Slot().from_data(str(minim + index), "Reserve", "") for index in range(amount)]
 
-    def __build_slotlist(self, content: str):
+    def __build_slotlist(self, content: str) ->None:
         """
         Constructs the slotlist
         :param content: slotlist string
@@ -179,7 +177,7 @@ class SlotList:
         if len(self.reserve) == 0:
             self.__build_reserve()
 
-    def add_slot(self, slot: Slot):
+    def add_slot(self, slot: Slot) -> None:
         """
         Adds slot to slotlist
         :param slot: Slot
@@ -190,7 +188,7 @@ class SlotList:
         else:
             self.slots.append(slot)
 
-    def add_group(self, group: SlotGroup):
+    def add_group(self, group: SlotGroup) -> None:
         """
         Adds group
         :param group: SlotGroup
@@ -198,7 +196,7 @@ class SlotList:
         """
         self.struct.append(group)
 
-    def slot(self, number: int, user_name: str):
+    def slot(self, number: int, user_name: str) -> None:
         """
         Slots a user
         :param number: Slot number
@@ -213,23 +211,23 @@ class SlotList:
 
             hit.slot_user(user_name)
 
-    def unslot(self, user_name: str):
+    def unslot(self, user_name: str) -> None:
         """
         Unslots a user
         :param user_name: User which should be unslotted
-        :return:
+        :return: None
         """
         if (hit := next(((x for x in self.slots if x.user == user_name)), 0)) == 0:
             raise UserNotSlotted
         else:
             hit.unslot_user(user_name)
 
-    def manage_reserve(self):
+    def manage_reserve(self) -> None:
         """
         Manage reserve slots.
         Puts user from reserve into free slots,
         and sorts the reserve slots, so its filled from the button up
-        :return:
+        :return: None
         """
 
         # Free slots
@@ -250,12 +248,12 @@ class SlotList:
                 if elem.user == "":
                     self.reserve.append(self.reserve.pop(index))
 
-    async def write(self, channel=None, edit=True):
+    async def write(self, channel=None, edit=True) -> None:
         """
         Writes slotlist to channel
         :param channel: channel to write to
         :param edit: if this is a edit
-        :return:
+        :return: None
         """
         self.manage_reserve()
 
