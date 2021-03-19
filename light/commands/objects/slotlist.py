@@ -226,7 +226,6 @@ class SlotList:
 
         self.__add_slot(slot)
 
-
     def remove_slot(self, number: str) -> None:
         """
         Changes the description of an slot
@@ -239,8 +238,6 @@ class SlotList:
             self.slots.remove(slot)
 
     def __get_group(self, name: str) -> SlotGroup:
-        print([str(x) for x in self.struct])
-
         if name.isdigit():
             try:
                 return self.struct[int(name)]
@@ -259,6 +256,21 @@ class SlotList:
         :return:
         """
         self.struct.append(group)
+
+    def remove_group(self, name: str) -> None:
+        """
+        Removes a group and its slots
+        :param name: Title of the group
+        :return:
+        """
+
+        group = self.__get_group(name)
+
+        # Remove all slots
+        for slot in [x for x in self.slots if x.group == group.prim]:
+            self.slots.remove(slot)
+
+        self.struct.remove(group)
 
     def slot(self, number: int, user_name: str) -> None:
         """
