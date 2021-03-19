@@ -153,7 +153,7 @@ class SlotList:
         :param content: slotlist string
         :return:
         """
-        last = 0
+        last = SlotGroup
         current_buffer = ""
         title_buffer = []
 
@@ -167,16 +167,16 @@ class SlotList:
                     raise SlotlistNumberError(self.message.channel)
 
                 if not self.struct or current_buffer or title_buffer:
-                    self.add_group(SlotGroup(prim=last, title="\n".join(title_buffer), before=current_buffer))
-                    last += 1
+                    last = SlotGroup(title="\n".join(title_buffer), before=current_buffer)
+                    self.__add_group(last)
+
                     title_buffer = []
                     current_buffer = ""
-
-                slot.group = len(self.struct) - 1
 
                 if slot.desc.strip().replace("**", "") == "Reserve":
                     self.reserve.append(slot)
                 else:
+                    slot.group = last
                     self.__add_slot(slot)
 
             elif line.strip().replace("\u200b", "") == "":
@@ -249,13 +249,22 @@ class SlotList:
         else:
             return group
 
-    def add_group(self, group: SlotGroup) -> None:
+    def __add_group(self, group: SlotGroup) -> None:
         """
         Adds group
         :param group: SlotGroup
         :return:
         """
         self.struct.append(group)
+
+    def new_group(self, index: int, name: str) -> None:
+        """
+        Adds a new group
+        :param index:
+        :param name:
+        :return:
+        """
+        self.struct.insert(index, SlotGroup(title=name, before='\n'))
 
     def remove_group(self, name: str) -> None:
         """
@@ -267,7 +276,7 @@ class SlotList:
         group = self.__get_group(name)
 
         # Remove all slots
-        for slot in [x for x in self.slots if x.group == group.prim]:
+        for slot in [x for x in self.slots if x.group == group]:
             self.slots.remove(slot)
 
         self.struct.remove(group)
@@ -342,7 +351,7 @@ class SlotList:
         output = "**Slotlist**\n"  # TODO: Langugage
         for group in self.struct:
             output += str(group) + "\n"
-            output += "\n".join([str(x) for x in self.slots if x.group == group.prim])
+            output += "\n".join([str(x) for x in self.slots if x.group == group])
             output += "\n"
 
         if self.reserve and \

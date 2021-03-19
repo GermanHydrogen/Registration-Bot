@@ -115,7 +115,25 @@ class Moderator(commands.Cog):
         except discord.errors.NotFound:
             pass
 
-    @commands.command(hidden=True, description="[Number] [Group] [Description] Adds a slot to an group")
+    @commands.command(hidden=True, description="[Index] [Description] Adds a group")
+    @commands.guild_only()
+    @is_moderator
+    async def addGroup(self, ctx, index: int, *, description: str):
+        author = ctx.message.author
+        channel = ctx.message.channel
+
+        slotlist = await self.state.get_slotlist(channel, author, self.client.user)
+        slotlist.new_group(index, description)
+        await slotlist.write()
+
+        await ctx.send(f'Added group {description} successfully.', delete_after=5)
+
+        try:
+            await ctx.message.delete()
+        except discord.errors.NotFound:
+            pass
+
+    @commands.command(hidden=True, description="[Description] Removes a group.")
     @commands.guild_only()
     @is_moderator
     async def delGroup(self, ctx, *, description: str):

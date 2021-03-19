@@ -1,15 +1,13 @@
 class SlotGroup:
-    def __init__(self, prim: int, title="", before=""):
+    def __init__(self, title="", before=""):
         """
         The Slotgroup is the meta container for all slots.
-        It consists of a primary identifier, a title which is
+        It consists of a title which is
         displayed and a string which is played before the slotlist is
         displayed. The before string is mainly used for line feeds.
-        :param prim:
         :param title:
         :param before:
         """
-        self.prim = prim
         self.title = title
         self.before = before
 
