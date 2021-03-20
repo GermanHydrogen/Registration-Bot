@@ -14,7 +14,7 @@ from config.loader import cfg
 path = os.path.dirname(os.path.abspath(__file__))
 
 # Bot definition
-client = Bot(command_prefix="!", case_insensitive=True)
+client = Bot(command_prefix=cfg['prefix'], case_insensitive=True)
 client.remove_command("help")
 
 # Get logger

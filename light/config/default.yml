@@ -1,2 +1,8 @@
 # Bot Token (from discord.com/developers/)
 token: ""
+
+#Bot Prefix
+prefix: '!sb '
+
+# Reservation Slot Ratio (Slots/Reservation)
+res_ratio: 0.2
