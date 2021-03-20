@@ -7,12 +7,21 @@ from commands.objects.guildconfig import RoleConfig, is_moderator
 
 class Moderator(commands.Cog):
     def __init__(self, client: discord.Client, state: ClientState, guild_config: RoleConfig):
+        # Meta Information for the help command
+        self.description = "All commands accessible with the defined moderator role or admin permission."
+
         self.client = client
         self.state = state
 
         self.guildConfig = guild_config
 
-    @commands.command(hidden=True, description="Initialize the slotlist")
+    @commands.command(name="create",
+                      usage="",
+                      help="Creates an event in the channel from your 'slotlist message'.\n"
+                           "This 'slotlist message' has to begin with the string '>Slotlist<'.\n"
+                           "Slots have to be declared with the format: #[number] [slot description] - [opt: Username], "
+                           "while the number can contain leading zeros, but has to be unique for every event.",
+                      brief="Creates an event in the channel.")
     @commands.guild_only()
     @is_moderator
     async def create(self, ctx):  # makes the slotlist editable for the bot
@@ -25,10 +34,14 @@ class Moderator(commands.Cog):
 
         await ctx.message.delete()
 
-    @commands.command(hidden=True, description="[Number] [User] Slots an User in a Slot")
+    @commands.command(name="forceSlot",
+                      usage="[number] [username]",
+                      help="Registers a username for the given slot. The username argument, doesnt have to be a "
+                           "username, so it can also be used to block a slot for example.",
+                      brief="Registers a user for a given slot.")
     @commands.guild_only()
     @is_moderator
-    async def forceSlot(self, ctx, slot_number: int, *, user_name: str):
+    async def force_slot(self, ctx, slot_number: int, *, user_name: str):
         author = ctx.message.author
         channel = ctx.message.channel
 
@@ -43,10 +56,13 @@ class Moderator(commands.Cog):
         except discord.errors.NotFound:
             pass
 
-    @commands.command(hidden=True, description="[User] Unslots an User or slot")
+    @commands.command(name="forceUnslot",
+                      usage="[username]",
+                      help="Withdraws a given user from the event.",
+                      brief="Withdraws a given user from the event.")
     @commands.guild_only()
     @is_moderator
-    async def forceUnslot(self, ctx, *, user_name: str):
+    async def force_unslot(self, ctx, *, user_name: str):
         author = ctx.message.author
         channel = ctx.message.channel
 
@@ -61,10 +77,13 @@ class Moderator(commands.Cog):
         except discord.errors.NotFound:
             pass
 
-    @commands.command(hidden=True, description="[Number] [Description] Edit the description of a slot")
+    @commands.command(name="editSlot",
+                      usage="[number] [description]",
+                      help="Edits the description a slot given by its number.",
+                      brief="Edits the description of a given slot.")
     @commands.guild_only()
     @is_moderator
-    async def editSlot(self, ctx, number: str, *, description: str):
+    async def edit_slot(self, ctx, number: str, *, description: str):
         author = ctx.message.author
         channel = ctx.message.channel
 
@@ -79,10 +98,13 @@ class Moderator(commands.Cog):
         except discord.errors.NotFound:
             pass
 
-    @commands.command(hidden=True, description="[Number] [Description] Edit the description of a slot")
+    @commands.command(name="delSlot",
+                      usage="[number]",
+                      help="Deletes a slot given by its number.",
+                      brief="Deletes a given slot.")
     @commands.guild_only()
     @is_moderator
-    async def delSlot(self, ctx, number: str):
+    async def del_slot(self, ctx, number: str):
         author = ctx.message.author
         channel = ctx.message.channel
 
@@ -97,10 +119,16 @@ class Moderator(commands.Cog):
         except discord.errors.NotFound:
             pass
 
-    @commands.command(hidden=True, description="[Number] [Group] [Description] Adds a slot to an group")
+    @commands.command(name="addSlot",
+                      usage="[number] [group] [description]",
+                      help="Adds a new slot to a slot-group given by its title or index (counting from 0).\n"
+                           "A slot-group is defined as a paragraph of slots which can have a multi-line title.\n"
+                           "If you want to refer to the group by its title and the title contains white-spaces "
+                           "you have to use quotation marks around the group argument.\n",
+                      brief="Adds a new slot to a slot-group.")
     @commands.guild_only()
     @is_moderator
-    async def addSlot(self, ctx, number: str, group: str, description: str):
+    async def add_slot(self, ctx, number: str, group: str, description: str):
         author = ctx.message.author
         channel = ctx.message.channel
 
@@ -115,10 +143,17 @@ class Moderator(commands.Cog):
         except discord.errors.NotFound:
             pass
 
-    @commands.command(hidden=True, description="[Index] [Description] Adds a group")
+    @commands.command(name="addGroup",
+                      usage="[index] [title]",
+                      help="Adds a new slot-group at the end of the slotlist.\n"
+                           "A slot-group is defined as a paragraph of slots which can have a multi-line title.\n"
+                           "The index argument, defines where the slot-group is placed in the order of the existing"
+                           "slot-groups (counting from 0).\n"
+                           "Slots can be added later with the addSlot command.",
+                      brief="Adds a new slot-group.")
     @commands.guild_only()
     @is_moderator
-    async def addGroup(self, ctx, index: int, *, description: str):
+    async def add_group(self, ctx, index: int, *, description: str):
         author = ctx.message.author
         channel = ctx.message.channel
 
@@ -133,10 +168,17 @@ class Moderator(commands.Cog):
         except discord.errors.NotFound:
             pass
 
-    @commands.command(hidden=True, description="[Description] Removes a group.")
+    @commands.command(name="delGroup",
+                      usage="[Identifier]",
+                      help="Deletes a slot-group identified by its name or index (counting from 0).\n"
+                           "A slot-group is defined as a paragraph of slots which can have a multi-line title.\n"
+                           "The index argument, defines where the slot-group is placed in the order of the existing"
+                           "slot-groups (counting from 0).\n"
+                           "All slots of the slot-group are also deleted.",
+                      brief="Deletes a slot-group.")
     @commands.guild_only()
     @is_moderator
-    async def delGroup(self, ctx, *, description: str):
+    async def del_group(self, ctx, *, description: str):
         author = ctx.message.author
         channel = ctx.message.channel
 

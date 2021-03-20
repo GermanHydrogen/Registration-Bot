@@ -92,3 +92,19 @@ class Util(commands.Cog):
 
         raise error
 
+
+class CustomHelp(discord.ext.commands.DefaultHelpCommand):
+    def __init__(self):
+        super(CustomHelp, self).__init__()
+
+    async def send_pages(self) -> None:
+        destination = self.get_destination()
+        for page in self.paginator.pages:
+            await destination.send(page)
+        try:
+            await self.context.message.delete()
+        except discord.Forbidden:
+            pass
+
+    def get_destination(self):
+        return self.context.author

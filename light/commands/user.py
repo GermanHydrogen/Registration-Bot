@@ -8,11 +8,18 @@ from util import send_msg
 
 class User(commands.Cog):
     def __init__(self, client: discord.user, state: ClientState, guild_config: RoleConfig):
+        # Meta Information for the help command
+        self.description = "All commands accessible by all users."
+
         self.state = state
         self.client = client
         self.guildConfig = guild_config
 
-    @commands.command(hidden=False, description="[number] slots the author of the message in the slot")
+    @commands.command(name="slot",
+                      usage="[Number]",
+                      help="Registers the caller for the event in the desired slot, which is given by its number. "
+                           "Leading zeros don't have to be given.",
+                      brief="Register for the event.")
     @commands.cooldown(1, 0.5, commands.BucketType.channel)
     @commands.guild_only()
     async def slot(self, ctx, slot_number: int):
@@ -44,7 +51,10 @@ class User(commands.Cog):
 
         await ctx.message.delete()
 
-    @commands.command(hidden=False, description="unslot the author of the message")
+    @commands.command(name="unslot",
+                      usage="",
+                      help="Withdraws the caller from the event.",
+                      brief="Withdraw from the event.")
     @commands.cooldown(1, 0.5, commands.BucketType.channel)
     @commands.guild_only()
     async def unslot(self, ctx):
@@ -55,11 +65,11 @@ class User(commands.Cog):
         slotlist.unslot(author.display_name)
         await slotlist.write()
 
-        await author.send(f"You unslotted yourself from the event **{channel.name}** by **{channel.guild.name}**.")
+        await author.send(f"You have withdrawn yourself from the event **{channel.name}** by **{channel.guild.name}**.")
 
         if self.client.user != slotlist.author:
             await slotlist.author.send(f"{author.display_name} ({author}) "
-                                       f"unslotted himself from the event {channel.name} "
+                                       f"have withdrawn himself from the event {channel.name} "
                                        f"in the guild {channel.guild.name}.")
 
         await ctx.message.delete()
