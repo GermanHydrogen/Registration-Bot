@@ -31,6 +31,6 @@ client.add_cog(User(client=client, state=state, guild_config=guildConfig))
 client.add_cog(Moderator(client=client, state=state, guild_config=guildConfig))
 client.add_cog(Admin(client=client, state=state, guild_config=guildConfig))
 
-client.add_cog(Util(logger=logger))
+client.add_cog(Util(client=client, cfg=cfg, logger=logger))
 
 client.run(cfg['token'])

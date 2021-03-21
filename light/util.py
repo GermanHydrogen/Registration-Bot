@@ -52,8 +52,10 @@ class CustomParentException(Exception):
 
 
 class Util(commands.Cog):
-    def __init__(self, logger):
+    def __init__(self, client, cfg, logger):
         self.logger = logger
+        self.client = client
+        self.cfg = cfg
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -95,6 +97,14 @@ class Util(commands.Cog):
         self.logger.error(log)
 
         raise error
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        game = discord.Game(name=f"Use: {self.cfg['prefix']} help")
+        await self.client.change_presence(activity=game)
+
+        self.logger.info("Server Started")
+        print("Server started.")
 
 
 class CustomHelp(discord.ext.commands.DefaultHelpCommand):
