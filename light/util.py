@@ -60,7 +60,9 @@ class Util(commands.Cog):
         if ctx.message.channel != "DMChannel" and ctx.message.channel != "GroupChannel":
             try:
                 await ctx.message.delete()
-            except discord.errors.NotFound or discord.errors.Forbidden:
+            except discord.errors.NotFound:
+                pass
+            except discord.errors.Forbidden:
                 pass
 
         if isinstance(error, commands.CommandOnCooldown):
@@ -73,7 +75,7 @@ class Util(commands.Cog):
             await send_msg(ctx, f"The given boolean is argument is faulty! Check **!help {ctx.command}** for correct "
                                 f"usage ")
         elif isinstance(error.original, discord.errors.Forbidden):
-            await send_msg(ctx, "The Bot is missing a permission. Please contact your local admin.")
+            await ctx.message.author.send("The Bot is missing a permission. Please contact your local admin.")
         elif isinstance(error, derrors.MissingRole):
             await send_msg(ctx, f"You are missing the configured {error.missing_role}.")
 
