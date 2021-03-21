@@ -2,4 +2,6 @@
 **/.idea
 **/config.*
 **/__pycache__
-/venv/
+**/venv/
+
+**/guildConfig.yml

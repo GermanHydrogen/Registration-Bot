@@ -17,7 +17,13 @@ This bot is part of the german multi-gaming discord community Rosenrudel: https:
 The medium version is recommended for larger communities, because of minimized the api-traffic.
 
 ## Usage
-*English versions coming soon*
 
-For users: https://github.com/GermanHydrogen/Registration-Bot/wiki/User-Guide-DE <br>
-For admins and event builders: https://github.com/GermanHydrogen/Registration-Bot/wiki/Admin-Usage-DE
+### Light
+- [For users](https://github.com/GermanHydrogen/Registration-Bot/wiki/User-Usage-Light)
+- [For admins](https://github.com/GermanHydrogen/Registration-Bot/wiki/Admin-Usage-Light)
+
+### Medium
+*English versions for the medium versions coming soon*
+
+- [For users (german)](https://github.com/GermanHydrogen/Registration-Bot/wiki/User-Guide-DE)
+- [For admins (german)](https://github.com/GermanHydrogen/Registration-Bot/wiki/Admin-Usage-DE)
