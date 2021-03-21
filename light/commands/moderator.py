@@ -79,7 +79,7 @@ class Moderator(commands.Cog):
 
     @commands.command(name="editSlot",
                       usage="[number] [description]",
-                      help="Edits the description a slot given by its number.",
+                      help="Edits the description of a slot given by its number.",
                       brief="Edits the description of a given slot.")
     @commands.guild_only()
     @is_moderator
@@ -145,7 +145,7 @@ class Moderator(commands.Cog):
 
     @commands.command(name="addGroup",
                       usage="[index] [title]",
-                      help="Adds a new slot-group at the end of the slotlist.\n"
+                      help="Adds a new slot-group.\n"
                            "A slot-group is defined as a paragraph of slots which can have a multi-line title.\n"
                            "The index argument, defines where the slot-group is placed in the order of the existing"
                            "slot-groups (counting from 0).\n"
