@@ -7,11 +7,11 @@ from discord.ext.commands import errors as derrors
 from util import CustomParentException
 
 
-class ConfigAlreadyExists(Exception):
+class ConfigAlreadyExists(CustomParentException):
     pass
 
 
-class GuildNotExisting(Exception):
+class GuildNotExisting(CustomParentException):
     """
     Raised if a requested config for a guild is not found
     """
