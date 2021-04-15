@@ -239,3 +239,14 @@ delgroup:
       channel: "Die angegebene Gruppe ist ungültig"
     arg_error:
       channel: "Bitte gib eine gültige Gruppe an!"
+
+editgroup:
+
+  success:
+    channel: "Der Gruppenname wurde erfolgreich geändert!"
+
+  error:
+    general:
+      channel: "Die angegebene Gruppe ist ungültig"
+    arg_error:
+      channel: "Bitte gib eine gültige Gruppe an!"

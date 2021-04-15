@@ -26,7 +26,7 @@ class Admin(commands.Cog, name="Admin Commands"):
     @commands.command(name="create",
                       usage="",
                       help="Creates an event in the channel from your 'slotlist message'.\n"
-                           "This 'slotlist message' has to begin with the string '>Slotlist<'.\n"
+                           "This 'slotlist message' has to begin with the string '>Slotliste<'.\n"
                            "Slots have to be declared with the format: #[number] [slot description] - [opt: Username], "
                            "while the number can contain leading zeros, but has to be unique for every event.",
                       brief="Creates an event in the channel.")
@@ -383,6 +383,32 @@ class Admin(commands.Cog, name="Admin Commands"):
             await ctx.message.delete()
         else:
             await channel.send(ctx.message.author.mention + " " + self.lang["delgroup"]["error"]["general"]["channel"],
+                               delete_after=5)
+            await ctx.message.delete()
+
+    @commands.command(name="editGroup",
+                      usage="[Identifier] [Name]",
+                      help="Edit a slot-group title identified by its name or index (counting from 0).\n"
+                           "A slot-group is defined as a paragraph of slots which can have a multi-line title.\n"
+                           "The index argument, defines where the slot-group is placed in the order of the existing"
+                           "slot-groups (counting from 0).\n"
+                           "All slots of the slot-group are also deleted.",
+                      brief="Edits the title of a slot-group.")
+    @has_role(cfg["role"])
+    @commands.cooldown(1, 2, commands.BucketType.channel)
+    @commands.guild_only()
+    async def editgroup(self, ctx, group, *, title):
+        channel = ctx.message.channel
+
+        if self.list.editGroup(channel, group, title):
+            await self.io.writeEvent(channel, True)
+
+            await channel.send(ctx.message.author.mention + " " + self.lang["editgroup"]["success"]["channel"],
+                               delete_after=5)
+
+            await ctx.message.delete()
+        else:
+            await channel.send(ctx.message.author.mention + " " + self.lang["editgroup"]["error"]["general"]["channel"],
                                delete_after=5)
             await ctx.message.delete()
 
