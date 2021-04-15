@@ -1,7 +1,7 @@
 from discord.ext import commands
 
 
-class Global(commands.Cog):
+class Global(commands.Cog, name='Reminder'):
     def __init__(self, client, lang, logger, db, cursor):
 
         self.client = client
@@ -36,7 +36,11 @@ class Global(commands.Cog):
 
         return not result[0]
 
-    @commands.command(hidden=False, description="toggles if you recieve a notification before an event globaly")
+    @commands.command(name="toggleReminderGlobal",
+                      usage="",
+                      help="Enables/Disables if you get notified for a event at this guild. If you only want to change"
+                           "the reminding option for this event, please use the command toggleReminder.",
+                      brief="Enables/Disables if you get notified for a event at this guild.")
     @commands.guild_only()
     async def toggleReminderGlobal(self, ctx):
 

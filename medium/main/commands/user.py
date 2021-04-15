@@ -9,7 +9,7 @@ from main.util.mark import Mark
 from config.loader import cfg
 
 
-class User(commands.Cog):
+class User(commands.Cog, name='User Commands'):
 
     def __init__(self, client, lang, logger, db, cursor):
 
@@ -25,7 +25,10 @@ class User(commands.Cog):
         self.list = EditList(db, cursor)
         self.mark = Mark(db, cursor)
 
-    @commands.command(hidden=False, description="[number] slots the author of the message in the slot")
+    @commands.command(name="slot",
+                      usage="[Number]",
+                      help="Registers the caller for the event in the desired slot, which is given by its number. ",
+                      brief="Register for a event.")
     @commands.cooldown(1, 0.5, commands.BucketType.channel)
     @commands.guild_only()
     async def slot(self, ctx, num=""):
@@ -104,7 +107,10 @@ class User(commands.Cog):
 
         await ctx.message.delete()
 
-    @commands.command(hidden=False, description="unslot the author of the message")
+    @commands.command(name="unslot",
+                      usage="",
+                      help="Withdraws the caller from the event.",
+                      brief="Withdraw from the event.")
     @commands.cooldown(1, 0.5, commands.BucketType.channel)
     @commands.guild_only()
     async def unslot(self, ctx):
@@ -155,7 +161,10 @@ class User(commands.Cog):
                                delete_after=5)
             await ctx.message.delete()
 
-    @commands.command(hidden=False, description="[type] adds an mark to the user in the slotlist")
+    @commands.command(name="mark",
+                      usage="[marker type]",
+                      help="Adds a marker to the user which is displayed in the slotlist behind the users name.",
+                      brief="Adds a marker to the username in the slotlist.")
     @commands.cooldown(1, 0.5, commands.BucketType.channel)
     @commands.guild_only()
     async def mark(self, ctx):
@@ -188,7 +197,10 @@ class User(commands.Cog):
 
         await ctx.message.delete()
 
-    @commands.command(hidden=False, description="[type] adds an mark to the user in the slotlist")
+    @commands.command(name="unmark",
+                      usage="[marker type]",
+                      help="Removes a marker from the user which is displayed in the slotlist behind the users name",
+                      brief="Removes a maker from the username in the slotlist.")
     @commands.cooldown(1, 0.5, commands.BucketType.channel)
     @commands.guild_only()
     async def unmark(self, ctx):
@@ -219,23 +231,4 @@ class User(commands.Cog):
                 ctx.message.author.mention + " " + self.lang["unmark"]["error"]["typeNotFound"],
                 delete_after=5)
 
-        await ctx.message.delete()
-
-    @commands.command()
-    async def help(self, ctx):
-        output = "My commands are:\n```yaml\n"
-
-        for element in self.client.commands:
-            if element != help and not element.hidden:
-                output += f"{element}:".ljust(20) + f"{element.description}\n"
-
-        if cfg['role'] in [x.name for x in ctx.message.author.roles]:
-            output += "\n#Admin Commands:\n"
-            for element in self.client.commands:
-                if element != help and element.hidden:
-                    output += f"{element}:".ljust(20) + f"{element.description}\n"
-
-        output += "```"
-
-        await ctx.message.author.send(output)
         await ctx.message.delete()

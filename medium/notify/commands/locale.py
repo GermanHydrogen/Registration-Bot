@@ -11,7 +11,7 @@ from notify.util.handler import Handler
 from config.loader import cfg
 
 
-class Locale(commands.Cog):
+class Locale(commands.Cog, name='Reminder'):
     def __init__(self, client, lang, logger, db, cursor):
 
         self.client = client
@@ -24,7 +24,13 @@ class Locale(commands.Cog):
         self.edit = EditLocale(db, cursor)
         self.hand = Handler(client, lang, logger, db, cursor)
 
-    @commands.command(hidden=True, description="[Number] [User] Slots an User in a Slot")
+    @commands.command(name="update",
+                      usage="[arg]",
+                      help="Updates the meta data (date and time) of the event."
+                           "Per default all users which are slotted for the event, are"
+                           "messaged the changed time and date. If the arg '--supress' is given,"
+                           "this is not the case.",
+                      brief="Updates the internal meta data (date and time) of the event.")
     @has_role(cfg["role"])
     @commands.cooldown(1, 0.5, commands.BucketType.channel)
     @commands.guild_only()
@@ -93,7 +99,11 @@ class Locale(commands.Cog):
 
         await ctx.message.delete()
 
-    @commands.command(hidden=False, description="toggles if you recieve a notification before an event")
+    @commands.command(name="toggleReminder",
+                      usage="",
+                      help="Enables/Disables the reminder for this event. If you want to change this for all event, "
+                           "please use toggleReminderGlobal",
+                      brief="Enables/Disables the reminder for this event.")
     @commands.cooldown(1, 0.5, commands.BucketType.channel)
     @commands.guild_only()
     async def toggleReminder(self, ctx):
@@ -113,7 +123,10 @@ class Locale(commands.Cog):
 
         await ctx.message.delete()
 
-    @commands.command(hidden=False, description="[time in h] sets time you want to be notified before an event")
+    @commands.command(name="changeTime",
+                      usage="[time in h]",
+                      help="Changes the time before a event, when you are reminded for the event.",
+                      brief="Changes the time before a event, when you are reminded for the event.")
     @commands.cooldown(1, 0.5, commands.BucketType.channel)
     @commands.guild_only()
     async def changeTime(self, ctx, time):
