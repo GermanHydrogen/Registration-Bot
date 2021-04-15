@@ -10,7 +10,7 @@ from main.util.editList import EditList
 from config.loader import cfg
 
 
-class Admin(commands.Cog):
+class Admin(commands.Cog, name="Admin Commands"):
     def __init__(self, client, lang, logger, db, cursor):
         self.client = client
         self.lang = lang
@@ -23,7 +23,13 @@ class Admin(commands.Cog):
         self.util = Util(client, db, cursor)
         self.list = EditList(db, cursor)
 
-    @commands.command(hidden=True, description="Initialize the slotlist")
+    @commands.command(name="create",
+                      usage="",
+                      help="Creates an event in the channel from your 'slotlist message'.\n"
+                           "This 'slotlist message' has to begin with the string '>Slotlist<'.\n"
+                           "Slots have to be declared with the format: #[number] [slot description] - [opt: Username], "
+                           "while the number can contain leading zeros, but has to be unique for every event.",
+                      brief="Creates an event in the channel.")
     @has_role(cfg["role"])
     @commands.guild_only()
     async def create(self, ctx, arg=""):  # makes the slotlist editable for the bot
@@ -59,7 +65,12 @@ class Admin(commands.Cog):
 
         await ctx.message.delete()
 
-    @commands.command(hidden=True, description="[Number] [User] Slots an User in a Slot")
+    @commands.command(name="forceSlot",
+                      usage="[number] [username]",
+                      help="Registers a username for the given slot. The username argument, cam also be used for "
+                           "dummy users. At this time the possible dummy users are:\n"
+                           "'BLOCKED', 'K.I.A.', 'M.I.A.', 'Auf Nachfrage beim Missionsbauer'.",
+                      brief="Registers a user or dummy for a given slot.")
     @has_role(cfg["role"])
     @commands.cooldown(1, 0.5, commands.BucketType.channel)
     @commands.guild_only()
@@ -122,7 +133,12 @@ class Admin(commands.Cog):
                                delete_after=5)
             await ctx.message.delete()
 
-    @commands.command(hidden=True, description="[User] Unslots an User or slot")
+    @commands.command(name="forceUnslot",
+                      usage="[option] [argument]",
+                      help="If the option is not specified or '--user' is used, the user given in the argument "
+                           "parameter is unsloted."
+                           "If the option is set to '--slot', the slot given in the argument is emptied.",
+                      brief="Unslots a user or empties a slot.")
     @has_role(cfg["role"])
     @commands.cooldown(1, 0.5, commands.BucketType.channel)
     @commands.guild_only()
@@ -199,7 +215,13 @@ class Admin(commands.Cog):
                 delete_after=5)
             await ctx.message.delete()
 
-    @commands.command(hidden=True, description="[Number] [Group] [Description] Adds a Slot to the list")
+    @commands.command(name="addSlot",
+                      usage="[number] [group] [description]",
+                      help="Adds a new slot to a slot-group given by its title or index (counting from 0).\n"
+                           "A slot-group is defined as a paragraph of slots which can have a multi-line title.\n"
+                           "If you want to refer to the group by its title and the title contains white-spaces "
+                           "you have to use quotation marks around the group argument.\n",
+                      brief="Adds a new slot to a slot-group.")
     @has_role(cfg["role"])
     @commands.cooldown(1, 2, commands.BucketType.channel)
     @commands.guild_only()
@@ -229,7 +251,10 @@ class Admin(commands.Cog):
                                delete_after=5)
             await ctx.message.delete()
 
-    @commands.command(hidden=True, description="[Number] [Description] Deletes a Slot from the list")
+    @commands.command(name="delSlot",
+                      usage="[number]",
+                      help="Deletes a slot given by its number.",
+                      brief="Deletes a given slot.")
     @has_role(cfg["role"])
     @commands.cooldown(1, 2, commands.BucketType.channel)
     @commands.guild_only()
@@ -249,7 +274,10 @@ class Admin(commands.Cog):
                                delete_after=5)
             await ctx.message.delete()
 
-    @commands.command(hidden=True, description="[Number] [Description] Edits a Slot")
+    @commands.command(name="editSlot",
+                      usage="[number] [description]",
+                      help="Edits the description of a slot given by its number.",
+                      brief="Edits the description of a given slot.")
     @has_role(cfg["role"])
     @commands.cooldown(1, 2, commands.BucketType.channel)
     @commands.guild_only()
@@ -279,7 +307,14 @@ class Admin(commands.Cog):
                                delete_after=5)
             await ctx.message.delete()
 
-    @commands.command(hidden=True, description="[Number] [optional name] Adds a group to the list")
+    @commands.command(name="addGroup",
+                      usage="[index] [title]",
+                      help="Adds a new slot-group.\n"
+                           "A slot-group is defined as a paragraph of slots which can have a multi-line title.\n"
+                           "The index argument, defines where the slot-group is placed in the order of the existing"
+                           "slot-groups (counting from 0).\n"
+                           "Slots can be added later with the addSlot command.",
+                      brief="Adds a new slot-group.")
     @has_role(cfg["role"])
     @commands.cooldown(1, 2, commands.BucketType.channel)
     @commands.guild_only()
@@ -312,7 +347,14 @@ class Admin(commands.Cog):
                                delete_after=5)
             await ctx.message.delete()
 
-    @commands.command(hidden=True, description="[name/number] Delets a group from the list")
+    @commands.command(name="delGroup",
+                      usage="[Identifier]",
+                      help="Deletes a slot-group identified by its name or index (counting from 0).\n"
+                           "A slot-group is defined as a paragraph of slots which can have a multi-line title.\n"
+                           "The index argument, defines where the slot-group is placed in the order of the existing"
+                           "slot-groups (counting from 0).\n"
+                           "All slots of the slot-group are also deleted.",
+                      brief="Deletes a slot-group.")
     @has_role(cfg["role"])
     @commands.cooldown(1, 2, commands.BucketType.channel)
     @commands.guild_only()
@@ -344,7 +386,12 @@ class Admin(commands.Cog):
                                delete_after=5)
             await ctx.message.delete()
 
-    @commands.command(hidden=True, description="Sperrt bzw. öffnet die Slotliste")
+    @commands.command(name="toggleLock",
+                      usage="",
+                      help="Toggles the lock of the slotlist. If the slotlist is locked, all slot requests are"
+                           "rejected, but it is possible to edit the slotlist with admin commands. So"
+                           "user still can be slotted through forceSlot etc..",
+                      brief="Toggles the lock of the slotlist.")
     @has_role(cfg["role"])
     @commands.cooldown(1, 2, commands.BucketType.channel)
     @commands.guild_only()

@@ -1,3 +1,5 @@
+import discord.ext
+
 from functools import lru_cache
 from discord import utils as dutil
 from config.loader import cfg
@@ -43,3 +45,20 @@ class Util:
             self.guild = self.client.get_guild(int(cfg['guild']))
 
         return dutil.get(self.guild.emojis, name=name)
+
+
+class CustomHelp(discord.ext.commands.DefaultHelpCommand):
+    def __init__(self):
+        super(CustomHelp, self).__init__()
+
+    async def send_pages(self) -> None:
+        destination = self.get_destination()
+        for page in self.paginator.pages:
+            await destination.send(page)
+        try:
+            await self.context.message.delete()
+        except discord.Forbidden:
+            pass
+
+    def get_destination(self):
+        return self.context.author

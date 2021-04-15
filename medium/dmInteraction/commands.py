@@ -10,7 +10,7 @@ from dmInteraction.util.edit import Edit
 from config.loader import cfg
 
 
-class Campaign(commands.Cog):
+class Campaign(commands.Cog, name='Admin Commands'):
     def __init__(self, client, lang, logger, db, cursor):
 
         self.client = client
@@ -24,7 +24,13 @@ class Campaign(commands.Cog):
         self.util = Util(db, cursor)
         self.edit = Edit(db, cursor)
 
-    @commands.command(hidden=True, description="Initialize the slotlist")
+    @commands.command(name="campaign",
+                      alias="copy",
+                      usage="[slotlist id or name]",
+                      help="Sends all users of the given slotlists a request, if they want to be slotted"
+                           "in this slotlist. If the request is accepted, the user is automatically slotted."
+                           "While the request is valid (~2days), the slots in the 'new' slotlist get blocked.",
+                      brief="Effectively copies the users from one slotlist to the slotlist of the current channel.")
     @has_role(cfg["role"])
     @commands.guild_only()
     async def campaign(self, ctx, event):
@@ -108,7 +114,27 @@ class Campaign(commands.Cog):
 
         await ctx.message.delete()
 
-    @commands.command(hidden=False, description="[user] Sends a swap request to the user")
+
+class Swap(commands.Cog, name='User Commands'):
+    def __init__(self, client, lang, logger, db, cursor):
+        self.client = client
+        self.lang = lang
+        self.logger = logger
+
+        self.db = db
+        self.cursor = cursor
+
+        self.io = IO(cfg, client, db, cursor)
+        self.util = Util(db, cursor)
+        self.edit = Edit(db, cursor)
+
+    @commands.command(name="trade",
+                      alias='swap',
+                      usage="[username]",
+                      help="Send the given user a trade request to swap your slot with its."
+                           "The user has two days to answer the request. This DOES NOT WORK if one"
+                           "of you is slotted in a reserve slot!",
+                      brief="Sends the given user a trade request to swap your slot with its.")
     @commands.cooldown(1, 0.5, commands.BucketType.channel)
     @commands.guild_only()
     async def swap(self, ctx):
