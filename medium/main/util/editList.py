@@ -305,6 +305,42 @@ class EditList:
 
         return True
 
+    def editGroup(self, channel, group, name):
+        """
+                Edits the name of slot from a given event
+                Args:
+                    channel (channel): Server channel
+                    group (string): Group-Number (counting form 0) or Group-Name
+                    name (string): Group Name to change to
+
+                Returns:
+                   (bool): if successful
+
+        """
+
+        if group.isdigit():
+            sql = "SELECT Number FROM SlotGroup WHERE Event = %s AND Number = %s;"
+            self.cursor.execute(sql, [channel.id, group])
+
+            if self.cursor.fetchone() is None:
+                return False
+
+        else:
+            sql = "SELECT Number FROM SlotGroup WHERE Event = %s AND Name = %s;"
+            var = [channel.id, group]
+            self.cursor.execute(sql, var)
+
+            if not group:
+                return False
+
+            group = self.cursor.fetchone()[0]
+
+        sql = "UPDATE SlotGroup SET Name=%s WHERE Number = %s AND Event = %s;"
+        self.cursor.execute(sql, [name, group, channel.id])
+        self.db.commit()
+
+        return True
+
     def toggleLock(self, channel):
         """
         Toggles the lock on an event
