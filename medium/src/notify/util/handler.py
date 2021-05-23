@@ -1,8 +1,8 @@
 import datetime as dt
 
 from discord.ext import commands
-from notify.util.editLocale import EditLocale
-from main.util.util import Util
+from src.notify.util.editLocale import EditLocale
+from src.main.util.util import Util
 
 from config.loader import cfg
 import asyncio

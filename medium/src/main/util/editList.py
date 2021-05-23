@@ -1,4 +1,4 @@
-from notify.util.editLocale import EditLocale
+from src.notify.util.editLocale import EditLocale
 import mysql.connector
 
 

@@ -5,8 +5,8 @@ from discord.ext import commands
 from discord.ext.commands import has_role
 import asyncio
 
-from notify.util.editLocale import EditLocale
-from notify.util.handler import Handler
+from src.notify.util.editLocale import EditLocale
+from src.notify.util.handler import Handler
 
 from config.loader import cfg
 

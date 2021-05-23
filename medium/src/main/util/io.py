@@ -2,7 +2,7 @@ from discord import utils as dutils
 from math import ceil
 from datetime import datetime, timedelta
 from config.loader import cfg
-from main.util.util import Util
+from src.main.util.util import Util
 
 
 def get_line_data(line, last, manuel=False):

@@ -1,10 +1,7 @@
-import sys
-
 from mysql.connector import errors
 from discord.ext import commands
-from discord import utils as dutils
 from config.loader import cfg
-from main.util.util import Util
+from src.main.util.util import Util
 
 
 class Handler(commands.Cog):

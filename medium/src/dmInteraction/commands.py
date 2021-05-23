@@ -3,9 +3,9 @@ import datetime
 from discord.ext import commands
 from discord.ext.commands import has_role
 
-from main.util.io import IO
-from dmInteraction.util.util import Util
-from dmInteraction.util.edit import Edit
+from src.main.util.io import IO
+from src.dmInteraction.util.util import Util
+from src.dmInteraction.util.edit import Edit
 
 from config.loader import cfg
 

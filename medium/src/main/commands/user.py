@@ -1,10 +1,10 @@
 import datetime
 from discord.ext import commands
 
-from main.util.io import IO
-from main.util.util import Util
-from main.util.editList import EditList
-from main.util.mark import Mark
+from src.main.util.io import IO
+from src.main.util.util import Util
+from src.main.util.editList import EditList
+from src.main.util.mark import Mark
 
 from config.loader import cfg
 

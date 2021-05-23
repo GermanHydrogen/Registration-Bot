@@ -7,22 +7,21 @@ from discord.ext.commands import Bot
 
 import mysql.connector
 
-from main.commands.user import User
-from main.commands.admin import Admin
-from main.util.handler import Handler
+from src.main.commands.user import User
+from src.main.commands.admin import Admin
+from src.main.util.handler import Handler
 
-from notify.commands.master import Global
-from notify.commands.locale import Locale
+from src.notify.commands.master import Global
+from src.notify.commands.locale import Locale
 
-from dmInteraction.commands import Campaign, Swap
-from dmInteraction.util.handler import Handler as dmHandler
+from src.dmInteraction.commands import Campaign, Swap
+from src.dmInteraction.util.handler import Handler as dmHandler
 
-from notify.util.handler import Handler as ntHandler
+from src.notify.util.handler import Handler as ntHandler
 
-from main.util.util import CustomHelp
+from src.main.util.util import CustomHelp
 
-from config.loader import cfg
-from config.loader import lang
+from config.loader import cfg, lang
 
 ''' --- onLoad ----'''
 

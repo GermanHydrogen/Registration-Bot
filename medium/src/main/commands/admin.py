@@ -3,9 +3,9 @@ import re
 from discord.ext import commands
 from discord.ext.commands import has_role
 
-from main.util.io import IO
-from main.util.util import Util
-from main.util.editList import EditList
+from src.main.util.io import IO
+from src.main.util.util import Util
+from src.main.util.editList import EditList
 
 from config.loader import cfg
 
