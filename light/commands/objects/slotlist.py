@@ -350,7 +350,7 @@ class SlotList:
     def __str__(self):
         output = "**Slotlist**\n"  # TODO: Langugage
         for group in self.struct:
-            output += str(group) + "\n"
+            output += str(group)
             output += "\n".join([str(x) for x in self.slots if x.group == group])
             output += "\n"
 

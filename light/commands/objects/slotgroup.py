@@ -12,4 +12,7 @@ class SlotGroup:
         self.before = before
 
     def __str__(self):
-        return f"{self.before}{self.title}"
+        if self.title == "":
+            return f"{self.before}"
+        else:
+            return f"{self.before}{self.title}\n"
