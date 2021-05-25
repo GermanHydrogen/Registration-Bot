@@ -3,6 +3,8 @@ import discord.ext
 from functools import lru_cache
 from discord import utils as dutil
 
+from config.loader import cfg
+
 
 class Util:
     def __init__(self, client, db, cursor):

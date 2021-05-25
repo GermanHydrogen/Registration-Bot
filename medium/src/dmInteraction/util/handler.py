@@ -4,7 +4,7 @@ from discord.ext import commands
 
 from config.loader import cfg
 
-from src.main.util.io import IO
+from src.main.objects.slotlist import IO
 from src.dmInteraction.util.edit import Edit
 from src.dmInteraction.util.choice import Choice
 from src.notify.util.editLocale import EditLocale

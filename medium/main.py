@@ -9,7 +9,7 @@ import mysql.connector
 
 from src.main.commands.user import User
 from src.main.commands.admin import Admin
-from src.main.util.handler import Handler
+from src.main.handler.handler import Handler
 
 from src.notify.commands.master import Global
 from src.notify.commands.locale import Locale
@@ -19,7 +19,7 @@ from src.dmInteraction.util.handler import Handler as dmHandler
 
 from src.notify.util.handler import Handler as ntHandler
 
-from src.main.util.util import CustomHelp
+from src.main.objects.util import CustomHelp
 
 from config.loader import cfg, lang
 

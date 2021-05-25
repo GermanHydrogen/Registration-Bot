@@ -3,7 +3,7 @@ import datetime
 from discord.ext import commands
 from discord.ext.commands import has_role
 
-from src.main.util.io import IO
+from src.main.objects.slotlist import IO
 from src.dmInteraction.util.util import Util
 from src.dmInteraction.util.edit import Edit
 

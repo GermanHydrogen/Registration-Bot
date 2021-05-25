@@ -3,9 +3,9 @@ import re
 from discord.ext import commands
 from discord.ext.commands import has_role
 
-from src.main.util.io import IO
-from src.main.util.util import Util
-from src.main.util.editList import EditList
+from src.main.objects.slotlist import IO
+from src.main.objects.util import Util
+from src.main.objects.slot import EditSlot
 
 from config.loader import cfg
 
@@ -21,7 +21,7 @@ class Admin(commands.Cog, name="Admin Commands"):
 
         self.io = IO(cfg, client, db, cursor)
         self.util = Util(client, db, cursor)
-        self.list = EditList(db, cursor)
+        self.list = EditSlot(db, cursor)
 
     @commands.command(name="create",
                       usage="",
@@ -107,7 +107,7 @@ class Admin(commands.Cog, name="Admin Commands"):
                 delete_after=5)
             return
 
-        if self.list.slotEvent(channel, player, num, force=True):
+        if self.list.slot(channel, player, num, force=True):
 
             await self.io.writeEvent(channel)
 
@@ -191,7 +191,7 @@ class Admin(commands.Cog, name="Admin Commands"):
                 else:
                     player = buffer
 
-        if self.list.unslotEvent(channel, player, slot):
+        if self.list.unslot(channel, player, slot):
             await self.io.writeEvent(channel)
             await channel.send(
                 ctx.message.author.mention + " " + self.lang["forceUnslot"]["success"]["channel"].format(player),
@@ -239,7 +239,7 @@ class Admin(commands.Cog, name="Admin Commands"):
         group = argv[2]
         desc = " ".join(argv[3:])
 
-        if self.list.addSlot(channel, slot_num, group, desc):
+        if self.list.add(channel, slot_num, group, desc):
             await self.io.writeEvent(channel, True)
 
             await channel.send(ctx.message.author.mention + " " + self.lang["addslot"]["success"]["channel"],
@@ -261,7 +261,7 @@ class Admin(commands.Cog, name="Admin Commands"):
     async def delslot(self, ctx, slot_num):
         channel = ctx.message.channel
 
-        if self.list.delSlot(channel, slot_num):
+        if self.list.delete(channel, slot_num):
             await self.io.writeEvent(channel, True)
 
             await channel.send(ctx.message.author.mention + " " + self.lang["delslot"]["success"]["channel"],
@@ -295,7 +295,7 @@ class Admin(commands.Cog, name="Admin Commands"):
         slot_num = argv[1]
         desc = " ".join(argv[2:])
 
-        if self.list.editSlot(channel, slot_num, desc):
+        if self.list.edit(channel, slot_num, desc):
             await self.io.writeEvent(channel, True)
 
             await channel.send(ctx.message.author.mention + " " + self.lang["editslot"]["success"]["channel"],

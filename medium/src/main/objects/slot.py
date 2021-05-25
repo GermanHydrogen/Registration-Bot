@@ -2,14 +2,14 @@ from src.notify.util.editLocale import EditLocale
 import mysql.connector
 
 
-class EditList:
+class EditSlot:
     def __init__(self, db, cursor):
         self.db = db
         self.cursor = cursor
 
         self.notify = EditLocale(db, cursor)
 
-    def slotEvent(self, channel, user_id, num, user_displayname=None, force=False):
+    def slot(self, channel, user_id, num, user_displayname=None, force=False):
         """
                Slots a given user in the given slot
                Args:
@@ -66,7 +66,7 @@ class EditList:
 
         return True
 
-    def unslotEvent(self, channel, user_id="", slot=""):
+    def unslot(self, channel, user_id="", slot=""):
         """
                 Unslots a user or clears an slot from an Event
                 Args:
@@ -99,7 +99,7 @@ class EditList:
         else:
             return False
 
-    def addSlot(self, channel, slot, group, desc):
+    def add(self, channel, slot, group, desc):
         """
                Adds a slot to a given event
                Args:
@@ -167,7 +167,7 @@ class EditList:
 
         return True
 
-    def delSlot(self, channel, slot):
+    def delete(self, channel, slot):
         """
                Deletes a given slot
                Args:
@@ -199,7 +199,7 @@ class EditList:
 
         return True
 
-    def editSlot(self, channel, slot, desc):
+    def edit(self, channel, slot, desc):
         """
                Edits a slot name
                Args:

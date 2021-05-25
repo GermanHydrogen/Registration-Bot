@@ -1,10 +1,10 @@
 import datetime
 from discord.ext import commands
 
-from src.main.util.io import IO
-from src.main.util.util import Util
-from src.main.util.editList import EditList
-from src.main.util.mark import Mark
+from src.main.objects.slotlist import IO
+from src.main.objects.util import Util
+from src.main.objects.slot import EditSlot
+from src.main.objects.mark import Mark
 
 from config.loader import cfg
 
@@ -22,7 +22,7 @@ class User(commands.Cog, name='User Commands'):
 
         self.io = IO(cfg, client, db, cursor)
         self.util = Util(client, db, cursor)
-        self.list = EditList(db, cursor)
+        self.list = EditSlot(db, cursor)
         self.mark = Mark(db, cursor)
 
     @commands.command(name="slot",
@@ -75,7 +75,7 @@ class User(commands.Cog, name='User Commands'):
                 return
 
         if num:
-            if self.list.slotEvent(channel, author.id, num, user_displayname=author.display_name):
+            if self.list.slot(channel, author.id, num, user_displayname=author.display_name):
                 await self.io.writeEvent(channel)
 
                 await author.send(
@@ -119,7 +119,7 @@ class User(commands.Cog, name='User Commands'):
         channel_author = self.util.get_channel_author(channel)
 
         backup = ctx.guild.get_member(cfg['backup'])
-        index = self.list.unslotEvent(channel, ctx.message.author.id)
+        index = self.list.unslot(channel, ctx.message.author.id)
         if index:
             await self.io.writeEvent(channel)
             await ctx.message.author.send(

@@ -1,7 +1,7 @@
 from mysql.connector import errors
 from discord.ext import commands
 from config.loader import cfg
-from src.main.util.util import Util
+from src.main.objects.util import Util
 
 
 class Handler(commands.Cog):
