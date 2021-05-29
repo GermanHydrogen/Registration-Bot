@@ -1,56 +1,60 @@
-from src.notify.util.editLocale import EditLocale
+from src.main.objects.notify import EditLocale
 import mysql.connector
+import discord
+from src.main.objects.util import with_cursor
 
 
 class EditSlot:
-    def __init__(self, db, cursor):
+    def __init__(self, db):
         self.db = db
-        self.cursor = cursor
 
-        self.notify = EditLocale(db, cursor)
+        self.notify = EditLocale(db)
 
-    def slot(self, channel, user_id, num, user_displayname=None, force=False):
+    @with_cursor
+    def slot(self, cursor: mysql.connector.MySQLConnection.cursor, channel: discord.TextChannel,
+             user_id: int, num: str, user_displayname: str = None, force: bool = False) -> bool:
         """
-               Slots a given user in the given slot
-               Args:
-                    channel (channel): Server channel
-                    user_id (int): User ID
-                    num (string): Number of the slot
-                    user_displayname (string): User nickname (optional)
-                    force (bool): If true, accept duplicates (optional)
+        Slots a given user in the given slot
+        Args:
+            cursor: Database cursor
+            channel: Server channel
+            user_id: User ID
+            num: Number of the slot
+            user_displayname: User nickname (optional)
+            force: If true, accept duplicates (optional)
 
-               Returns:
-                   (bool): if successful
-
+        Returns:
+           (bool): if successful
         """
 
-        sql = "SELECT User FROM Slot, Event WHERE Event.ID = Slot.Event and Event = %s and Number = %s and (NOT Event.Locked OR %s);"
+        sql = "SELECT User FROM Slot, Event " \
+              "WHERE Event.ID = Slot.Event and Event = %s and Number = %s and (NOT Event.Locked OR %s);"
         var = [channel.id, num, force]
-        self.cursor.execute(sql, var)
-        slot = self.cursor.fetchone()
+        cursor.execute(sql, var)
+        slot = cursor.fetchone()
 
         if slot is None or slot[0] is not None:
             return False
 
         sql = "SELECT ID, Nickname FROM User WHERE ID = %s;"
-        self.cursor.execute(sql, [user_id])
-        result = self.cursor.fetchone()
+        cursor.execute(sql, [user_id])
+        result = cursor.fetchone()
 
         if (not force) and (result is None):
             sql = "INSERT INTO User (ID, Nickname) VALUES (%s, %s);"
             var = [str(user_id), user_displayname]
-            self.cursor.execute(sql, var)
+            cursor.execute(sql, var)
             self.db.commit()
         elif not force and (result is not None) and result[1] != user_displayname:
             sql = "UPDATE User SET Nickname= %s WHERE ID = %s;"
             var = [str(user_displayname), str(user_id)]
-            self.cursor.execute(sql, var)
+            cursor.execute(sql, var)
             self.db.commit()
 
         if not force:
             sql = "UPDATE Slot SET User = NULL WHERE STRCMP(User, %s) = 0 AND Event = %s;"
             var = [str(user_id), str(channel.id)]
-            self.cursor.execute(sql, var)
+            cursor.execute(sql, var)
             self.db.commit()
 
         self.notify.create(channel.id, user_id)
@@ -58,39 +62,40 @@ class EditSlot:
         try:
             sql = "UPDATE Slot SET User = %s WHERE Number = %s and Event = %s;"
             var = [user_id, num, channel.id]
-            self.cursor.execute(sql, var)
+            cursor.execute(sql, var)
             self.db.commit()
-
         except mysql.connector.errors.DatabaseError:
             return False
 
         return True
 
-    def unslot(self, channel, user_id="", slot=""):
+    @with_cursor
+    def unslot(self, cursor: mysql.connector.MySQLConnection.cursor,
+               channel: discord.TextChannel, user_id: str = "", slot: str = "") -> bool:
         """
-                Unslots a user or clears an slot from an Event
-                Args:
-                    channel (channel): Server channel
-                    user_id (string): User ID
-                    slot (string) ; Slotnumber
+        Unslots a user or clears an slot from an Event
+        Args:
+            cursor: Database cursor
+            channel: Server channel
+            user_id: User ID
+            slot: Slotnumber
 
-               Returns:
-                   (bool): if successful
-
-           """
+        Returns:
+            (bool): if successful
+        """
         type = ['Number', 'User'][int(slot == "")]
         arg = [slot, user_id][int(slot == "")]
 
         sql = f"SELECT Number FROM Slot WHERE STRCMP({type} , %s) = 0 and Event = %s;"
         var = [arg, channel.id]
-        self.cursor.execute(sql, var)
-        result = self.cursor.fetchone()
+        cursor.execute(sql, var)
+        result = cursor.fetchone()
 
         if result:
 
             sql = f"UPDATE Slot SET User = NULL WHERE STRCMP({type}, %s) = 0 and Event = %s;"
             var = [arg, channel.id]
-            self.cursor.execute(sql, var)
+            cursor.execute(sql, var)
             self.db.commit()
 
             self.notify.toggle(channel.id, user_id, True)
@@ -99,36 +104,38 @@ class EditSlot:
         else:
             return False
 
-    def add(self, channel, slot, group, desc):
+    @with_cursor
+    def add(self, cursor: mysql.connector.MySQLConnection.cursor, channel: discord.TextChannel,
+            slot: int, group: str, desc: str):
         """
-               Adds a slot to a given event
-               Args:
-                    channel (channel): Server channel
-                    slot (int): Slot-Number
-                    group (string): Group-Number (counting form 0) or Group-Name
-                    desc (string): Name
+           Adds a slot to a given event
+           Args:
+                cursor: Database cursor
+                channel (channel): Server channel
+                slot (int): Slot-Number
+                group (string): Group-Number (counting form 0) or Group-Name
+                desc (string): Name
 
-               Returns:
-                   (bool): if successful
-
+           Returns:
+               (bool): if successful
            """
 
         sql = "SELECT Description FROM Slot WHERE Event = %s and Number = %s;"
         var = [channel.id, slot]
-        self.cursor.execute(sql, var)
+        cursor.execute(sql, var)
 
-        result = self.cursor.fetchone()
+        result = cursor.fetchone()
 
         # Pushes Reserve Slots
         if result and (result[0] == "Reserve" and not desc == "Reserve"):
             sql = "SELECT Number FROM Slot WHERE Event = %s and Description = %s"
-            self.cursor.execute(sql, [channel.id, 'Reserve'])
+            cursor.execute(sql, [channel.id, 'Reserve'])
 
-            result = self.cursor.fetchall()
+            result = cursor.fetchall()
             new = [(int(x[0]) + 10, channel.id, x[0]) for x in result]
 
             sql = "UPDATE Slot SET Number = %s WHERE Event=%s and Number = %s"
-            self.cursor.executemany(sql, new)
+            cursor.executemany(sql, new)
             self.db.commit()
 
         elif result:
@@ -137,24 +144,24 @@ class EditSlot:
         if group.isdigit():
 
             sql = "SELECT Number FROM SlotGroup WHERE Event = %s AND Number = %s;"
-            self.cursor.execute(sql, [channel.id, group])
+            cursor.execute(sql, [channel.id, group])
 
-            if self.cursor.fetchall() is None:
+            if cursor.fetchall() is None:
                 return False
 
         else:
 
             sql = "SELECT Number FROM SlotGroup WHERE Event = %s and Name = %s;"
             var = [channel.id, group]
-            self.cursor.execute(sql, var)
-            group = self.cursor.fetchone()[0]
+            cursor.execute(sql, var)
+            group = cursor.fetchone()[0]
 
             if not group:
                 return False
 
         sql = "INSERT INTO Slot (Event, Number, Description, GroupNumber) VALUES (%s, %s, %s, %s);"
         var = [channel.id, slot, desc, group]
-        self.cursor.execute(sql, var)
+        cursor.execute(sql, var)
         self.db.commit()
 
         length = len(str(slot)) + len(desc) + 15
@@ -162,97 +169,103 @@ class EditSlot:
         sql = "UPDATE SlotGroup SET Length = Length + %s WHERE Number = %s and Event = %s;"
         var = [length, group, channel.id]
 
-        self.cursor.execute(sql, var)
+        cursor.execute(sql, var)
         self.db.commit()
 
         return True
 
-    def delete(self, channel, slot):
+    @with_cursor
+    def delete(self, cursor: mysql.connector.MySQLConnection.cursor, channel: discord.TextChannel, slot: str) -> bool:
         """
-               Deletes a given slot
-               Args:
-                    channel (channel): Server channel
-                    slot (string): Slot-Number
+        Deletes a given slot
+        Args:
+            cursor: Database cursor
+            channel: Server channel
+            slot: Slot-Number
 
-               Returns:
-                   (bool): if successful
-
+        Returns:
+           (bool): if successful
            """
 
         sql = "SELECT Description, GroupNumber FROM Slot WHERE Event = %s and Number = %s;"
         var = [channel.id, slot]
-        self.cursor.execute(sql, var)
-        desc = self.cursor.fetchone()
+        cursor.execute(sql, var)
+        desc = cursor.fetchone()
         if not desc:
             return False
 
         length = len(str(slot)) + len(desc[0]) + 15
 
         sql = "DELETE FROM Slot WHERE Event = %s AND Number = %s;"
-        self.cursor.execute(sql, [channel.id, slot])
+        cursor.execute(sql, [channel.id, slot])
         self.db.commit()
 
         sql = "UPDATE SlotGroup SET Length = Length - %s WHERE Number = %s AND Event = %s"
         var = [length, desc[1], channel.id]
-        self.cursor.execute(sql, var)
+        cursor.execute(sql, var)
         self.db.commit()
 
         return True
 
-    def edit(self, channel, slot, desc):
+    @with_cursor
+    def edit(self, cursor: mysql.connector.MySQLConnection.cursor,
+             channel: discord.TextChannel, slot: str, desc: str) -> bool:
         """
-               Edits a slot name
-               Args:
-                   channel (channel): Server channel
-                   slot (string): Slot-Number
-                   desc (string): Name
+        Edits a slot name
+        Args:
+           cursor: Database cursor
+           channel: Server channel
+           slot: Slot-Number
+           desc: Name
 
-               Returns:
-                   (bool): if successful
-
+        Returns:
+           (bool): if successful
         """
 
         sql = "SELECT Description, GroupNumber FROM Slot WHERE Event = %s and Number = %s;"
         var = [channel.id, slot]
-        self.cursor.execute(sql, var)
-        old_desc = self.cursor.fetchone()
+        cursor.execute(sql, var)
+        old_desc = cursor.fetchone()
         if not old_desc:
             return False
 
         sql = "UPDATE Slot SET Description = %s WHERE Number = %s AND Event = %s;"
         var = [desc, slot, channel.id]
-        self.cursor.execute(sql, var)
+        cursor.execute(sql, var)
         self.db.commit()
 
         length = len(desc) - len(old_desc[0])
 
         sql = "UPDATE SlotGroup SET Length = Length + %s WHERE Event = %s AND Number = %s;"
         var = [length, channel.id, old_desc[1]]
-        self.cursor.execute(sql, var)
+        cursor.execute(sql, var)
         self.db.commit()
 
         return True
 
-    def addGroup(self, channel, number, name=""):
+    @with_cursor
+    def add_group(self, cursor: mysql.connector.MySQLConnection.cursor,
+                  channel: discord.TextChannel, number: int, name: str = "") -> bool:
         """
-               Adds a slot-group to a given event
-               Args:
-                    channel (channel): Server channel
-                    number (int): Group-Number (counting from 0)
-                    name (string): Group-Name (optional)
+        Adds a slot-group to a given event
+        Args:
+            cursor: Database cursor
+            channel: Server channel
+            number: Group-Number (counting from 0)
+            name: Group-Name (optional)
 
-               Returns:
-                    (bool): if successful
+        Returns:
+            (bool): if successful
+        """
 
-           """
         sql = "SELECT Name, Number FROM SlotGroup WHERE Event = %s and Number = %s;"
         var = [channel.id, int(number)]
-        self.cursor.execute(sql, var)
-        result = self.cursor.fetchone()
+        cursor.execute(sql, var)
+        result = cursor.fetchone()
         if result and result[0] == "Reserve":
             sql = "UPDATE SlotGroup SET Number = %s WHERE Event = %s and Name = %s"
             var = [int(number) + 1, channel.id, 'Reserve']
-            self.cursor.execute(sql, var)
+            cursor.execute(sql, var)
             self.db.commit()
 
         elif result:
@@ -261,98 +274,104 @@ class EditSlot:
         sql = "INSERT INTO SlotGroup (Number, Event, Name, Struct, Length) VALUES (%s, %s, %s, '\n', %s);"
         length = len(name) + 1
         var = [number, channel.id, name, length]
-        self.cursor.execute(sql, var)
+        cursor.execute(sql, var)
         self.db.commit()
 
         return True
 
-    def delGroup(self, channel, group):
+    @with_cursor
+    def del_group(self, cursor: mysql.connector.MySQLConnection.cursor,
+                  channel: discord.TextChannel, group: str) -> bool:
         """
-                Deletes a slot from a given event
-                Args:
-                    channel (channel): Server channel
-                    group (string): Group-Number (counting form 0) or Group-Name
+        Deletes a slot from a given event
+        Args:
+            cursor: Database cursor
+            channel: Server channel
+            group: Group-Number (counting form 0) or Group-Name
 
-                Returns:
-                   (bool): if successful
-
+        Returns:
+           (bool): if successful
         """
 
         if group.isdigit():
             sql = "SELECT Number FROM SlotGroup WHERE Event = %s AND Number = %s;"
-            self.cursor.execute(sql, [channel.id, group])
+            cursor.execute(sql, [channel.id, group])
 
-            if self.cursor.fetchone() is None:
+            if cursor.fetchone() is None:
                 return False
 
         else:
             sql = "SELECT Number FROM SlotGroup WHERE Event = %s AND Name = %s;"
             var = [channel.id, group]
-            self.cursor.execute(sql, var)
+            cursor.execute(sql, var)
 
             if not group:
                 return False
 
-            group = self.cursor.fetchone()[0]
+            group = cursor.fetchone()[0]
 
         sql = "DELETE FROM Slot WHERE GroupNumber = %s AND Event = %s;"
-        self.cursor.execute(sql, [group, channel.id])
+        cursor.execute(sql, [group, channel.id])
         self.db.commit()
 
         sql = "DELETE FROM SlotGroup WHERE Number = %s AND Event = %s;"
-        self.cursor.execute(sql, [group, channel.id])
+        cursor.execute(sql, [group, channel.id])
         self.db.commit()
 
         return True
 
-    def editGroup(self, channel, group, name):
+    @with_cursor
+    def edit_group(self, cursor: mysql.connector.MySQLConnection.cursor,
+                   channel: discord.TextChannel, group: str, name: str) -> bool:
         """
-                Edits the name of slot from a given event
-                Args:
-                    channel (channel): Server channel
-                    group (string): Group-Number (counting form 0) or Group-Name
-                    name (string): Group Name to change to
+        Edits the name of slot from a given event
+        Args:
+            cursor: Database cursor
+            channel: Server channel
+            group: Group-Number (counting form 0) or Group-Name
+            name: Group Name to change to
 
-                Returns:
-                   (bool): if successful
-
+        Returns:
+           (bool): if successful
         """
 
         if group.isdigit():
             sql = "SELECT Number FROM SlotGroup WHERE Event = %s AND Number = %s;"
-            self.cursor.execute(sql, [channel.id, group])
+            cursor.execute(sql, [channel.id, group])
 
-            if self.cursor.fetchone() is None:
+            if cursor.fetchone() is None:
                 return False
 
         else:
             sql = "SELECT Number FROM SlotGroup WHERE Event = %s AND Name = %s;"
             var = [channel.id, group]
-            self.cursor.execute(sql, var)
+            cursor.execute(sql, var)
 
             if not group:
                 return False
 
-            group = self.cursor.fetchone()[0]
+            group = cursor.fetchone()[0]
 
         sql = "UPDATE SlotGroup SET Name=%s WHERE Number = %s AND Event = %s;"
-        self.cursor.execute(sql, [name, group, channel.id])
+        cursor.execute(sql, [name, group, channel.id])
         self.db.commit()
 
         return True
 
-    def toggleLock(self, channel):
+    @with_cursor
+    def toggle_lock(self, cursor: mysql.connector.MySQLConnection.cursor, channel: discord.TextChannel) -> bool:
         """
         Toggles the lock on an event
         Args:
-            channel (channel): Server channel
+            cursor: Database cursor
+            channel: Server channel
 
         Returns:
             (bool): if successful
         """
 
         sql = "UPDATE Event SET Locked = NOT Locked WHERE ID = %s;"
-        self.cursor.execute(sql, [channel.id])
+        cursor.execute(sql, [channel.id])
         self.db.commit()
 
-        return self.cursor.rowcount == 1
+        return cursor.rowcount == 1

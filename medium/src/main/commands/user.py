@@ -11,19 +11,16 @@ from config.loader import cfg
 
 class User(commands.Cog, name='User Commands'):
 
-    def __init__(self, client, lang, logger, db, cursor):
+    def __init__(self, client, lang, logger, db):
 
         self.client = client
         self.lang = lang
         self.logger = logger
 
-        self.db = db
-        self.cursor = cursor
-
-        self.io = IO(cfg, client, db, cursor)
-        self.util = Util(client, db, cursor)
-        self.list = EditSlot(db, cursor)
-        self.mark = Mark(db, cursor)
+        self.io = IO(cfg, client, db)
+        self.util = Util(client, db)
+        self.list = EditSlot(db)
+        self.mark = Mark(db)
 
     @commands.command(name="slot",
                       usage="[Number]",
@@ -76,7 +73,7 @@ class User(commands.Cog, name='User Commands'):
 
         if num:
             if self.list.slot(channel, author.id, num, user_displayname=author.display_name):
-                await self.io.writeEvent(channel)
+                await self.io.write(channel)
 
                 await author.send(
                     self.lang["slot"]["slot"]["success"]["user"].format('/'.join(ctx.channel.name.split('-')[:-1])))
@@ -121,7 +118,7 @@ class User(commands.Cog, name='User Commands'):
         backup = ctx.guild.get_member(cfg['backup'])
         index = self.list.unslot(channel, ctx.message.author.id)
         if index:
-            await self.io.writeEvent(channel)
+            await self.io.write(channel)
             await ctx.message.author.send(
                 self.lang["unslot"]["success"]["user"].format('/'.join(ctx.channel.name.split('-')[:-1])))
             if str(datetime.date.today()) == "-".join(channel.name.split("-")[:-1]):
@@ -181,8 +178,8 @@ class User(commands.Cog, name='User Commands'):
 
         emoji_name = " ".join(args)
         if emoji_name in cfg['marks'].keys():
-            if self.mark.addMark(user.id, channel.id, emoji_name):
-                await self.io.writeEvent(channel)
+            if self.mark.add_mark(user.id, channel.id, emoji_name):
+                await self.io.write(channel)
                 await channel.send(
                     ctx.message.author.mention + " " + self.lang["mark"]["suc"],
                     delete_after=5)
@@ -217,8 +214,8 @@ class User(commands.Cog, name='User Commands'):
 
         emoji_name = " ".join(args)
         if emoji_name in cfg['marks'].keys():
-            if self.mark.removeMark(user.id, channel.id, emoji_name):
-                await self.io.writeEvent(channel)
+            if self.mark.remove_mark(user.id, channel.id, emoji_name):
+                await self.io.write(channel)
                 await channel.send(
                     ctx.message.author.mention + " " + self.lang["unmark"]["suc"],
                     delete_after=5)

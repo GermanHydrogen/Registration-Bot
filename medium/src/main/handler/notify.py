@@ -1,8 +1,9 @@
 import datetime as dt
+import mysql.connector
 
 from discord.ext import commands
-from src.notify.util.editLocale import EditLocale
-from src.main.objects.util import Util
+from src.main.objects.notify import EditLocale
+from src.main.objects.util import Util, with_cursor
 
 from config.loader import cfg
 import asyncio
@@ -11,23 +12,24 @@ import discord
 
 
 class Handler(commands.Cog):
-    def __init__(self, client, lang, logger, db, cursor):
+    def __init__(self, client, lang, logger, db):
         self.client = client
         self.lang = lang
         self.logger = logger
 
         self.db = db
-        self.cursor = cursor
-        self.edit = EditLocale(db, cursor)
-        self.util = Util(client, db, cursor)
+        self.edit = EditLocale(db)
+        self.util = Util(client, db)
 
-    async def notify(self, event, user_id, delay):
+    @with_cursor
+    async def notify(self, cursor: mysql.connector.MySQLConnection.cursor, event, user_id, delay):
         """
             Calculates datetime for notification
                 Args:
-                    event(string): ID of an event
-                    user_id(string): User ID
-                    delay(int): delay in sec.
+                    cursor: Database cursor
+                    event: ID of an event
+                    user_id: User ID
+                    delay: delay in sec.
 
         """
 
@@ -36,8 +38,8 @@ class Handler(commands.Cog):
         user = self.client.get_user(int(user_id))
         if user:
             sql = "SELECT Time FROM Notify WHERE Event = %s AND User = %s"
-            self.cursor.execute(sql, [event, user_id])
-            result = self.cursor.fetchall()
+            cursor.execute(sql, [event, user_id])
+            result = cursor.fetchall()
 
             if not result:
                 return
@@ -49,8 +51,8 @@ class Handler(commands.Cog):
                 return
 
             sql = "SELECT Name, Time FROM Event WHERE ID = %s;"
-            self.cursor.execute(sql, [event])
-            result = self.cursor.fetchone()
+            cursor.execute(sql, [event])
+            result = cursor.fetchone()
 
             guild = self.client.get_guild(int(cfg['guild']))
             nickname = guild.get_member(int(user_id)).display_name
@@ -62,12 +64,13 @@ class Handler(commands.Cog):
                 log += "Command: " + "Notify: discord.errors.Forbidden".ljust(20) + "\t"
                 self.logger.log(log)
 
+    @with_cursor
     @commands.Cog.listener()
-    async def on_ready(self):
+    async def on_ready(self, cursor: mysql.connector.MySQLConnection.cursor):
         sql = "SELECT n.User, n.Time, n.Event FROM Notify n, User u \
                 WHERE n.User = u.ID AND u.Notify AND n.Enabled AND n.Time >= CURDATE();"
-        self.cursor.execute(sql)
-        result = self.cursor.fetchall()
+        cursor.execute(sql)
+        result = cursor.fetchall()
 
         for elem in result:
             now = dt.datetime.now()
@@ -78,7 +81,7 @@ class Handler(commands.Cog):
     @commands.Cog.listener()
     async def on_guild_channel_update(self, before, after):
         if before.name != after.name:
-            if (event := self.edit.getEvent(after.id)) is not None:
+            if (event := self.edit.get_event(after.id)) is not None:
                 author = self.util.get_channel_author(after)
 
                 try:
@@ -88,8 +91,8 @@ class Handler(commands.Cog):
                     await author.send(self.lang["update"]["auto"]["date_error"].format(after.name))
                     return
 
-                self.edit.updateNotify(after.id, str(event[0]) + " " + str(event[1]), str(date) + " " + str(event[1]))
-                if self.edit.updateEvent(after.id, after.name, date):
+                self.edit.update_notify(after.id, str(event[0]) + " " + str(event[1]), str(date) + " " + str(event[1]))
+                if self.edit.update_event(after.id, after.name, date):
                     await author.send(self.lang["update"]["auto"]["success"].format(after.name))
                 else:
                     await author.send(self.lang["update"]["auto"]["error"].format(after.name))

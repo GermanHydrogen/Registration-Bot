@@ -5,28 +5,28 @@ from discord.ext import commands
 from config.loader import cfg
 
 from src.main.objects.slotlist import IO
-from src.dmInteraction.util.edit import Edit
-from src.dmInteraction.util.choice import Choice
-from src.notify.util.editLocale import EditLocale
+from src.main.objects.interaction import Interaction
+from src.main.objects.interaction_choice import Choice
+from src.main.objects.notify import EditLocale
 
 
 class Handler(commands.Cog):
-    def __init__(self, client, lang, logger, db, cursor):
+    def __init__(self, client, lang, logger, db):
 
         self.client = client
         self.lang = lang
         self.logger = logger
 
-        self.io = IO(cfg, client, db, cursor)
-        self.choice = Choice(db, cursor)
-        self.edit = Edit(db, cursor)
+        self.io = IO(cfg, client, db)
+        self.choice = Choice(db)
+        self.edit = Interaction(db)
 
-        self.notify = EditLocale(db, cursor)
+        self.notify = EditLocale(db)
 
     @commands.Cog.listener()
     async def on_ready(self):
         guild = self.client.get_guild(int(cfg['guild']))
-        result = self.edit.cleanupMessage(datetime.date.today())
+        result = self.edit.cleanup_message(datetime.date.today())
 
         if result is not None:
             camp = result[0]
@@ -38,7 +38,7 @@ class Handler(commands.Cog):
 
                 for elem in channels:
                     channel = guild.get_channel(int(elem))
-                    await self.io.writeEvent(channel)
+                    await self.io.write(channel)
 
                 for elem in users:
                     user = self.client.get_user(int(elem[0]))
@@ -90,7 +90,7 @@ class Handler(commands.Cog):
         msg = await channel.fetch_message(payload.message_id)
 
         if payload.emoji.name == '👎':
-            result = self.choice.denyMessage(str(msg.id))
+            result = self.choice.deny_message(str(msg.id))
             if not result:  # if no message is found in db corresponding to the msg id
                 await author.send(self.lang['trade']['private']['deny']['error'])
 
@@ -115,7 +115,7 @@ class Handler(commands.Cog):
                     guild = self.client.get_guild(int(cfg['guild']))
                     result = guild.get_channel(int(result))
 
-                    await self.io.writeEvent(result)
+                    await self.io.write(result)
                     await msg.delete()
                     await channel.send("``` " + msg.content + " ```")
                     await author.send(self.lang['campaign']['private']['deny']['success'])
@@ -142,7 +142,7 @@ class Handler(commands.Cog):
                     await author.send(self.lang['trade']['private']['deny']['rec'].format(nickname, channel_name))
 
         elif payload.emoji.name == '👍':
-            result = self.choice.acceptMessage(str(msg.id))
+            result = self.choice.accept_message(str(msg.id))
             if not result:      # if no message is found in db corresponding to the msg id
                 await author.send(self.lang['trade']['private']['accept']['error'])
 
@@ -167,7 +167,7 @@ class Handler(commands.Cog):
                     guild = self.client.get_guild(int(cfg['guild']))
                     result = guild.get_channel(int(result))
 
-                    await self.io.writeEvent(result)
+                    await self.io.write(result)
                     await msg.delete()
                     await channel.send("```" + msg.content + " ```")
                     await author.send(self.lang['campaign']['private']['accept']['success'])
@@ -181,7 +181,7 @@ class Handler(commands.Cog):
                 else:
                     channel = guild.get_channel(int(result[0]))
 
-                    await self.io.writeEvent(channel)
+                    await self.io.write(channel)
 
                     req_user = self.client.get_user(int(result[1]))
                     rec_user = self.client.get_user(int(result[2]))

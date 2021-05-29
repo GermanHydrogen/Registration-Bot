@@ -11,17 +11,16 @@ from config.loader import cfg
 
 
 class Admin(commands.Cog, name="Admin Commands"):
-    def __init__(self, client, lang, logger, db, cursor):
+    def __init__(self, client, lang, logger, db):
         self.client = client
         self.lang = lang
         self.logger = logger
 
         self.db = db
-        self.cursor = cursor
 
-        self.io = IO(cfg, client, db, cursor)
-        self.util = Util(client, db, cursor)
-        self.list = EditSlot(db, cursor)
+        self.io = IO(cfg, client, db)
+        self.util = Util(client, db)
+        self.list = EditSlot(db)
 
     @commands.command(name="create",
                       usage="",
@@ -51,8 +50,8 @@ class Admin(commands.Cog, name="Admin Commands"):
         if time == "" or len(time) != 4:
             await ctx.message.author.send(self.lang["create"]["error"]["time"]["user"])
         elif out:
-            self.io.createEvent(out, ctx.message.author, time, self.client.user, (arg == 'manuel'))
-            await self.io.writeEvent(channel, True)
+            self.io.create(out, ctx.message.author, time, self.client.user, (arg == 'manuel'))
+            await self.io.write(channel, True)
 
             await ctx.message.author.send(self.lang["create"]["success"]["user"])
 
@@ -109,7 +108,7 @@ class Admin(commands.Cog, name="Admin Commands"):
 
         if self.list.slot(channel, player, num, force=True):
 
-            await self.io.writeEvent(channel)
+            await self.io.write(channel)
 
             await channel.send(ctx.message.author.mention + " " + self.lang["forceSlot"]["success"]["channel"],
                                delete_after=5)
@@ -192,7 +191,7 @@ class Admin(commands.Cog, name="Admin Commands"):
                     player = buffer
 
         if self.list.unslot(channel, player, slot):
-            await self.io.writeEvent(channel)
+            await self.io.write(channel)
             await channel.send(
                 ctx.message.author.mention + " " + self.lang["forceUnslot"]["success"]["channel"].format(player),
                 delete_after=5)
@@ -240,7 +239,7 @@ class Admin(commands.Cog, name="Admin Commands"):
         desc = " ".join(argv[3:])
 
         if self.list.add(channel, slot_num, group, desc):
-            await self.io.writeEvent(channel, True)
+            await self.io.write(channel, True)
 
             await channel.send(ctx.message.author.mention + " " + self.lang["addslot"]["success"]["channel"],
                                delete_after=5)
@@ -262,7 +261,7 @@ class Admin(commands.Cog, name="Admin Commands"):
         channel = ctx.message.channel
 
         if self.list.delete(channel, slot_num):
-            await self.io.writeEvent(channel, True)
+            await self.io.write(channel, True)
 
             await channel.send(ctx.message.author.mention + " " + self.lang["delslot"]["success"]["channel"],
                                delete_after=5)
@@ -296,7 +295,7 @@ class Admin(commands.Cog, name="Admin Commands"):
         desc = " ".join(argv[2:])
 
         if self.list.edit(channel, slot_num, desc):
-            await self.io.writeEvent(channel, True)
+            await self.io.write(channel, True)
 
             await channel.send(ctx.message.author.mention + " " + self.lang["editslot"]["success"]["channel"],
                                delete_after=5)
@@ -335,8 +334,8 @@ class Admin(commands.Cog, name="Admin Commands"):
         else:
             name = ""
 
-        if self.list.addGroup(channel, number, name):
-            await self.io.writeEvent(channel, True)
+        if self.list.add_group(channel, number, name):
+            await self.io.write(channel, True)
 
             await channel.send(ctx.message.author.mention + " " + self.lang["addgroup"]["success"]["channel"],
                                delete_after=5)
@@ -374,8 +373,8 @@ class Admin(commands.Cog, name="Admin Commands"):
         else:
             name = ""
 
-        if self.list.delGroup(channel, name):
-            await self.io.writeEvent(channel, True)
+        if self.list.del_group(channel, name):
+            await self.io.write(channel, True)
 
             await channel.send(ctx.message.author.mention + " " + self.lang["delgroup"]["success"]["channel"],
                                delete_after=5)
@@ -400,8 +399,8 @@ class Admin(commands.Cog, name="Admin Commands"):
     async def editgroup(self, ctx, group, *, title):
         channel = ctx.message.channel
 
-        if self.list.editGroup(channel, group, title):
-            await self.io.writeEvent(channel, True)
+        if self.list.edit_group(channel, group, title):
+            await self.io.write(channel, True)
 
             await channel.send(ctx.message.author.mention + " " + self.lang["editgroup"]["success"]["channel"],
                                delete_after=5)
@@ -424,11 +423,11 @@ class Admin(commands.Cog, name="Admin Commands"):
     async def toggleLock(self, ctx):
         channel = ctx.message.channel
 
-        result = self.list.toggleLock(channel)
+        result = self.list.toggle_lock(channel)
         if result:
             await channel.send(ctx.message.author.mention + " " + self.lang["lock"]["toggle"]["success"],
                                delete_after=5)
-            await self.io.writeEvent(channel, True)
+            await self.io.write(channel, True)
         else:
             await channel.send(ctx.message.author.mention + " " + self.lang["lock"]["toggle"]["error"],
                                delete_after=5)

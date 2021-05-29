@@ -11,13 +11,12 @@ from src.main.commands.user import User
 from src.main.commands.admin import Admin
 from src.main.handler.handler import Handler
 
-from src.notify.commands.master import Global
-from src.notify.commands.locale import Locale
+from src.main.commands.notify import Locale, Global
 
-from src.dmInteraction.commands import Campaign, Swap
-from src.dmInteraction.util.handler import Handler as dmHandler
+from src.main.commands.interaction import Campaign, Swap
+from src.main.handler.interaction import Handler as dmHandler
 
-from src.notify.util.handler import Handler as ntHandler
+from src.main.handler.notify import Handler as ntHandler
 
 from src.main.objects.util import CustomHelp
 
@@ -38,8 +37,6 @@ try:
         passwd=cfg["passwd"],
         database=cfg["database"]
     )
-
-    mycursor = mydb.cursor(buffered=True)
 except:
     exit()
 
@@ -62,18 +59,18 @@ discord_logger.addHandler(discord_handler)
 
 # load commands
 
-client.add_cog(Handler(client, logger, mydb, mycursor))
-client.add_cog(dmHandler(client, lang, logger, mydb, mycursor))
+client.add_cog(Handler(client, logger, mydb))
+client.add_cog(dmHandler(client, lang, logger, mydb))
 
-client.add_cog(User(client, lang, logger, mydb, mycursor))
-client.add_cog(Admin(client, lang, logger, mydb, mycursor))
+client.add_cog(User(client, lang, logger, mydb))
+client.add_cog(Admin(client, lang, logger, mydb))
 
-client.add_cog(Campaign(client, lang, logger, mydb, mycursor))
-client.add_cog(Swap(client, lang, logger, mydb, mycursor))
+client.add_cog(Campaign(client, lang, logger, mydb))
+client.add_cog(Swap(client, lang, logger, mydb))
 
-client.add_cog(Global(client, lang, logger, mydb, mycursor))
-client.add_cog(Locale(client, lang, logger, mydb, mycursor))
+client.add_cog(Global(client, lang, logger, mydb))
+client.add_cog(Locale(client, lang, logger, mydb))
 
-client.add_cog(ntHandler(client, lang, logger, mydb, mycursor))
+client.add_cog(ntHandler(client, lang, logger, mydb))
 
 client.run(cfg['token'])
