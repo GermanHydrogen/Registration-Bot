@@ -11,16 +11,14 @@ from config.loader import cfg
 
 
 class Admin(commands.Cog, name="Admin Commands"):
-    def __init__(self, client, lang, logger, db):
+    def __init__(self, client, lang, logger, io: IO, util: Util, edit_slot: EditSlot):
         self.client = client
         self.lang = lang
         self.logger = logger
 
-        self.db = db
-
-        self.io = IO(cfg, client, db)
-        self.util = Util(client, db)
-        self.list = EditSlot(db)
+        self.io = io
+        self.util = util
+        self.list = edit_slot
 
     @commands.command(name="create",
                       usage="",

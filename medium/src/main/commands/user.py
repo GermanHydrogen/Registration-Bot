@@ -11,16 +11,14 @@ from config.loader import cfg
 
 class User(commands.Cog, name='User Commands'):
 
-    def __init__(self, client, lang, logger, db):
-
-        self.client = client
+    def __init__(self, lang, logger, io: IO, util: Util, edit_slot: EditSlot, mark: Mark):
         self.lang = lang
         self.logger = logger
 
-        self.io = IO(cfg, client, db)
-        self.util = Util(client, db)
-        self.list = EditSlot(db)
-        self.mark = Mark(db)
+        self.io = io
+        self.util = util
+        self.list = edit_slot
+        self.mark = mark
 
     @commands.command(name="slot",
                       usage="[Number]",

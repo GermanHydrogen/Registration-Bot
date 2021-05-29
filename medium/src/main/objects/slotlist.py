@@ -63,11 +63,11 @@ def get_members(name: str, channel: discord.TextChannel) -> discord.Member:
 
 
 class IO:
-    def __init__(self, cfg, client, db):
+    def __init__(self, cfg, db, util: Util):
         self.cfg = cfg
         self.db = db
 
-        self.util = Util(client, db)
+        self.util = util
 
     @with_cursor
     def get_user_id(self, cursor: mysql.connector.MySQLConnection.cursor,

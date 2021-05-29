@@ -7,22 +7,17 @@ from discord.ext.commands import has_role
 import asyncio
 
 from src.main.objects.notify import EditLocale
-from src.main.handler.notify import Handler
 
 from config.loader import cfg
 from src.main.objects.util import with_cursor
 
 
 class Locale(commands.Cog, name='Reminder'):
-    def __init__(self, client, lang, logger, db):
-
-        self.client = client
+    def __init__(self, lang, logger, edit: EditLocale):
         self.lang = lang
         self.logger = logger
 
-        self.db = db
-        self.edit = EditLocale(db)
-        self.hand = Handler(client, lang, logger, db)
+        self.edit = edit
 
     @commands.command(name="update",
                       usage="[arg]",
@@ -145,7 +140,7 @@ class Locale(commands.Cog, name='Reminder'):
             delta = (time - now).total_seconds()
 
             if 86400 > delta > 0:
-                asyncio.create_task(self.hand.notify(str(channel.id), str(author.id), delta))
+                asyncio.create_task(self.edit.notify(str(channel.id), str(author.id), delta))
 
             await channel.send(ctx.message.author.mention + " " +
                                self.lang["notify_local"]["time"]["channel"]["suc"], delete_after=5)
@@ -159,9 +154,7 @@ class Locale(commands.Cog, name='Reminder'):
 
 
 class Global(commands.Cog, name='Reminder'):
-    def __init__(self, client, lang, logger, db):
-
-        self.client = client
+    def __init__(self, lang, logger, db):
         self.lang = lang
         self.logger = logger
 

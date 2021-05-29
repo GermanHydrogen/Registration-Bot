@@ -11,16 +11,13 @@ from config.loader import cfg
 
 
 class Campaign(commands.Cog, name='Admin Commands'):
-    def __init__(self, client, lang, logger, db):
-
-        self.client = client
+    def __init__(self, lang, logger, io: IO, util: Util, interaction: Interaction):
         self.lang = lang
         self.logger = logger
 
-        self.db = db
-        self.io = IO(cfg, client, db)
-        self.util = Util(client, db)
-        self.edit = Interaction(db)
+        self.io = io
+        self.util = util
+        self.edit = interaction
 
     @commands.command(name="campaign",
                       alias="copy",
@@ -114,15 +111,13 @@ class Campaign(commands.Cog, name='Admin Commands'):
 
 
 class Swap(commands.Cog, name='User Commands'):
-    def __init__(self, client, lang, logger, db):
-        self.client = client
+    def __init__(self, lang, logger, io: IO, util: Util, interaction: Interaction):
         self.lang = lang
         self.logger = logger
 
-        self.db = db
-        self.io = IO(cfg, client, db)
-        self.util = Util(client, db)
-        self.edit = Interaction(db)
+        self.io = io
+        self.util = util
+        self.edit = interaction
 
     @commands.command(name="trade",
                       alias='swap',

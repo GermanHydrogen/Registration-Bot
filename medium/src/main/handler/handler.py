@@ -5,12 +5,12 @@ from src.main.objects.util import Util
 
 
 class Handler(commands.Cog):
-    def __init__(self, client, logger, db):
+    def __init__(self, client, logger, db, util: Util):
         self.client = client
         self.logger = logger
         self.db = db
 
-        self.util = Util(client, db)
+        self.util = util
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):

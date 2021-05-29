@@ -11,17 +11,16 @@ from src.main.objects.notify import EditLocale
 
 
 class Handler(commands.Cog):
-    def __init__(self, client, lang, logger, db):
+    def __init__(self, client, lang, logger, db, io: IO, choice: Choice, interaction: Interaction, notify: EditLocale):
 
         self.client = client
         self.lang = lang
         self.logger = logger
 
-        self.io = IO(cfg, client, db)
-        self.choice = Choice(db)
-        self.edit = Interaction(db)
-
-        self.notify = EditLocale(db)
+        self.io = io
+        self.choice = choice
+        self.edit = interaction
+        self.notify = notify
 
     @commands.Cog.listener()
     async def on_ready(self):

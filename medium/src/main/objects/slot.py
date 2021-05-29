@@ -5,10 +5,10 @@ from src.main.objects.util import with_cursor
 
 
 class EditSlot:
-    def __init__(self, db):
+    def __init__(self, db, notfiy: EditLocale):
         self.db = db
 
-        self.notify = EditLocale(db)
+        self.notify = notfiy
 
     @with_cursor
     def slot(self, cursor: mysql.connector.MySQLConnection.cursor, channel: discord.TextChannel,
