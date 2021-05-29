@@ -37,7 +37,7 @@ try:
         passwd=cfg["passwd"],
         database=cfg["database"]
     )
-except:
+except mysql.connector.errors.InterfaceError:
     exit()
 
 # init logger
