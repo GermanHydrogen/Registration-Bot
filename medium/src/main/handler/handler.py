@@ -18,8 +18,13 @@ class Handler(commands.Cog):
         if isinstance(error, commands.CommandOnCooldown):
             await ctx.send(ctx.message.author.mention + " " + str(error), delete_after=error.retry_after + 1)
 
-        # --- DB has gone away error ---
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send(ctx.message.author.mention +
+                           f" You are missing the the parameter {error.param.name}",
+                           delete_after=5)
+
         elif isinstance(error, commands.CommandInvokeError):
+            # --- DB has gone away error ---
             if isinstance(error.original, errors.OperationalError) or isinstance(error.original, errors.DatabaseError):
                 self.db.reconnect()  # Reconnect DB
                 try:

@@ -103,7 +103,7 @@ class Admin(commands.Cog, name="Admin Commands"):
                 ctx.message.author.mention + " " + self.lang["forceSlot"]["error"]["missing_target"]["channel"],
                 delete_after=5)
             return
-
+        # TODO: Catch mysql.connector.errors.DatabaseError
         if self.list.slot(channel, player, num, force=True):
 
             await self.io.write(channel)

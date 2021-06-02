@@ -4,6 +4,27 @@ import discord
 from src.main.objects.util import with_cursor
 
 
+class InvalidSlot(Exception):
+    """
+    Raised if a invalid slot is given
+    """
+    pass
+
+
+class SlotTaken(Exception):
+    """
+    Raised if a slot is taken
+    """
+    pass
+
+
+class SlotlistLocked(Exception):
+    """
+    Raised if the slotlist is locked
+    """
+    pass
+
+
 class EditSlot:
     def __init__(self, db, notfiy: EditLocale):
         self.db = db
@@ -12,7 +33,7 @@ class EditSlot:
 
     @with_cursor
     def slot(self, cursor: mysql.connector.MySQLConnection.cursor, channel: discord.TextChannel,
-             user_id: int, num: str, user_displayname: str = None, force: bool = False) -> bool:
+             user_id: int, num: str, user_displayname: str = None, force: bool = False) -> None:
         """
         Slots a given user in the given slot
         Args:
@@ -27,14 +48,18 @@ class EditSlot:
            (bool): if successful
         """
 
-        sql = "SELECT User FROM Slot, Event " \
-              "WHERE Event.ID = Slot.Event and Event = %s and Number = %s and (NOT Event.Locked OR %s);"
-        var = [channel.id, num, force]
+        sql = "SELECT User, Event.Locked FROM Slot, Event " \
+              "WHERE Event.ID = Slot.Event and Event = %s and Number = %s;"
+        var = [channel.id, num]
         cursor.execute(sql, var)
         slot = cursor.fetchone()
 
-        if slot is None or slot[0] is not None:
-            return False
+        if slot is None:
+            raise InvalidSlot
+        elif slot[0] is not None:
+            raise SlotTaken
+        elif slot[1] and not force:
+            raise SlotlistLocked
 
         sql = "SELECT ID, Nickname FROM User WHERE ID = %s;"
         cursor.execute(sql, [user_id])
@@ -59,15 +84,10 @@ class EditSlot:
 
         self.notify.create(channel.id, user_id)
 
-        try:
-            sql = "UPDATE Slot SET User = %s WHERE Number = %s and Event = %s;"
-            var = [user_id, num, channel.id]
-            cursor.execute(sql, var)
-            self.db.commit()
-        except mysql.connector.errors.DatabaseError:
-            return False
-
-        return True
+        sql = "UPDATE Slot SET User = %s WHERE Number = %s and Event = %s;"
+        var = [user_id, num, channel.id]
+        cursor.execute(sql, var)
+        self.db.commit()
 
     @with_cursor
     def unslot(self, cursor: mysql.connector.MySQLConnection.cursor,
@@ -102,7 +122,7 @@ class EditSlot:
 
             return result[0]
         else:
-            return False
+            raise InvalidSlot
 
     @with_cursor
     def add(self, cursor: mysql.connector.MySQLConnection.cursor, channel: discord.TextChannel,

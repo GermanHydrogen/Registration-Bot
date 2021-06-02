@@ -20,16 +20,19 @@ slot:
       user: "Du hast dich für das Event am {} eingetragen."
 
     error:
-      general:
-        channel: "Der angegebene Slot ist schon vergeben oder ungültig"
+      taken:
+        channel: "Der angegebene Slot ist schon vergeben!"
+      invalid:
+        channel: "Der angegebene Slot ist ungültig!"
+      locked:
+        channel: "Die Slotliste ist gesperrt!"
       number_missing:
         channel: "Bitte gib einen Slot an!"
 
 unslot:
 
   success:
-    channel_author: "{} ({}) hat sich für das Event {} aus der Position #{} **ausgetragen**"
-    channel_author_date: "{} ({}) hat sich für das Event {} aus der Position #{} __**ausgetragen**__"
+    channel_author: "{} ({}) hat sich für das Event {} aus der Position #{} {}**ausgetragen**{}"
     user : "Du hast dich für das Event am {} ausgetragen."
 
   error:

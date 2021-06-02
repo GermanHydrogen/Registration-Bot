@@ -1,9 +1,11 @@
 import datetime
+
+import discord.ext.commands
 from discord.ext import commands
 
 from src.main.objects.slotlist import IO
 from src.main.objects.util import Util
-from src.main.objects.slot import EditSlot
+from src.main.objects.slot import EditSlot, SlotTaken, InvalidSlot, SlotlistLocked
 from src.main.objects.mark import Mark
 
 from config.loader import cfg
@@ -26,7 +28,7 @@ class User(commands.Cog, name='User Commands'):
                       brief="Register for a event.")
     @commands.cooldown(1, 0.5, commands.BucketType.channel)
     @commands.guild_only()
-    async def slot(self, ctx, num=""):
+    async def slot(self, ctx, number: str):
         channel = ctx.message.channel
         channel_author = self.util.get_channel_author(channel)
 
@@ -45,12 +47,13 @@ class User(commands.Cog, name='User Commands'):
                     instructor.append(buffer)
                     await buffer.send(
                         self.lang["slot"]["new_user"]["instructor"].format(author, author.display_name, channel.name,
-                                                                           num))
+                                                                           number))
 
             if not instructor:
                 instructor.append(ctx.guild.get_member(cfg['backup']))
                 await instructor[0].send(
-                    self.lang["slot"]["new_user"]["instructor"].format(author, author.display_name, channel.name, num))
+                    self.lang["slot"]["new_user"]["instructor"].format(author, author.display_name, channel.name,
+                                                                       number))
 
             # User-Message
             if "welcome-msg" in cfg['games'][game].keys() and cfg['games'][game]['welcome-msg'] != "":
@@ -64,43 +67,47 @@ class User(commands.Cog, name='User Commands'):
             if "strict" in cfg["games"][game].keys() and cfg["games"][game]["strict"]:
                 # Channel-Message
                 await channel_author.send(
-                    self.lang["slot"]["new_user"]["channel"].format(author, author.display_name, channel.name, num))
+                    self.lang["slot"]["new_user"]["channel"].format(author, author.display_name, channel.name, number))
 
                 await ctx.message.delete()
                 return
 
-        if num:
-            if self.list.slot(channel, author.id, num, user_displayname=author.display_name):
-                await self.io.write(channel)
+        try:
+            self.list.slot(channel, author.id, number, user_displayname=author.display_name)
+        except SlotTaken:
+            await channel.send(author.mention + " " + self.lang["slot"]["slot"]["error"]["taken"]["channel"],
+                               delete_after=5)
+            return
+        except InvalidSlot:
+            await channel.send(author.mention + " " + self.lang["slot"]["slot"]["error"]["invalid"]["channel"],
+                               delete_after=5)
+            return
+        except SlotlistLocked:
+            await channel.send(author.mention + " " + self.lang["slot"]["slot"]["error"]["locked"]["channel"],
+                               delete_after=5)
+            return
+        finally:
+            await ctx.message.delete()
 
-                await author.send(
-                    self.lang["slot"]["slot"]["success"]["user"].format('/'.join(ctx.channel.name.split('-')[:-1])))
-                try:
-                    await channel_author.send(
-                        self.lang["slot"]["slot"]["success"]["channel_author"].format(author,
-                                                                                      ctx.message.author.display_name,
-                                                                                      channel.name, num))
-                    await backup.send(self.lang["slot"]["slot"]["success"]["channel_author"].format(author,
-                                                                                                    ctx.message.author.display_name,
-                                                                                                    channel.name, num))
-                except:
-                    pass
+        await self.io.write(channel)
 
-                log = "User: " + str(ctx.message.author).ljust(20) + "\t"
-                log += "Channel:" + str(ctx.message.channel).ljust(20) + "\t"
-                log += "Command: " + str(ctx.message.content).ljust(20) + "\t"
-                self.logger.debug(log)
+        await author.send(
+            self.lang["slot"]["slot"]["success"]["user"].format('/'.join(ctx.channel.name.split('-')[:-1])))
+        try:
+            await channel_author.send(
+                self.lang["slot"]["slot"]["success"]["channel_author"].format(author,
+                                                                              ctx.message.author.display_name,
+                                                                              channel.name, number))
+            await backup.send(self.lang["slot"]["slot"]["success"]["channel_author"].format(author,
+                                                                                            ctx.message.author.display_name,
+                                                                                            channel.name, number))
+        except AttributeError:
+            pass
 
-            else:
-                await channel.send(author.mention + " " + self.lang["slot"]["slot"]["error"]["general"]["channel"],
-                                   delete_after=5)
-
-        else:
-            await channel.send(
-                ctx.message.author.mention + " " + self.lang["slot"]["slot"]["error"]["number_missing"]["channel"],
-                delete_after=5)
-
-        await ctx.message.delete()
+        log = "User: " + str(ctx.message.author).ljust(20) + "\t"
+        log += "Channel:" + str(ctx.message.channel).ljust(20) + "\t"
+        log += "Command: " + str(ctx.message.content).ljust(20) + "\t"
+        self.logger.debug(log)
 
     @commands.command(name="unslot",
                       usage="",
@@ -114,47 +121,35 @@ class User(commands.Cog, name='User Commands'):
         channel_author = self.util.get_channel_author(channel)
 
         backup = ctx.guild.get_member(cfg['backup'])
-        index = self.list.unslot(channel, ctx.message.author.id)
-        if index:
-            await self.io.write(channel)
-            await ctx.message.author.send(
-                self.lang["unslot"]["success"]["user"].format('/'.join(ctx.channel.name.split('-')[:-1])))
-            if str(datetime.date.today()) == "-".join(channel.name.split("-")[:-1]):
-                try:
-                    await channel_author.send(
-                        self.lang["unslot"]["success"]["channel_author_date"].format(ctx.message.author,
-                                                                                     ctx.message.author.display_name,
-                                                                                     channel.name, index))
-                    await backup.send(self.lang["unslot"]["success"]["channel_author"].format(ctx.message.author,
-                                                                                              ctx.message.author.display_name,
-                                                                                              channel.name, index))
-                except:
-                    pass
-            else:
-
-                try:
-                    await channel_author.send(
-                        self.lang["unslot"]["success"]["channel_author"].format(ctx.message.author,
-                                                                                ctx.message.author.display_name,
-                                                                                channel.name,
-                                                                                index))
-                    await backup.send(self.lang["unslot"]["success"]["channel_author"].format(ctx.message.author,
-                                                                                              ctx.message.author.display_name,
-                                                                                              channel.name, index))
-
-                except:
-                    pass
-
-            log = "User: " + str(ctx.message.author).ljust(20) + "\t"
-            log += "Channel:" + str(ctx.message.channel).ljust(20) + "\t"
-            log += "Command: " + str(ctx.message.content).ljust(20) + "\t"
-            self.logger.debug(log)
-
-            await ctx.message.delete()
-        else:
+        try:
+            index = self.list.unslot(channel, ctx.message.author.id)
+        except InvalidSlot:
             await channel.send(ctx.message.author.mention + " " + self.lang["unslot"]["error"]["general"]["channel"],
                                delete_after=5)
+            return
+        finally:
             await ctx.message.delete()
+
+        await self.io.write(channel)
+        await ctx.message.author.send(
+            self.lang["unslot"]["success"]["user"].format('/'.join(ctx.channel.name.split('-')[:-1])))
+        modifier = ["", "__"][int(str(datetime.date.today()) == "-".join(channel.name.split("-")[:-1]))]
+
+        try:
+            await channel_author.send(
+                self.lang["unslot"]["success"]["channel_author"].format(ctx.message.author,
+                                                                        ctx.message.author.display_name,
+                                                                        channel.name, index, modifier, modifier))
+            await backup.send(self.lang["unslot"]["success"]["channel_author"].format(ctx.message.author,
+                                                                                      ctx.message.author.display_name,
+                                                                                      channel.name, index))
+        except AttributeError:
+            pass
+
+        log = "User: " + str(ctx.message.author).ljust(20) + "\t"
+        log += "Channel:" + str(ctx.message.channel).ljust(20) + "\t"
+        log += "Command: " + str(ctx.message.content).ljust(20) + "\t"
+        self.logger.debug(log)
 
     @commands.command(name="mark",
                       usage="[marker type]",
