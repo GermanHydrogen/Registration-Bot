@@ -222,7 +222,7 @@ class SlotList:
 
         group = self.__get_group(group_name)
         slot = Slot().from_data(number, description, "")
-        slot.group = group.prim
+        slot.group = group
 
         self.__add_slot(slot)
 
