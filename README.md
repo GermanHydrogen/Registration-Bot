@@ -5,6 +5,8 @@ Two versions are available for this Bot. The light variant doesn't requiere any 
 All light version features are also found in the medium version. <br> <br>
 
 This bot is part of the german multi-gaming discord community Rosenrudel: https://discord.gg/ep8FcXT
+
+You can add a public version of the light version to your guild via this [link](https://discord.com/oauth2/authorize?client_id=823277525525594162&permissions=268511232&scope=bot).
 ## Features
 ### Light
 - Easy slotlist creation and managment for event builders
