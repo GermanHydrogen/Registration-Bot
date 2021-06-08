@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 
 import discord.ext.commands
@@ -22,11 +23,12 @@ class User(commands.Cog, name='User Commands'):
         self.list = edit_slot
         self.mark = mark
 
+        self.mutex = asyncio.Lock()
+
     @commands.command(name="slot",
                       usage="[Number]",
                       help="Registers the caller for the event in the desired slot, which is given by its number. ",
                       brief="Register for a event.")
-    @commands.cooldown(1, 0.5, commands.BucketType.channel)
     @commands.guild_only()
     async def slot(self, ctx, number: str):
         channel = ctx.message.channel
@@ -35,6 +37,9 @@ class User(commands.Cog, name='User Commands'):
         game = (channel.name.split("-"))[-1]
         author = ctx.message.author
         backup = ctx.guild.get_member(cfg['backup'])
+        await ctx.message.delete()
+
+        await self.mutex.acquire()
 
         if game in cfg["games"].keys() and not (
                 cfg["games"][game]["role"] in [x.id for x in ctx.message.author.roles]):
@@ -74,6 +79,7 @@ class User(commands.Cog, name='User Commands'):
 
         try:
             self.list.slot(channel, author.id, number, user_displayname=author.display_name)
+            await self.io.write(channel)
         except SlotTaken:
             await channel.send(author.mention + " " + self.lang["slot"]["slot"]["error"]["taken"]["channel"],
                                delete_after=5)
@@ -87,9 +93,7 @@ class User(commands.Cog, name='User Commands'):
                                delete_after=5)
             return
         finally:
-            await ctx.message.delete()
-
-        await self.io.write(channel)
+            self.mutex.release()
 
         await author.send(
             self.lang["slot"]["slot"]["success"]["user"].format('/'.join(ctx.channel.name.split('-')[:-1])))
