@@ -168,6 +168,32 @@ class Moderator(commands.Cog):
         except discord.errors.NotFound:
             pass
 
+    @commands.command(name="editGroup",
+                      usage="[Identifier] [New Description]",
+                      help="Edits a slot-group identified by its name or index (counting from 0).\n"
+                           "A slot-group is defined as a paragraph of slots which can have a multi-line title.\n"
+                           "The index argument, defines where the slot-group is placed in the order of the existing"
+                           "slot-groups (counting from 0).\n"
+                           r"New line in the new description can be added with \n",
+                      brief="Edits the name of an slot-group.")
+    @commands.guild_only()
+    @is_moderator
+    async def edit_group(self, ctx, description: str, new_description: str):
+        author = ctx.message.author
+        channel = ctx.message.channel
+
+        slotlist = await self.state.get_slotlist(channel, author, self.client.user)
+        new_description = new_description.replace(r"\n", "\n")
+        slotlist.edit_group(description, new_description)
+        await slotlist.write()
+
+        await ctx.send(f'The group {description} was changed to {new_description}.', delete_after=5)
+
+        try:
+            await ctx.message.delete()
+        except discord.errors.NotFound:
+            pass
+
     @commands.command(name="delGroup",
                       usage="[Identifier]",
                       help="Deletes a slot-group identified by its name or index (counting from 0).\n"
