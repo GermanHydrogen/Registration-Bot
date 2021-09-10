@@ -266,6 +266,18 @@ class SlotList:
         """
         self.struct.insert(index, SlotGroup(title=name, before='\n'))
 
+    def edit_group(self, name: str, new_name: str) -> None:
+        """
+        Removes a group and its slots
+        :param name: Title of the group
+        :param new_name: New Title of the group
+        :return:
+        """
+
+        group = self.__get_group(name)
+        print(group.title)
+        group.title = new_name
+
     def remove_group(self, name: str) -> None:
         """
         Removes a group and its slots
