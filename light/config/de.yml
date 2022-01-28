@@ -1,0 +1,125 @@
+# German Language File
+
+# User Commands
+
+slot:
+
+  new_user:
+    user:   'Willkommen im Rudel,\n
+            du bekommst diese kurze Nachricht hier, weil du dich für ein ArmA3-Event anmelden wolltest, ohne das du unseren kleinen Technik-Check absolviert hast. Der ist gar nicht so unwichtig! Wir führen ihn im Moment auf
+            wöchentlicher Basis durch oder nach Absprache. Du erfährst da ein paar nette Details, die dir am Anfang weiterhelfen und wie du möglichst ohne technische Probleme hier mitmachen kannst.\n
+            Schreib doch bitte **{}** an, das ist unser ArmA3-Einstiegshelfer.\n\n
+            Wir machen das im Sinne der Gemeinschaft und damit jeder ein möglichst angenehmes Spielerlebnis hat. Und damit für die Zukunft noch ein: viel Spaß!'
+
+    channel: "{} ({}) hat versucht sich für das Event {} in der Position #{} einzutragen"
+    instructor: "{} ({}) hat versucht sich für das Event {} in der Position #{} einzutragen"
+
+  slot:
+    success:
+      channel_author: "{} ({}) hat sich für das Event {} in der Position #{} eingetragen"
+      user: "Du hast dich für das Event am {} eingetragen."
+
+    error:
+      general:
+        channel: "Der angegebene Slot ist schon vergeben oder ungültig"
+      number_missing:
+        channel: "Bitte gib einen Slot an!"
+
+
+unslot:
+
+  success:
+    channel_author: "{} ({}) hat sich für das Event {} aus der Position {} **ausgetragen**"
+    channel_author_date: "{} ({}) hat sich für das Event {} aus der Position {} __**ausgetragen**__"
+    user : "Du hast dich für das Event am {} ausgetragen."
+
+  error:
+    general:
+      channel: "Du kannst dich nicht austragen, wenn du nicht in der Liste eingetragen bist"
+
+# -------------------------------------------------------------------
+# Admin Commands
+
+create:
+  success:
+    user: "Das Event wurde erfolgreich erstellt"
+  error:
+    general:
+      user: "Die Slotliste wurde nicht erkannt!"
+
+forceSlot:
+  success:
+    channel: "Der User wurde eingetragen!"
+    target: "Du wurdest von {} zum Event am {} eingetragen"
+
+  error:
+    general:
+      channel: "Der angegebene Slot ist ungültig!"
+    arg_error:
+      channel: "Bitte gib einen **Slot** und **User** an!"
+    missing_target:
+      channel: "Bitte gib einen **User** an!"
+
+forceUnslot:
+
+  success:
+    channel: "{} wurde entfernt!"
+    target: "Du wurdest von dem Event {ctx.channel.name} ausgetragen"
+
+  error:
+    general:
+      channel: "{} ist nicht eingetragen!"
+    missing_target:
+      channel: "Bitte gib einen **User** an!"
+
+addslot:
+
+  success:
+    channel: "Der Slot wurde erfolgreich hinzugefügt!"
+
+  error:
+    general:
+      channel: "Der angegebne Slot ist ungültig"
+    arg_error:
+      channel: "Bitte gib einen gültigen **Slot** mit **Beschreibung** an!"
+
+delslot:
+
+  success:
+    channel: "Der angegebene Slot wurde entfernt!"
+  error:
+    general:
+      channel: "Der angegebene Slot ist ungültig!"
+
+editslot:
+
+  success:
+    channel: "Der Slot wurde erfolgreich bearbeitet!"
+
+  error:
+    general:
+      channel: "Der angegebne Slot ist ungültig"
+    arg_error:
+      channel: "Bitte gib einen gültigen **Slot** mit **Beschreibung** an!"
+
+addgroup:
+
+  success:
+    channel: "Die Gruppe wurde erfolgreich hinzugefügt!"
+
+  error:
+    general:
+      channel: "Die angegebene Gruppe ist ungültig"
+    arg_error:
+      channel: "Bitte gib eine gültige Gruppe an!"
+
+delgroup:
+
+  success:
+    channel: "Die Gruppe wurde erfolgreich gelöscht!"
+
+  error:
+    general:
+      channel: "Die angegebene Gruppe ist ungültig"
+    arg_error:
+      channel: "Bitte gib eine gültige Gruppe an!"
