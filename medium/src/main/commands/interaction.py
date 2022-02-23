@@ -3,26 +3,21 @@ import datetime
 from discord.ext import commands
 from discord.ext.commands import has_role
 
-from main.util.io import IO
-from dmInteraction.util.util import Util
-from dmInteraction.util.edit import Edit
+from src.main.objects.slotlist import IO
+from src.main.objects.util import Util
+from src.main.objects.interaction import Interaction
 
 from config.loader import cfg
 
 
 class Campaign(commands.Cog, name='Admin Commands'):
-    def __init__(self, client, lang, logger, db, cursor):
-
-        self.client = client
+    def __init__(self, lang, logger, io: IO, util: Util, interaction: Interaction):
         self.lang = lang
         self.logger = logger
 
-        self.db = db
-        self.cursor = cursor
-
-        self.io = IO(cfg, client, db, cursor)
-        self.util = Util(db, cursor)
-        self.edit = Edit(db, cursor)
+        self.io = io
+        self.util = util
+        self.edit = interaction
 
     @commands.command(name="campaign",
                       alias="copy",
@@ -50,7 +45,7 @@ class Campaign(commands.Cog, name='Admin Commands'):
             return
 
         # Cleanup
-        old = self.edit.deleteAllMessages(str(ctx.message.channel.id))
+        old = self.edit.delete_all_messages(str(ctx.message.channel.id))
         for elem in old:
             user = self.client.get_user(int(elem[0]))
             msg = await user.fetch_message(int(elem[1]))
@@ -82,7 +77,7 @@ class Campaign(commands.Cog, name='Admin Commands'):
                         elem[2],
                         elem[1]))
 
-                    if self.edit.reserveSlots(str(ctx.message.channel.id), elem[0], elem[1], str(msg.id), str(date)):
+                    if self.edit.reserve_slots(str(ctx.message.channel.id), elem[0], elem[1], str(msg.id), str(date)):
                         await msg.add_reaction('\N{THUMBS UP SIGN}')
                         await msg.add_reaction('\N{THUMBS DOWN SIGN}')
                     else:
@@ -96,7 +91,7 @@ class Campaign(commands.Cog, name='Admin Commands'):
 
                         self.logger.error(log)
 
-        if self.edit.copyDummies(ctx.message.channel.id, event):
+        if self.edit.copy_dummies(ctx.message.channel.id, event):
             await ctx.message.channel.send(
                 ctx.message.author.mention + " " + self.lang["campaign"]["channel"]["success"],
                 delete_after=5)
@@ -110,23 +105,19 @@ class Campaign(commands.Cog, name='Admin Commands'):
             await ctx.message.channel.send(ctx.message.author.mention + " " + self.lang["campaign"]["channel"]["error"],
                                            delete_after=5)
 
-        await self.io.writeEvent(ctx.message.channel)
+        await self.io.write(ctx.message.channel)
 
         await ctx.message.delete()
 
 
 class Swap(commands.Cog, name='User Commands'):
-    def __init__(self, client, lang, logger, db, cursor):
-        self.client = client
+    def __init__(self, lang, logger, io: IO, util: Util, interaction: Interaction):
         self.lang = lang
         self.logger = logger
 
-        self.db = db
-        self.cursor = cursor
-
-        self.io = IO(cfg, client, db, cursor)
-        self.util = Util(db, cursor)
-        self.edit = Edit(db, cursor)
+        self.io = io
+        self.util = util
+        self.edit = interaction
 
     @commands.command(name="trade",
                       alias='swap',
@@ -159,7 +150,7 @@ class Swap(commands.Cog, name='User Commands'):
                                delete_after=5)
 
             return
-        valid = self.edit.validateSwap(channel.id, reqUser, recUser)
+        valid = self.edit.validate_swap(channel.id, reqUser, recUser)
 
         if valid == 0:
             await ctx.message.delete()
@@ -182,7 +173,7 @@ class Swap(commands.Cog, name='User Commands'):
             await msg.add_reaction('\N{THUMBS UP SIGN}')
             await msg.add_reaction('\N{THUMBS DOWN SIGN}')
 
-            self.edit.createSwap(str(channel.id), str(reqUser), str(recUser), str(msg.id), date)
+            self.edit.create_swap(str(channel.id), str(reqUser), str(recUser), str(msg.id), date)
         except:
             await ctx.message.delete()
             await channel.send(ctx.message.author.mention + " " + self.lang["trade"]["channel"]["error"]["send"],

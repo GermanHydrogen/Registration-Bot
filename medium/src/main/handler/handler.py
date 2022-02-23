@@ -1,20 +1,16 @@
-import sys
-
 from mysql.connector import errors
 from discord.ext import commands
-from discord import utils as dutils
 from config.loader import cfg
-from main.util.util import Util
+from src.main.objects.util import Util
 
 
 class Handler(commands.Cog):
-    def __init__(self, client, logger, db, cursor):
+    def __init__(self, client, logger, db, util: Util):
         self.client = client
         self.logger = logger
         self.db = db
-        self.cursor = cursor
 
-        self.util = Util(client, db, cursor)
+        self.util = util
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
@@ -22,8 +18,13 @@ class Handler(commands.Cog):
         if isinstance(error, commands.CommandOnCooldown):
             await ctx.send(ctx.message.author.mention + " " + str(error), delete_after=error.retry_after + 1)
 
-        # --- DB has gone away error ---
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send(ctx.message.author.mention +
+                           f" You are missing the the parameter {error.param.name}",
+                           delete_after=5)
+
         elif isinstance(error, commands.CommandInvokeError):
+            # --- DB has gone away error ---
             if isinstance(error.original, errors.OperationalError) or isinstance(error.original, errors.DatabaseError):
                 self.db.reconnect()  # Reconnect DB
                 try:

@@ -1,28 +1,23 @@
 import re
 import datetime as dt
+import mysql.connector
 
 from discord.ext import commands
 from discord.ext.commands import has_role
 import asyncio
 
-from notify.util.editLocale import EditLocale
-from notify.util.handler import Handler
+from src.main.objects.notify import EditLocale
 
 from config.loader import cfg
+from src.main.objects.util import with_cursor
 
 
 class Locale(commands.Cog, name='Reminder'):
-    def __init__(self, client, lang, logger, db, cursor):
-
-        self.client = client
+    def __init__(self, lang, logger, edit: EditLocale):
         self.lang = lang
         self.logger = logger
 
-        self.db = db
-        self.cursor = cursor
-
-        self.edit = EditLocale(db, cursor)
-        self.hand = Handler(client, lang, logger, db, cursor)
+        self.edit = edit
 
     @commands.command(name="update",
                       usage="[arg]",
@@ -43,7 +38,7 @@ class Locale(commands.Cog, name='Reminder'):
         channel = ctx.message.channel
         time = ""
 
-        if (before := self.edit.getEvent(channel.id)) is not None:
+        if (before := self.edit.get_event(channel.id)) is not None:
             try:
                 date = [int(x) for x in channel.name.split("-")[:3]]
                 date = dt.date(*date)
@@ -73,11 +68,11 @@ class Locale(commands.Cog, name='Reminder'):
                                        self.lang["update"]["command"]["time_error"].format(channel.name),
                                        delete_after=5)
                     return
-                
+
                 time = time[:2] + ':' + time[2:] + ":00"
-                self.edit.updateNotify(channel.id, str(before[0]) + " " + str(before[1]),
-                                       str(date) + " " + str(time))
-                if self.edit.updateEvent(channel.id, channel.name, date, time):
+                self.edit.update_notify(channel.id, str(before[0]) + " " + str(before[1]),
+                                        str(date) + " " + str(time))
+                if self.edit.update_event(channel.id, channel.name, date, time):
                     await channel.send(ctx.message.author.mention + " " +
                                        self.lang["update"]["command"]["success"].format(channel.name),
                                        delete_after=5)
@@ -139,13 +134,13 @@ class Locale(commands.Cog, name='Reminder'):
         elif int(time) > 2400:
             await channel.send(ctx.message.author.mention + " " +
                                self.lang["notify_local"]["time"]["channel"]["large"], delete_after=5)
-        elif (time := self.edit.changeTime(channel.id, author.id, time)) is not None:
+        elif (time := self.edit.change_time(channel.id, author.id, time)) is not None:
 
             now = dt.datetime.now()
             delta = (time - now).total_seconds()
 
             if 86400 > delta > 0:
-                asyncio.create_task(self.hand.notify(str(channel.id), str(author.id), delta))
+                asyncio.create_task(self.edit.notify(str(channel.id), str(author.id), delta))
 
             await channel.send(ctx.message.author.mention + " " +
                                self.lang["notify_local"]["time"]["channel"]["suc"], delete_after=5)
@@ -154,5 +149,67 @@ class Locale(commands.Cog, name='Reminder'):
         else:
             await channel.send(ctx.message.author.mention + " " +
                                self.lang["notify_local"]["time"]["channel"]["fail"], delete_after=5)
+
+        await ctx.message.delete()
+
+
+class Global(commands.Cog, name='Reminder'):
+    def __init__(self, lang, logger, db):
+        self.lang = lang
+        self.logger = logger
+
+        self.db = db
+
+    # TODO: Move
+    @with_cursor
+    def toggle(self, cursor: mysql.connector.MySQLConnection.cursor, user_id: str):
+        """
+            Toggles notification globally
+                Args:
+                    cursor: Database cursor
+                    user_id: User ID
+
+                Returns:
+                    (Bool): Currents notification status if successfull, when not None
+        """
+        sql = "SELECT Notify FROM User WHERE ID = %s;"
+        var = [str(user_id)]
+        cursor.execute(sql, var)
+
+        result = cursor.fetchone()
+
+        if not result:
+            return None
+
+        sql = "UPDATE User SET Notify = NOT Notify WHERE ID = %s;"
+
+        cursor.execute(sql, var)
+        self.db.commit()
+
+        return not result[0]
+
+    @commands.command(name="toggleReminderGlobal",
+                      usage="",
+                      help="Enables/Disables if you get notified for a event at this guild. If you only want to change"
+                           "the reminding option for this event, please use the command toggleReminder.",
+                      brief="Enables/Disables if you get notified for a event at this guild.")
+    @commands.guild_only()
+    async def toggleReminderGlobal(self, ctx):
+
+        author = ctx.message.author
+        channel = ctx.message.channel
+
+        result = self.toggle(author.id)
+
+        if result is not None:
+
+            result = ["nicht mehr", "wieder"][result]
+
+            await channel.send(ctx.message.author.mention + " " +
+                               self.lang["notify_global"]["toggle"]["channel"]["suc"], delete_after=5)
+            await author.send(self.lang["notify_global"]["toggle"]["private"].format(result))
+        else:
+            await channel.send(ctx.message.author.mention + " " +
+                               self.lang["notify_global"]["toggle"]["channel"]["fail"], delete_after=5)
 
         await ctx.message.delete()

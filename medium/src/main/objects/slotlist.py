@@ -1,17 +1,19 @@
+import discord
+import mysql.connector
 from discord import utils as dutils
 from math import ceil
 from datetime import datetime, timedelta
 from config.loader import cfg
-from main.util.util import Util
+from src.main.objects.util import Util, with_cursor
 
 
-def get_line_data(line, last, manuel=False):
+def get_line_data(line: str, last: int, manuel: bool = False) -> (int, dict):
     """
     Extracts information from a line of a slotlist
     Args:
-        line (string): line of a slotlist
-        last (int): last slot number
-        manuel (bool): disables automatic slotnumber generation
+        line: line of a slotlist
+        last: last slot number
+        manuel: disables automatic slotnumber generation
 
     Returns:
        int(num), {num: {"User": playername, "Description": description}}
@@ -40,15 +42,14 @@ def get_line_data(line, last, manuel=False):
     return int(num), {num: output}
 
 
-def get_members(name, channel):
+def get_members(name: str, channel: discord.TextChannel) -> discord.Member:
     """
     Gets a member of a list
     Args:
-        name (string): Name of a user
-        channel (discord.TextChannel): channel
+        name: Name of a user
+        channel: Discord text channel
 
-    Returns:
-        (discord.Member)
+    Returns: Discord Member
 
     """
 
@@ -62,28 +63,28 @@ def get_members(name, channel):
 
 
 class IO:
-    def __init__(self, cfg, client, db, cursor):
+    def __init__(self, cfg, db, util: Util):
         self.cfg = cfg
         self.db = db
-        self.cursor = cursor
 
-        self.util = Util(client, db, cursor)
+        self.util = util
 
-    def get_user_id(self, nname, channel):
+    @with_cursor
+    def get_user_id(self, cursor: mysql.connector.MySQLConnection.cursor,
+                    nname: str, channel: discord.TextChannel) -> str:
         """
-            Gets an user id
-            Args:
-                nname (string): Nickname of a user
-                channel (channel): Channel
+        Gets an user id
+        Args:
+            cursor: Database cursor
+            nname: Nickname of a user
+            channel: Channel
 
-            Returns:
-                (int)
-
+        Returns: Discord Member ID
         """
 
         sql = "SElECT ID FROM User WHERE Nickname = %s;"
-        self.cursor.execute(sql, [nname])
-        result = self.cursor.fetchall()
+        cursor.execute(sql, [nname])
+        result = cursor.fetchall()
 
         if result:
             return result[0][0]
@@ -92,35 +93,38 @@ class IO:
 
             if not nname:
                 return None
+
             sql = f"INSERT IGNORE INTO User (ID, Nickname) VALUES (%s, %s);"
             var = [nname.id, nname.display_name]
-            self.cursor.execute(sql, var)
+            cursor.execute(sql, var)
             self.db.commit()
 
             return str(nname.id)
 
-    def pull_reserve(self, event_id):
+    @with_cursor
+    def pull_reserve(self, cursor: mysql.connector.MySQLConnection.cursor, event_id: int) -> bool:
         """
-            Pulls users from reserve into open slots
-            Args:
-                event_id (string): Event ID
+        Pulls users from reserve into open slots
+        Args:
+            cursor: Database cursor
+            event_id: Event ID
 
-            Returns:
-                (bool): if free slots exist
-
+        Returns:
+            (bool): if free slots exist
         """
+
         sql = "SELECT Number FROM Slot " \
               "WHERE Event = %s AND User IS NULL AND Description != 'Reserve';"
 
-        self.cursor.execute(sql, [event_id])
-        free = self.cursor.fetchall()
+        cursor.execute(sql, [event_id])
+        free = cursor.fetchall()
 
         sql = "SELECT Number, User FROM Slot " \
               "WHERE Event = %s and User IS NOT NULL AND Description = 'Reserve' " \
               "ORDER BY CONVERT(Number, UNSIGNED INTEGER);"
 
-        self.cursor.execute(sql, [event_id])
-        reserve = self.cursor.fetchall()
+        cursor.execute(sql, [event_id])
+        reserve = cursor.fetchall()
 
         if free and reserve:
             for index, elem in enumerate(free, start=0):
@@ -130,12 +134,12 @@ class IO:
 
                 sql = "UPDATE Slot SET User= NULL WHERE Event= %s and Number = %s;"
                 var = [event_id, reserve[index][0]]
-                self.cursor.execute(sql, var)
+                cursor.execute(sql, var)
                 self.db.commit()
 
                 sql = "UPDATE Slot SET User= %s WHERE Event= %s and Number = %s;"
                 var = [reserve[index][1], event_id, elem[0]]
-                self.cursor.execute(sql, var)
+                cursor.execute(sql, var)
                 self.db.commit()
 
             return False
@@ -144,19 +148,18 @@ class IO:
         else:
             return False
 
-    def sort_reserve(self, channel):
+    @with_cursor
+    def sort_reserve(self, cursor: mysql.connector.MySQLConnection.cursor, channel: discord.TextChannel) -> None:
         """
-            Sorts the reserve slots, so its filled from bottom up
-            Args:
-                channel (discord.TextChannel): Server channel
-
-            Returns:
-                (bool): if successful
-
+        Sorts the reserve slots, so its filled from bottom up
+        Args:
+            cursor:  Database cursor
+            channel: Server channel
         """
+
         sql = "SELECT Number, User FROM Slot WHERE Event = %s and Description = 'Reserve' ORDER BY Number"
-        self.cursor.execute(sql, [channel.id])
-        reserve = self.cursor.fetchall()
+        cursor.execute(sql, [channel.id])
+        reserve = cursor.fetchall()
 
         count = 0
 
@@ -165,29 +168,31 @@ class IO:
                 continue
             else:
                 sql = "UPDATE Slot SET User = NULL WHERE User = %s AND Event = %s;"
-                self.cursor.execute(sql, [y, channel.id])
+                cursor.execute(sql, [y, channel.id])
                 self.db.commit()
 
                 sql = "UPDATE Slot SET User = %s WHERE Number = %s AND Event = %s;"
                 var = [y, reserve[count][0], channel.id]
-                self.cursor.execute(sql, var)
+                cursor.execute(sql, var)
                 self.db.commit()
 
                 count += 1
 
-    def createEvent(self, msg_list, author, time, bot=None, manuel=False):
+    @with_cursor
+    def create(self, cursor: mysql.connector.MySQLConnection.cursor, msg_list: [discord.Message],
+               author: discord.Member, time: str, bot: discord.User = None, manuel: bool = False) -> bool:
         """
-               Creates an event in the database
-               Args:
-                   msg_list (list of msg object): The message containing the slotlist
-                   author (user object): Author of the slotlist
-                   time (str): start time of the event
-                   bot (user object): Used Bot user (optional)
-                   manuel (bool): if slotgeneration should be manuel
+        Creates an event in the database
+        Args:
+           cursor: Database cursor
+           msg_list: The message containing the slotlist
+           author: Author of the slotlist
+           time: start time of the event
+           bot: Used Bot user (optional)
+           manuel: if slot-generation should be manuel
 
-               Returns:
-                   (bool): if successful
-
+        Returns:
+           (bool): if successful
         """
 
         channel = msg_list[0].channel
@@ -202,47 +207,47 @@ class IO:
         event = channel.id
 
         sql = "SELECT ID FROM Event WHERE ID = %s;"
-        self.cursor.execute(sql, [event])
+        cursor.execute(sql, [event])
 
-        if self.cursor.fetchall():
+        if cursor.fetchall():
             sql = "DELETE FROM Slot WHERE Event = %s;"
-            self.cursor.execute(sql, [event])
+            cursor.execute(sql, [event])
             self.db.commit()
 
             sql = "DELETE FROM SlotGroup WHERE Event = %s;"
-            self.cursor.execute(sql, [event])
+            cursor.execute(sql, [event])
             self.db.commit()
 
             sql = "DELETE FROM Notify WHERE Event = %s;"
-            self.cursor.execute(sql, [event])
+            cursor.execute(sql, [event])
             self.db.commit()
 
             sql = "UPDATE Event SET Name=%s, Author=%s, Date=%s, Time=%s,Type=%s WHERE ID = %s;"
             var = [channel.name, author.id, date, time, name, event]
-            self.cursor.execute(sql, var)
+            cursor.execute(sql, var)
             self.db.commit()
 
         else:
             # Check if Author User exists
             sql = "SELECT ID FROM User WHERE ID = %s;"
-            self.cursor.execute(sql, [author.id])
+            cursor.execute(sql, [author.id])
 
-            if not self.cursor.fetchall():
+            if not cursor.fetchall():
                 sql = "INSERT INTO User (ID, Nickname) VALUES (%s, %s);"
                 var = [author.id, author.display_name]
-                self.cursor.execute(sql, var)
+                cursor.execute(sql, var)
                 self.db.commit()
 
             sql = "INSERT INTO Event (ID, Name, Author, Date, Time, Type) VALUES (%s, %s, %s, %s, %s, %s);"
             var = [event, channel.name, author.id, date, time, name]
-            self.cursor.execute(sql, var)
+            cursor.execute(sql, var)
 
             self.db.commit()
 
         sql = "SELECT Number, MsgID FROM EventMessage WHERE Event = %s ORDER BY Number;"
-        self.cursor.execute(sql, [channel.id])
+        cursor.execute(sql, [channel.id])
 
-        messages = self.cursor.fetchall()
+        messages = cursor.fetchall()
 
         if False not in [msg.author == bot for msg in msg_list]:
 
@@ -252,17 +257,17 @@ class IO:
                     sql = "UPDATE EventMessage SET MsgID = %s WHERE Event = %s AND Number = %s;"
                     var = [msg_list[-index].id, channel.id, elem[0]]
 
-                    self.cursor.execute(sql, var)
+                    cursor.execute(sql, var)
                     self.db.commit()
                 else:
                     sql = "DELETE FROM EventMessage WHERE Number = %s"
                     var = [elem[0]]
-                    self.cursor.execute(sql, var)
+                    cursor.execute(sql, var)
                     self.db.commit()
         else:
             sql = "DELETE FROM EventMessage WHERE Event = %s"
             var = [channel.id]
-            self.cursor.execute(sql, var)
+            cursor.execute(sql, var)
             self.db.commit()
 
         content = "\n".join([x.content for x in msg_list[::-1]])
@@ -321,13 +326,13 @@ class IO:
             sql = "INSERT INTO SlotGroup (Number, Event, Name, Struct, Length) VALUES (%s, %s, %s, %s, %s);"
             var = [a, b, c, d, e]
 
-            self.cursor.execute(sql, var)
+            cursor.execute(sql, var)
             self.db.commit()
 
         sql = "INSERT INTO Slot VALUES (%s, %s, %s, %s, %s)"
         var = [(event, index, elem["Description"], elem["User"], elem["GroupNum"]) for index, elem in
                slots.items()]
-        self.cursor.executemany(sql, var)
+        cursor.executemany(sql, var)
         self.db.commit()
 
         # Notify System
@@ -340,7 +345,7 @@ class IO:
         sql = "INSERT INTO Notify VALUES (%s, %s, %s, %s)"
         var = [(str(event), elem["User"], 1, delta) for index, elem in slots.items() if
                elem["User"] and elem["User"].isdigit()]
-        self.cursor.executemany(sql, var)
+        cursor.executemany(sql, var)
         self.db.commit()
 
         if not reserve:
@@ -352,30 +357,30 @@ class IO:
             sql = "INSERT INTO SlotGroup (Number, Event, Name, Struct, Length) VALUES (%s, %s, %s, %s, %s);"
             var = [groupNum, channel.id, "Reserve", '\n', lenght * (9 + 14 + len(str(groupNum))) + 12]
 
-            self.cursor.execute(sql, var)
+            cursor.execute(sql, var)
             self.db.commit()
 
             sql = "INSERT INTO Slot (Event, Number, Description, GroupNumber) VALUES (%s, %s, %s, %s);"
             var = [(channel.id, str(index).rjust(msg_format, "0"), "Reserve", groupNum) for index in
                    range(begin, begin + lenght)]
 
-            self.cursor.executemany(sql, var)
+            cursor.executemany(sql, var)
             self.db.commit()
 
         return True
 
-    async def writeEvent(self, channel, manage=False, new=False):
+    @with_cursor
+    async def write(self, cursor: mysql.connector.MySQLConnection.cursor, channel: discord.TextChannel,
+                    manage: bool = False, new: bool = False) -> None:
         """
-               Outputs the slotlist to a given channel
-               Args:
-                   channel (channel): Server channel
-                   manage (bool): manage the distrebution of slotgroups to msg? (optional)
-                   new (bool): if its possible to add new msgs (optional)
+        Outputs the slotlist to a given channel
+        Args:
+           cursor: Database cursor
+           channel: Server channel
+           manage: manage the distribution of slotgroups to msg? (optional)
+           new: if its possible to add new msgs (optional)
+        """
 
-               Returns:
-                   (bool): if successful
-
-           """
         locked_modifier = {True: '', False: '**'}
 
         channel_id = channel.id
@@ -385,15 +390,15 @@ class IO:
 
         if manage:
             sql = "SELECT Number, Length FROM SlotGroup WHERE Event = %s ORDER BY Number;"
-            self.cursor.execute(sql, [channel_id])
-            group = self.cursor.fetchall()
+            cursor.execute(sql, [channel_id])
+            group = cursor.fetchall()
 
             total = sum([x[1] for x in group])
 
             sql = "SELECT Number FROM EventMessage WHERE Event = %s;"
-            self.cursor.execute(sql, [channel_id])
+            cursor.execute(sql, [channel_id])
 
-            ids = self.cursor.fetchall()
+            ids = cursor.fetchall()
 
             if not ids or new:
                 number = int((total + 400) / 2000) + 1
@@ -403,10 +408,10 @@ class IO:
 
                 for x in range(0, number):
                     sql = "INSERT INTO EventMessage (Event) VALUES (%s);"
-                    self.cursor.execute(sql, [channel_id])
+                    cursor.execute(sql, [channel_id])
                     self.db.commit()
 
-                    ids.append((self.cursor.lastrowid,))
+                    ids.append((cursor.lastrowid,))
 
             else:
 
@@ -426,7 +431,7 @@ class IO:
                     sql = "UPDATE SlotGroup SET Msg = %s WHERE Event = %s AND Number = %s;"
                     var = [(ids[times_limit - 1][0], channel_id, x[0]) for x in group[last_split:index]]
 
-                    self.cursor.executemany(sql, var)
+                    cursor.executemany(sql, var)
                     self.db.commit()
 
                     last_split = index
@@ -439,16 +444,16 @@ class IO:
             sql = "UPDATE SlotGroup SET Msg = %s WHERE Event = %s AND Number = %s;"
             var = [(ids[times_limit - 1][0], channel_id, x[0]) for x in group[last_split:]]
 
-            self.cursor.executemany(sql, var)
+            cursor.executemany(sql, var)
             self.db.commit()
 
         sql = "SELECT Number, MsgID FROM EventMessage WHERE Event = %s ORDER BY Number;"
-        self.cursor.execute(sql, [channel_id])
-        msgs = self.cursor.fetchall()
+        cursor.execute(sql, [channel_id])
+        msgs = cursor.fetchall()
 
         sql = "SELECT Locked FROM Event WHERE ID =  %s;"
-        self.cursor.execute(sql, [channel_id])
-        locked = self.cursor.fetchone()[0]
+        cursor.execute(sql, [channel_id])
+        locked = cursor.fetchone()[0]
 
         output = "**Slotliste**\n"
 
@@ -457,8 +462,8 @@ class IO:
 
         for msg_id in msgs:
             sql = "SELECT Number, Name, Struct, Length FROM SlotGroup WHERE Event = %s AND Msg = %s ORDER BY Number;"
-            self.cursor.execute(sql, [channel_id, msg_id[0]])
-            group = self.cursor.fetchall()
+            cursor.execute(sql, [channel_id, msg_id[0]])
+            group = cursor.fetchall()
 
             for element in group:
                 if element[1]:
@@ -488,14 +493,14 @@ class IO:
                       "ORDER BY CONVERT(Number,UNSIGNED INTEGER);"
 
                 var = [channel_id, element[0]]
-                self.cursor.execute(sql, var)
-                slots = self.cursor.fetchall()
+                cursor.execute(sql, var)
+                slots = cursor.fetchall()
                 for x in slots:
                     if x[2] is not None:
 
                         sql = "SELECT Nickname FROM User WHERE ID = %s;"
-                        self.cursor.execute(sql, [x[2]])
-                        user = self.cursor.fetchone()[0]
+                        cursor.execute(sql, [x[2]])
+                        user = cursor.fetchone()[0]
                         mark = x[3]
                         output += f"#{x[0]} {x[1]} - {user}"
                         if mark is not None:
@@ -519,7 +524,7 @@ class IO:
 
                     sql = "UPDATE EventMessage SET MsgID = %s WHERE Number = %s;"
                     var = [msg.id, msg_id[0]]
-                    self.cursor.execute(sql, var)
+                    cursor.execute(sql, var)
                     self.db.commit()
 
             else:
@@ -527,7 +532,7 @@ class IO:
 
                 sql = "UPDATE EventMessage SET MsgID = %s WHERE Number = %s;"
                 var = [new_msg.id, msg_id[0]]
-                self.cursor.execute(sql, var)
+                cursor.execute(sql, var)
 
                 self.db.commit()
 
