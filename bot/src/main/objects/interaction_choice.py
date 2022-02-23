@@ -1,5 +1,5 @@
 import mysql.connector
-from src.main.objects.util import with_cursor
+from bot.src.main.objects.util import with_cursor
 
 
 class Choice:

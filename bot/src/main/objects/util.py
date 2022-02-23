@@ -6,7 +6,7 @@ import mysql.connector
 from functools import lru_cache
 from discord import utils as dutil
 
-from config.loader import cfg
+from bot.config.loader import cfg
 
 
 def with_cursor(func):

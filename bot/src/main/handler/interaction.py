@@ -4,10 +4,10 @@ from discord.ext import commands
 
 from config.loader import cfg
 
-from src.main.objects.slotlist import IO
-from src.main.objects.interaction import Interaction
-from src.main.objects.interaction_choice import Choice
-from src.main.objects.notify import EditLocale
+from bot.src.main.objects.slotlist import IO
+from bot.src.main.objects.interaction import Interaction
+from bot.src.main.objects.interaction_choice import Choice
+from bot.src.main.objects.notify import EditLocale
 
 
 class InteractionHandler(commands.Cog):

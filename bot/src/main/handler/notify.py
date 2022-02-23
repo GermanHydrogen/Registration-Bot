@@ -1,10 +1,10 @@
+import asyncio
 import datetime as dt
 
 from discord.ext import commands
-from src.main.objects.notify import EditLocale
-from src.main.objects.util import Util, with_cursor
 
-import asyncio
+from bot.src.main.objects.notify import EditLocale
+from bot.src.main.objects.util import Util
 
 
 class NotifyHandler(commands.Cog):

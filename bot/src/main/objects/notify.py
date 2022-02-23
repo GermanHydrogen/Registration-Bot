@@ -3,11 +3,10 @@ import asyncio
 import discord
 import mysql.connector
 import datetime as dt
-
-from config.loader import cfg
 from datetime import datetime, timedelta
 
-from src.main.objects.util import with_cursor
+from bot.config.loader import cfg
+from bot.src.main.objects.util import with_cursor
 
 
 class EditLocale:
