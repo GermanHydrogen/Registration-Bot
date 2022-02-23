@@ -12,7 +12,7 @@ from config.loader import cfg
 from src.main.objects.util import with_cursor
 
 
-class Locale(commands.Cog, name='Reminder'):
+class Locale(commands.Cog, name='Local Reminder'):
     def __init__(self, lang, logger, edit: EditLocale):
         self.lang = lang
         self.logger = logger
@@ -153,7 +153,7 @@ class Locale(commands.Cog, name='Reminder'):
         await ctx.message.delete()
 
 
-class Global(commands.Cog, name='Reminder'):
+class Global(commands.Cog, name='Global Reminder'):
     def __init__(self, lang, logger, db):
         self.lang = lang
         self.logger = logger

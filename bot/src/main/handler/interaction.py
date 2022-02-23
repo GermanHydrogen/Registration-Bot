@@ -10,7 +10,7 @@ from src.main.objects.interaction_choice import Choice
 from src.main.objects.notify import EditLocale
 
 
-class Handler(commands.Cog):
+class InteractionHandler(commands.Cog):
     def __init__(self, client, lang, logger, db, io: IO, choice: Choice, interaction: Interaction, notify: EditLocale):
 
         self.client = client

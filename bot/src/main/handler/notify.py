@@ -8,7 +8,7 @@ from src.main.objects.util import Util, with_cursor
 import asyncio
 
 
-class Handler(commands.Cog):
+class NotifyHandler(commands.Cog):
     def __init__(self, lang, logger, notify: EditLocale, util: Util):
         self.lang = lang
         self.logger = logger

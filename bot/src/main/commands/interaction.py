@@ -10,7 +10,7 @@ from src.main.objects.interaction import Interaction
 from config.loader import cfg
 
 
-class Campaign(commands.Cog, name='Admin Commands'):
+class Campaign(commands.Cog, name='Campaign Commands'):
     def __init__(self, lang, logger, io: IO, util: Util, interaction: Interaction):
         self.lang = lang
         self.logger = logger
@@ -110,7 +110,7 @@ class Campaign(commands.Cog, name='Admin Commands'):
         await ctx.message.delete()
 
 
-class Swap(commands.Cog, name='User Commands'):
+class Swap(commands.Cog, name='Swap Commands'):
     def __init__(self, lang, logger, io: IO, util: Util, interaction: Interaction):
         self.lang = lang
         self.logger = logger

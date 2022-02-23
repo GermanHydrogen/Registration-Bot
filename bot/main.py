@@ -14,9 +14,9 @@ from src.main.handler.handler import Handler
 from src.main.commands.notify import Locale, Global
 
 from src.main.commands.interaction import Campaign, Swap
-from src.main.handler.interaction import Handler as dmHandler
+from src.main.handler.interaction import InteractionHandler as dmHandler
 
-from src.main.handler.notify import Handler as ntHandler
+from src.main.handler.notify import NotifyHandler as ntHandler
 from src.main.objects.interaction import Interaction
 from src.main.objects.interaction_choice import Choice
 from src.main.objects.mark import Mark
