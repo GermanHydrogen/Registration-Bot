@@ -4,12 +4,12 @@ import datetime
 import discord.ext.commands
 from discord.ext import commands
 
-from src.main.objects.slotlist import IO
-from src.main.objects.util import Util
-from src.main.objects.slot import EditSlot, SlotTaken, InvalidSlot, SlotlistLocked
-from src.main.objects.mark import Mark
+from bot.src.main.objects.slotlist import IO
+from bot.src.main.objects.util import Util
+from bot.src.main.objects.slot import EditSlot, SlotTaken, InvalidSlot, SlotlistLocked
+from bot.src.main.objects.mark import Mark
 
-from config.loader import cfg
+from bot.config.loader import cfg
 
 
 class User(commands.Cog, name='User Commands'):

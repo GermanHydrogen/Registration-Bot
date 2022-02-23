@@ -3,8 +3,9 @@ import mysql.connector
 from discord import utils as dutils
 from math import ceil
 from datetime import datetime, timedelta
-from config.loader import cfg
-from src.main.objects.util import Util, with_cursor
+
+from bot.config.loader import cfg
+from bot.src.main.objects.util import Util, with_cursor
 
 
 def get_line_data(line: str, last: int, manuel: bool = False) -> (int, dict):

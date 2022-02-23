@@ -3,15 +3,16 @@ import datetime
 from discord.ext import commands
 from discord.ext.commands import has_role
 
-from src.main.objects.slotlist import IO
-from src.main.objects.util import Util
-from src.main.objects.interaction import Interaction
+from bot.src.main.objects.slotlist import IO
+from bot.src.main.objects.util import Util
+from bot.src.main.objects.interaction import Interaction
 
-from config.loader import cfg
+from bot.config.loader import cfg
 
 
-class Campaign(commands.Cog, name='Admin Commands'):
-    def __init__(self, lang, logger, io: IO, util: Util, interaction: Interaction):
+class Campaign(commands.Cog, name='Campaign Commands'):
+    def __init__(self, client, lang, logger, io: IO, util: Util, interaction: Interaction):
+        self.client = client
         self.lang = lang
         self.logger = logger
 
@@ -110,7 +111,7 @@ class Campaign(commands.Cog, name='Admin Commands'):
         await ctx.message.delete()
 
 
-class Swap(commands.Cog, name='User Commands'):
+class Swap(commands.Cog, name='Swap Commands'):
     def __init__(self, lang, logger, io: IO, util: Util, interaction: Interaction):
         self.lang = lang
         self.logger = logger

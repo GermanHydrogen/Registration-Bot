@@ -3,11 +3,11 @@ import re
 from discord.ext import commands
 from discord.ext.commands import has_role
 
-from src.main.objects.slotlist import IO
-from src.main.objects.util import Util
-from src.main.objects.slot import EditSlot
+from bot.src.main.objects.slotlist import IO
+from bot.src.main.objects.util import Util
+from bot.src.main.objects.slot import EditSlot
 
-from config.loader import cfg
+from bot.config.loader import cfg
 
 
 class Admin(commands.Cog, name="Admin Commands"):

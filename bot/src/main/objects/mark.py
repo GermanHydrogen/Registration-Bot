@@ -1,6 +1,7 @@
 import mysql.connector
 from mysql.connector import errors as myerror
-from src.main.objects.util import with_cursor
+
+from bot.src.main.objects.util import with_cursor
 
 
 class Mark:

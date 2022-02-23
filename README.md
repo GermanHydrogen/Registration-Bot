@@ -1,5 +1,5 @@
 # Registration-Bot
-A simple Discord Bot for managing registrations to events for your community. It's using the discord.py package by Rapptz.
+A simple Discord Bot for managing registrations to events for your community. It's using py-cords.
 A light public hosted version for this bot can be found [here](https://github.com/GermanHydrogen/Light-Registration-Bot)
 
 This bot is part of the german multi-gaming discord community Rosenrudel: https://discord.gg/ep8FcXT

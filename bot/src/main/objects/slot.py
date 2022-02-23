@@ -1,7 +1,8 @@
-from src.main.objects.notify import EditLocale
 import mysql.connector
 import discord
-from src.main.objects.util import with_cursor
+
+from bot.src.main.objects.util import with_cursor
+from bot.src.main.objects.notify import EditLocale
 
 
 class InvalidSlot(Exception):

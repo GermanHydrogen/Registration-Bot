@@ -6,7 +6,7 @@ import mysql.connector
 from functools import lru_cache
 from discord import utils as dutil
 
-from config.loader import cfg
+from bot.config.loader import cfg
 
 
 def with_cursor(func):
@@ -98,6 +98,22 @@ class Util:
             return result[0]
         else:
             return None
+
+    @with_cursor
+    def get_event_users(self, cursor: mysql.connector.MySQLConnection.cursor, channel: discord.TextChannel) -> [discord.Member]:
+        """
+        Gets all server members of a specified event.
+
+        Args:
+            cursor: Database cursor
+            channel: Server Channel
+        Returns:
+            [Members]
+
+        """
+        sql = "SELECT User FROM Slot WHERE Event = %s  AND User IS NOT NULL;"
+        cursor.execute(sql, [channel.id])
+        return [channel.guild.get_member(int(x[0])) for x in cursor.fetchall() if x[0].isnumeric()]
 
     @with_cursor
     def get_slots(self, cursor: mysql.connector.MySQLConnection.cursor, channel_id: str, intersection: str = '') -> []:
