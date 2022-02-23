@@ -60,7 +60,7 @@ class Bot(discord.ext.commands.Bot):
         self.add_cog(Swap(lang, self.logger, self.io, self.util, self.interaction))
 
         self.add_cog(Global(lang, self.logger, db))
-        self.add_cog(Locale(lang, self.logger, self.notify))
+        self.add_cog(Locale(lang, self.logger, self.notify, self.util))
 
     def _init_logger(self) -> None:
         """

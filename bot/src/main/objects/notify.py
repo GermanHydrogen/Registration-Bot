@@ -12,9 +12,9 @@ from src.main.objects.util import with_cursor
 
 class EditLocale:
     def __init__(self, client, logger, lang, db):
-        self.lang = client
-        self.client = logger
-        self.logger = lang
+        self.lang = lang
+        self.client = client
+        self.logger = logger
         self.db = db
 
     # TODO: Duplicate with src.util.Util.get_event_date
@@ -29,7 +29,7 @@ class EditLocale:
             date and time
         """
         sql = "SELECT Date, Time FROM Event WHERE ID = %s;"
-        cursor.execute(sql, [id])
+        cursor.execute(sql, [event_id])
         result = cursor.fetchone()
         return result
 
@@ -192,6 +192,16 @@ class EditLocale:
             return time
         else:
             return None
+
+    @with_cursor
+    def get_all_notify(self, cursor: mysql.connector.MySQLConnection.cursor) -> []:
+        """
+        Gets all notifications which should be triggered today
+        """
+        sql = "SELECT n.User, n.Time, n.Event FROM Notify n, User u \
+                        WHERE n.User = u.ID AND u.Notify AND n.Enabled AND n.Time >= CURDATE();"
+        cursor.execute(sql)
+        return cursor.fetchall()
 
     @with_cursor
     async def notify(self, cursor: mysql.connector.MySQLConnection.cursor, event, user_id, delay):

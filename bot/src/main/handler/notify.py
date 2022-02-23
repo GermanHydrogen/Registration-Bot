@@ -1,5 +1,4 @@
 import datetime as dt
-import mysql.connector
 
 from discord.ext import commands
 from src.main.objects.notify import EditLocale
@@ -16,15 +15,9 @@ class NotifyHandler(commands.Cog):
         self.notify = notify
         self.util = util
 
-    @with_cursor
     @commands.Cog.listener()
-    async def on_ready(self, cursor: mysql.connector.MySQLConnection.cursor):
-        sql = "SELECT n.User, n.Time, n.Event FROM Notify n, User u \
-                WHERE n.User = u.ID AND u.Notify AND n.Enabled AND n.Time >= CURDATE();"
-        cursor.execute(sql)
-        result = cursor.fetchall()
-
-        for elem in result:
+    async def on_ready(self):
+        for elem in self.notify.get_all_notify():
             now = dt.datetime.now()
             delta = (elem[1] - now).total_seconds()
             if delta > 0:

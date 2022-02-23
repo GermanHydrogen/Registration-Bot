@@ -100,6 +100,22 @@ class Util:
             return None
 
     @with_cursor
+    def get_event_users(self, cursor: mysql.connector.MySQLConnection.cursor, channel: discord.TextChannel) -> [discord.Member]:
+        """
+        Gets all server members of a specified event.
+
+        Args:
+            cursor: Database cursor
+            channel: Server Channel
+        Returns:
+            [Members]
+
+        """
+        sql = "SELECT User FROM Slot WHERE Event = %s  AND User IS NOT NULL;"
+        cursor.execute(sql, [channel.id])
+        return [channel.guild.get_member(int(x[0])) for x in cursor.fetchall() if x[0].isnumeric()]
+
+    @with_cursor
     def get_slots(self, cursor: mysql.connector.MySQLConnection.cursor, channel_id: str, intersection: str = '') -> []:
         """
         Gets all taken slots of the channel

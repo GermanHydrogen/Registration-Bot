@@ -6,18 +6,20 @@ from discord.ext import commands
 from discord.ext.commands import has_role
 import asyncio
 
-from src.main.objects.notify import EditLocale
+from bot.src.main.objects.notify import EditLocale
 
-from config.loader import cfg
-from src.main.objects.util import with_cursor
-
+from bot.config.loader import cfg
+from bot.src.main.objects.util import with_cursor
+from bot.src.main.objects.util import Util
 
 class Locale(commands.Cog, name='Local Reminder'):
-    def __init__(self, lang, logger, edit: EditLocale):
+    def __init__(self, lang, logger, edit: EditLocale, util: Util):
         self.lang = lang
         self.logger = logger
 
         self.edit = edit
+        self.util = util
+
 
     @commands.command(name="update",
                       usage="[arg]",
@@ -30,10 +32,7 @@ class Locale(commands.Cog, name='Local Reminder'):
     @commands.cooldown(1, 0.5, commands.BucketType.channel)
     @commands.guild_only()
     async def update(self, ctx, args=""):
-        def getAllUser():
-            sql = "SELECT User FROM Slot WHERE Event = %s  AND User IS NOT NULL;"
-            self.cursor.execute(sql, [ctx.message.channel.id])
-            return [channel.guild.get_member(int(x[0])) for x in self.cursor.fetchall() if x[0].isnumeric()]
+
 
         channel = ctx.message.channel
         time = ""
@@ -78,7 +77,7 @@ class Locale(commands.Cog, name='Local Reminder'):
                                        delete_after=5)
 
                     if args != "--suppress":
-                        for user in getAllUser():
+                        for user in self.util.get_event_users(channel):
                             await user.send(self.lang["update"]["command"]["broadcast"].format(channel.id, time))
 
                 else:
