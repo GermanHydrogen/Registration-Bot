@@ -56,7 +56,7 @@ class Bot(discord.ext.commands.Bot):
         self.add_cog(User(lang, self.logger, self.io, self.util, self.list, self.mark))
         self.add_cog(Admin(self, lang, self.logger, self.io, self.util, self.list))
 
-        self.add_cog(Campaign(lang, self.logger, self.io, self.util, self.interaction))
+        self.add_cog(Campaign(self, lang, self.logger, self.io, self.util, self.interaction))
         self.add_cog(Swap(lang, self.logger, self.io, self.util, self.interaction))
 
         self.add_cog(Global(lang, self.logger, db))

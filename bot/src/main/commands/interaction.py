@@ -11,7 +11,8 @@ from config.loader import cfg
 
 
 class Campaign(commands.Cog, name='Campaign Commands'):
-    def __init__(self, lang, logger, io: IO, util: Util, interaction: Interaction):
+    def __init__(self, client, lang, logger, io: IO, util: Util, interaction: Interaction):
+        self.client = client
         self.lang = lang
         self.logger = logger
 
