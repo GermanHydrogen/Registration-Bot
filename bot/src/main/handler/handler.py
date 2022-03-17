@@ -48,7 +48,10 @@ class Handler(commands.Cog):
                            delete_after=5)
 
         if ctx.message.channel != "DMChannel" and ctx.message.channel != "GroupChannel":
-            await ctx.message.delete()
+            try:
+                await ctx.message.delete()
+            except:
+                pass
 
         log = "User: " + str(ctx.message.author).ljust(20) + "\t"
         log += "Channel:" + str(ctx.message.channel).ljust(20) + "\t"

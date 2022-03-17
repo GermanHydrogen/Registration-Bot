@@ -46,7 +46,7 @@ class EditSlot:
             force: If true, accept duplicates (optional)
 
         Returns:
-           (bool): if successful
+            None
         """
 
         sql = "SELECT User, Event.Locked FROM Slot, Event " \

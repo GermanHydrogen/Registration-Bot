@@ -4,6 +4,7 @@ import datetime
 import discord.ext.commands
 from discord.ext import commands
 
+from bot.src.main.objects.event_role import EventRole
 from bot.src.main.objects.slotlist import IO
 from bot.src.main.objects.util import Util
 from bot.src.main.objects.slot import EditSlot, SlotTaken, InvalidSlot, SlotlistLocked
@@ -14,7 +15,7 @@ from bot.config.loader import cfg
 
 class User(commands.Cog, name='User Commands'):
 
-    def __init__(self, lang, logger, io: IO, util: Util, edit_slot: EditSlot, mark: Mark):
+    def __init__(self, lang, logger, io: IO, util: Util, edit_slot: EditSlot, mark: Mark, event_role: EventRole):
         self.lang = lang
         self.logger = logger
 
@@ -22,6 +23,7 @@ class User(commands.Cog, name='User Commands'):
         self.util = util
         self.list = edit_slot
         self.mark = mark
+        self.event_role = event_role
 
         self.mutex = asyncio.Lock()
 
@@ -95,6 +97,8 @@ class User(commands.Cog, name='User Commands'):
         finally:
             self.mutex.release()
 
+        await self.event_role.add_event_role(author, game)
+
         await author.send(
             self.lang["slot"]["slot"]["success"]["user"].format('/'.join(ctx.channel.name.split('-')[:-1])))
         try:
@@ -135,6 +139,9 @@ class User(commands.Cog, name='User Commands'):
             await ctx.message.delete()
 
         await self.io.write(channel)
+
+        await self.event_role.remove_event_role(ctx.message.author, (channel.name.split("-"))[-1])
+
         await ctx.message.author.send(
             self.lang["unslot"]["success"]["user"].format('/'.join(ctx.channel.name.split('-')[:-1])))
         modifier = ["", "__"][int(str(datetime.date.today()) == "-".join(channel.name.split("-")[:-1]))]
@@ -145,8 +152,8 @@ class User(commands.Cog, name='User Commands'):
                                                                         ctx.message.author.display_name,
                                                                         channel.name, index, modifier, modifier))
             await backup.send(self.lang["unslot"]["success"]["channel_author"].format(ctx.message.author,
-                                                                                      ctx.message.author.display_name,
-                                                                                      channel.name, index))
+                                                                        ctx.message.author.display_name,
+                                                                        channel.name, index, modifier, modifier))
         except AttributeError:
             pass
 

@@ -3,15 +3,16 @@ import re
 from discord.ext import commands
 from discord.ext.commands import has_role
 
+from bot.src.main.objects.event_role import EventRole
 from bot.src.main.objects.slotlist import IO
 from bot.src.main.objects.util import Util
-from bot.src.main.objects.slot import EditSlot
+from bot.src.main.objects.slot import EditSlot, InvalidSlot, SlotTaken
 
 from bot.config.loader import cfg
 
 
 class Admin(commands.Cog, name="Admin Commands"):
-    def __init__(self, client, lang, logger, io: IO, util: Util, edit_slot: EditSlot):
+    def __init__(self, client, lang, logger, io: IO, util: Util, edit_slot: EditSlot, event_role: EventRole):
         self.client = client
         self.lang = lang
         self.logger = logger
@@ -19,6 +20,7 @@ class Admin(commands.Cog, name="Admin Commands"):
         self.io = io
         self.util = util
         self.list = edit_slot
+        self.event_role = event_role
 
     @commands.command(name="create",
                       usage="",
@@ -48,7 +50,7 @@ class Admin(commands.Cog, name="Admin Commands"):
         if time == "" or len(time) != 4:
             await ctx.message.author.send(self.lang["create"]["error"]["time"]["user"])
         elif out:
-            self.io.create(out, ctx.message.author, time, self.client.user, (arg == 'manuel'))
+            await self.io.create(out, ctx.message.author, time, self.client.user, (arg == 'manuel'))
             await self.io.write(channel, True)
 
             await ctx.message.author.send(self.lang["create"]["success"]["user"])
@@ -104,31 +106,35 @@ class Admin(commands.Cog, name="Admin Commands"):
                 delete_after=5)
             return
         # TODO: Catch mysql.connector.errors.DatabaseError
-        if self.list.slot(channel, player, num, force=True):
-
+        try:
+            self.list.slot(channel, player, num, force=True)
             await self.io.write(channel)
-
-            await channel.send(ctx.message.author.mention + " " + self.lang["forceSlot"]["success"]["channel"],
-                               delete_after=5)
-
-            try:
-                player = ctx.guild.get_member(int(player))
-                await player.send(
-                    self.lang["forceSlot"]["success"]["target"].format(str(ctx.message.author.display_name),
-                                                                       '/'.join(ctx.channel.name.split('-')[:-1])))
-            except:
-                pass
-
-            log = "User: " + str(ctx.message.author).ljust(20) + "\t"
-            log += "Channel:" + str(ctx.message.channel).ljust(20) + "\t"
-            log += "Command: " + str(ctx.message.content).ljust(20) + "\t"
-            self.logger.debug(log)
-
-            await ctx.message.delete()
-        else:
+        except (InvalidSlot, SlotTaken):
             await channel.send(ctx.message.author.mention + " " + self.lang["forceSlot"]["error"]["general"]["channel"],
                                delete_after=5)
             await ctx.message.delete()
+            return
+
+        await channel.send(ctx.message.author.mention + " " + self.lang["forceSlot"]["success"]["channel"],
+                           delete_after=5)
+
+        try:
+            member = ctx.message.guild.get_member(int(player))
+            await self.event_role.add_event_role(member, (channel.name.split("-"))[-1])
+            await member.send(
+                self.lang["forceSlot"]["success"]["target"].format(str(ctx.message.author.display_name),
+                                                                   '/'.join(ctx.channel.name.split('-')[:-1])))
+        except:
+            pass
+
+        log = "User: " + str(ctx.message.author).ljust(20) + "\t"
+        log += "Channel:" + str(ctx.message.channel).ljust(20) + "\t"
+        log += "Command: " + str(ctx.message.content).ljust(20) + "\t"
+        self.logger.debug(log)
+
+        await ctx.message.delete()
+
+
 
     @commands.command(name="forceUnslot",
                       usage="[option] [argument]",
@@ -201,7 +207,9 @@ class Admin(commands.Cog, name="Admin Commands"):
             self.logger.debug(log)
 
             try:
-                await player.send(self.lang["forceUnslot"]["success"]["target"].format(channel.name))
+                member = ctx.message.guild.get_member(int(player))
+                await self.event_role.remove_event_role(member, (channel.name.split("-"))[-1])
+                await member.send(self.lang["forceUnslot"]["success"]["target"].format(channel.name))
             except:
                 pass
 

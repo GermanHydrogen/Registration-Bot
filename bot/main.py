@@ -7,6 +7,8 @@ from discord.ext.commands import Bot
 
 import mysql.connector
 
+from bot.src.main.handler.event_role import EventRoleHandler
+from bot.src.main.objects.event_role import EventRole
 from src.main.commands.user import User
 from src.main.commands.admin import Admin
 from src.main.handler.handler import Handler
@@ -40,7 +42,8 @@ class Bot(discord.ext.commands.Bot):
         self._init_logger()
 
         self.util = Util(self, db)
-        self.io = IO(cfg, db, self.util)
+        self.event_role = EventRole(self, db)
+        self.io = IO(cfg, db, self.util, self.event_role)
         self.notify = EditLocale(self, self.logger, lang, db)
         self.list = EditSlot(db, self.notify)
         self.mark = Mark(db)
@@ -52,9 +55,10 @@ class Bot(discord.ext.commands.Bot):
         self.add_cog(Handler(self, self.logger, db, self.util))
         self.add_cog(dmHandler(self, lang, self.logger, db, self.io, self.choice, self.interaction, self.notify))
         self.add_cog(ntHandler(lang, self.logger, self.notify, self.util))
+        self.add_cog(EventRoleHandler(self, self.event_role))
 
-        self.add_cog(User(lang, self.logger, self.io, self.util, self.list, self.mark))
-        self.add_cog(Admin(self, lang, self.logger, self.io, self.util, self.list))
+        self.add_cog(User(lang, self.logger, self.io, self.util, self.list, self.mark, self.event_role))
+        self.add_cog(Admin(self, lang, self.logger, self.io, self.util, self.list, self.event_role))
 
         self.add_cog(Campaign(self, lang, self.logger, self.io, self.util, self.interaction))
         self.add_cog(Swap(lang, self.logger, self.io, self.util, self.interaction))

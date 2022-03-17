@@ -5,6 +5,7 @@ from math import ceil
 from datetime import datetime, timedelta
 
 from bot.config.loader import cfg
+from bot.src.main.objects.event_role import EventRole
 from bot.src.main.objects.util import Util, with_cursor
 
 
@@ -64,11 +65,12 @@ def get_members(name: str, channel: discord.TextChannel) -> discord.Member:
 
 
 class IO:
-    def __init__(self, cfg, db, util: Util):
+    def __init__(self, cfg, db, util: Util, event_role: EventRole):
         self.cfg = cfg
         self.db = db
 
         self.util = util
+        self.event_role = event_role
 
     @with_cursor
     def get_user_id(self, cursor: mysql.connector.MySQLConnection.cursor,
@@ -180,7 +182,7 @@ class IO:
                 count += 1
 
     @with_cursor
-    def create(self, cursor: mysql.connector.MySQLConnection.cursor, msg_list: [discord.Message],
+    async def create(self, cursor: mysql.connector.MySQLConnection.cursor, msg_list: [discord.Message],
                author: discord.Member, time: str, bot: discord.User = None, manuel: bool = False) -> bool:
         """
         Creates an event in the database
@@ -304,7 +306,10 @@ class IO:
 
                 if data[list(data)[0]]["User"]:
                     struct[-1]["Length"] += len(data[list(data)[0]]["User"]) + 1
-                    data[list(data)[0]]["User"] = self.get_user_id(data[list(data)[0]]["User"], channel)
+                    user_id = self.get_user_id(data[list(data)[0]]["User"], channel)
+                    data[list(data)[0]]["User"] = user_id
+                    if user_id.isdigit():
+                        await self.event_role.add_event_role(channel.guild.get_member(int(data[list(data)[0]]["User"])), name)
 
                 else:
                     data[list(data)[0]]["User"] = None
